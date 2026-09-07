@@ -158,13 +158,19 @@
       color: #e0e0e0;
       box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
-    .bloque h2 {
+    .bloque h2, .bloque summary {
       margin-top: 0;
       font-size: 18px;
       border-bottom: 1px solid #444;
       padding-bottom: 5px;
       color: #ff5252;
     }
+    .bloque summary {
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+    .bloque summary::-webkit-details-marker { display: none; }
     .bloque p, .bloque li {
       font-size: 14px;
       line-height: 1.6;
@@ -314,8 +320,8 @@
     </div>
   </div>
 
-  <div class="bloque">
-    <h2>ℹ️ ¿Cómo se usa "Control de Vacaciones"?</h2>
+  <details class="bloque">
+    <summary>ℹ️ ¿Cómo se usa "Control de Vacaciones"?</summary>
     <p><strong>Registrar un día:</strong> elegí el tipo (Vacaciones o Personal Day), la fecha y el turno (Día completo, AM o PM), y presioná "Registrar". Solo se pueden cargar días de lunes a viernes que no sean feriados.</p>
     <p><strong>Registrar varios días juntos:</strong> tildá "Registrar un rango de fechas", elegí desde/hasta y se cargan automáticamente todos los días hábiles del rango como día completo (saltando fines de semana y feriados).</p>
     <p><strong>Nota opcional:</strong> podés agregar un texto corto a cada registro (ej: "viaje", "trámite") para recordar el motivo.</p>
@@ -329,10 +335,10 @@
     <p><strong>Exportar:</strong> "Copiar Mes/Todo" copia una tabla al portapapeles para pegar en Excel. "Calendario del Mes/Año" descarga un archivo con los días marcados en verde (vacaciones) o naranja (Personal Day).</p>
     <p><strong>Importar desde Excel:</strong> subí un archivo con columnas Fecha | Evento | Tiempo para cargar varios registros de una sola vez.</p>
     <p><strong>Backup:</strong> "Descargar Backup" guarda todos tus datos (registros, feriados y configuración) en un archivo. "Cargar Backup" los restaura si cambiás de dispositivo o se borra el navegador.</p>
-  </div>
+  </details>
 
   <footer id="teamName">
-    <a href="https://darkpassenger-tools.netlify.app/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+    <a href="https://darkpassengerpy.github.io/tools/" target="_blank">Desarrollado por Dark Passenger Tools</a>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

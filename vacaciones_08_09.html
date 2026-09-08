@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Control de Vacaciones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="ico.png">
+  <style>
+    body {
+      font-family: "Aptos", Arial, sans-serif;
+      margin: 0; padding: 20px;
+      background: #121212;
+      color: #333;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #262626;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      text-align: center;
+      color: #e0e0e0;
+      box-sizing: border-box;
+    }
+
+    h1 { color: #ff5252; font-size: 22px; }
+
+    input, select {
+      font-family: "Aptos", Arial, sans-serif;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #1e1e1e;
+      color: #fff;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="month"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+
+    .fila-doble { display: flex; gap: 8px; }
+    .fila-doble > * { flex: 1; }
+
+    button {
+      background: #1976d2; border: none; cursor: pointer;
+      font-size: 14px; color: white; width: 120px;
+      height: 36px; border-radius: 4px; padding: 0;
+      line-height: 1; display: inline-flex;
+      align-items: center; justify-content: center; margin: 6px;
+      transition: 0.3s;
+    }
+    button:hover { background: #0d47a1; }
+
+    .btn-exportar {
+      background: #25d366; color: #fff; width: auto;
+      padding: 0 15px; font-weight: bold;
+    }
+    .btn-exportar:hover { background: #128c7e; }
+
+    .btn-calendario {
+      background: #f57c00; color: #fff; width: auto;
+      padding: 0 15px; font-weight: bold;
+    }
+    .btn-calendario:hover { background: #e65100; }
+
+    .btn-limpiar { background: #d32f2f; }
+    .btn-limpiar:hover { background: #b71c1c; }
+
+    .contadores {
+      display: flex; gap: 10px; margin-top: 10px;
+    }
+    .contador-card {
+      flex: 1; background: #1e1e1e; border-radius: 8px;
+      padding: 10px; border: 1px solid #444;
+    }
+    .contador-card .num { font-size: 22px; font-weight: bold; }
+    .contador-card .lbl { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .contador-vac .num { color: #64b5f6; }
+    .contador-pd .num { color: #ba68c8; }
+    .contador-card .num.negativo { color: #ff5252; }
+    .aviso-negativo { font-size: 10px; color: #ff5252; margin-top: 2px; display: none; font-weight: bold; }
+
+    .feriado-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid #444; font-size: 13px;
+    }
+    .feriado-row:last-child { border-bottom: none; }
+
+    .config-box {
+      margin-top: 12px; padding: 10px; background: #1e1e1e;
+      border-radius: 8px; border: 1px solid #444; text-align: left;
+    }
+    .config-box label { font-size: 12px; color: #aaa; display: block; margin-bottom: 4px; }
+
+    .mes-grupo {
+      background: #1e1e1e; margin-top: 15px; border-radius: 8px;
+      border: 1px solid #444; overflow: hidden; text-align: left;
+    }
+    .anio-grupo {
+      background: #1a1a1a; margin-top: 15px; border-radius: 8px;
+      border: 1px solid #555; overflow: hidden; text-align: left;
+    }
+    .anio-grupo > summary {
+      background: #2a2a2a; color: #64b5f6; font-size: 16px;
+    }
+    .anio-grupo > summary:hover { background: #333; }
+    .anio-grupo .mes-grupo { margin: 10px; }
+    summary {
+      padding: 12px 15px; cursor: pointer; font-weight: bold;
+      color: #81c784; background: #222; user-select: none;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 15px;
+    }
+    summary:hover { background: #2a2a2a; }
+    .mes-contenido { padding: 10px; }
+
+    table { width: 100%; border-collapse: collapse; color: #e0e0e0; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #444; color: #e0e0e0; font-size: 13px; }
+    td:last-child { text-align: right; }
+
+    .badge {
+      display: inline-block; font-size: 10px; font-weight: bold;
+      padding: 2px 6px; border-radius: 10px; margin-right: 4px;
+    }
+    .badge-vac { background: #1565c0; color: #fff; }
+    .badge-pd { background: #6a1b9a; color: #fff; }
+    .badge-turno { background: #444; color: #ddd; }
+
+    .delete-btn {
+      background: #f44336; border: none; cursor: pointer;
+      font-size: 16px; color: white; width: 28px; height: 28px;
+      border-radius: 4px; padding: 0; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .delete-btn:hover { background: #d32f2f; }
+
+    .export-section {
+      margin-top: 20px; padding: 15px;
+      background: #1e1e1e; border-radius: 8px; text-align: left;
+    }
+    .export-section h3 { color: #81c784; margin-top: 0; font-size: 16px; }
+
+    .bloque {
+      max-width: 500px;
+      width: 100%;
+      margin: 15px auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: #262626;
+      box-sizing: border-box;
+      text-align: left;
+      color: #e0e0e0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .bloque h2, .bloque summary {
+      margin-top: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+      color: #ff5252;
+    }
+    .bloque summary {
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+    .bloque summary::-webkit-details-marker { display: none; }
+    .bloque p, .bloque li {
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 8px 0 0;
+      color: #ccc;
+    }
+    .bloque ul { margin: 6px 0 0; padding-left: 20px; }
+    .bloque strong { color: #81c784; }
+
+    footer#teamName {
+      text-align: center; margin-top: 30px;
+      font-family: "Aptos", Arial, sans-serif; font-size: 15px;
+      font-weight: normal; color: #aaa;
+    }
+    footer#teamName a {
+      color: #81c784;
+      text-decoration: none;
+    }
+    footer#teamName a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧳 Control de Vacaciones</h1>
+
+    <div class="contadores">
+      <div class="contador-card contador-vac">
+        <div class="num" id="numVacaciones">0</div>
+        <div class="lbl">Vacaciones disponibles</div>
+        <div class="aviso-negativo" id="avisoVac">⚠️ Sin días disponibles</div>
+      </div>
+      <div class="contador-card contador-pd">
+        <div class="num" id="numPersonalDay">0</div>
+        <div class="lbl">Personal Day este mes</div>
+        <div class="aviso-negativo" id="avisoPD">⚠️ Sin días disponibles</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 15px;">
+      <select id="tipoRegistro" onchange="actualizarDiaPreview()">
+        <option value="Vacaciones">Vacaciones</option>
+        <option value="Personal Day">Personal Day</option>
+      </select>
+
+      <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#aaa; margin-top:6px; cursor:pointer; text-align:left;">
+        <input type="checkbox" id="modoRango" style="width:auto; margin:0;" onchange="toggleModoRango()"> Registrar un rango de fechas
+      </label>
+
+      <div id="campoFechaUnica">
+        <input type="date" id="fechaTardia" onchange="actualizarDiaPreview()">
+        <div id="previewDia" style="font-size: 13px; color: #81c784; margin-bottom: 5px; font-weight: bold;"></div>
+      </div>
+
+      <div id="campoRango" style="display:none;">
+        <div class="fila-doble">
+          <input type="date" id="fechaDesde">
+          <input type="date" id="fechaHasta">
+        </div>
+        <div style="font-size: 11px; color: #888; margin-top: -4px;">Se registra cada día hábil (lun-vie), saltando feriados, como día completo.</div>
+      </div>
+
+      <select id="turnoRegistro">
+        <option value="Completo">Día completo</option>
+        <option value="AM">Medio día (AM)</option>
+        <option value="PM">Medio día (PM)</option>
+      </select>
+
+      <input type="text" id="notaRegistro" placeholder="Nota (opcional)" maxlength="60">
+
+      <button onclick="registrarTardia()">Registrar</button>
+    </div>
+
+    <div style="margin-top: 10px; font-size: 14px; color: #aaa;" id="totalGeneral"></div>
+
+    <div id="listaRegistros"></div>
+
+    <div class="config-box">
+      <label for="totalVacaciones2">Días total de vacaciones asignados:</label>
+      <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="guardarConfig(); actualizarContadores();">
+    </div>
+
+    <details class="mes-grupo">
+      <summary><span>🗓️ Feriados</span></summary>
+      <div class="mes-contenido">
+        <div class="fila-doble">
+          <input type="date" id="fechaFeriado">
+          <input type="text" id="nombreFeriado" placeholder="Nombre (ej: Navidad)">
+        </div>
+        <button class="btn-exportar" style="width:100%; margin: 6px 0 0;" onclick="agregarFeriado()">Agregar feriado</button>
+        <div style="text-align: center; margin-top: 8px;">
+          <label class="btn-calendario" style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 15px; border-radius: 4px; margin: 6px;">
+            📥 Cargar Excel de feriados <input type="file" id="inputExcelFeriados" accept=".xlsx,.xls,.csv" style="display: none;" onchange="importarExcelFeriados(event)">
+          </label>
+        </div>
+        <p style="font-size: 11px; color: #888; margin: 4px 0 0;">Columnas: <strong>FECHA</strong> | <strong>FERIADO</strong> (ej: 25/12/2026 | Navidad).</p>
+        <div id="listaFeriados" style="margin-top: 10px;"></div>
+      </div>
+    </details>
+
+    <details class="mes-grupo">
+      <summary><span>📤 Exportar Registros</span></summary>
+      <div class="mes-contenido">
+        <div style="margin-bottom: 10px;">
+          <label for="mesFiltro" style="font-size: 13px; display: block; margin-bottom: 4px; text-align: left;">Filtrar por mes:</label>
+          <input type="month" id="mesFiltro">
+        </div>
+        <div style="text-align: center;">
+          <button class="btn-exportar" onclick="exportar('mes')">Copiar Mes 📋</button>
+          <button class="btn-exportar" onclick="exportar('todo')">Copiar Todo 📋</button>
+        </div>
+        <div style="text-align: center; margin-top: 8px;">
+          <button class="btn-calendario" onclick="exportarCalendarioAnio()">Calendario del Año 📅</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="mes-grupo">
+      <summary><span>📥 Importar desde Excel</span></summary>
+      <div class="mes-contenido">
+        <p style="font-size: 12px; color: #aaa; margin-top: 0; margin-bottom: 10px;">Subí un archivo .xlsx con columnas <strong>Fecha</strong> | <strong>Evento</strong> | <strong>Tiempo</strong> (ej: 05/09/2026 | Vacaciones | Completo).</p>
+        <div style="text-align: center;">
+          <label class="btn-exportar" style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 15px; border-radius: 4px; margin: 6px;">
+            📥 Cargar Excel <input type="file" id="inputExcel" accept=".xlsx,.xls,.csv" style="display: none;" onchange="importarExcel(event)">
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <details class="mes-grupo">
+      <summary><span>💾 Copia de Seguridad (Backup)</span></summary>
+      <div class="mes-contenido">
+        <p style="font-size: 12px; color: #aaa; margin-top: 0; margin-bottom: 10px;">Guardá un archivo de respaldo en tu PC para no perder datos si el navegador se limpia.</p>
+        <div style="text-align: center; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+          <button class="btn-exportar" onclick="descargarBackup()">📥 Descargar Backup</button>
+          <label class="btn-exportar" style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 15px; border-radius: 4px; margin: 6px;">
+            📤 Cargar Backup <input type="file" id="inputBackup" accept=".json" style="display: none;" onchange="importarBackup(event)">
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <div style="margin-top: 15px;">
+      <button class="btn-limpiar" onclick="borrarTodo()">Borrar Todo</button>
+    </div>
+  </div>
+
+  <details class="bloque">
+    <summary>ℹ️ ¿Cómo se usa "Control de Vacaciones"?</summary>
+    <p><strong>Registrar un día:</strong> elegí el tipo (Vacaciones o Personal Day), la fecha y el turno (Día completo, AM o PM), y presioná "Registrar". Solo se pueden cargar días de lunes a viernes que no sean feriados.</p>
+    <p><strong>Registrar varios días juntos:</strong> tildá "Registrar un rango de fechas", elegí desde/hasta y se cargan automáticamente todos los días hábiles del rango como día completo (saltando fines de semana y feriados).</p>
+    <p><strong>Nota opcional:</strong> podés agregar un texto corto a cada registro (ej: "viaje", "trámite") para recordar el motivo.</p>
+    <p><strong>Días total de vacaciones asignados:</strong> es la cantidad de días que tenés disponibles para usar. No es algo que se carga una sola vez: sumale ahí mismo cada vez que te asignen vacaciones nuevas (por ejemplo, al empezar un nuevo período o si te dan días extra), y el número total va a ir subiendo. El sistema resta automáticamente lo que ya usaste para mostrarte cuántos te quedan.</p>
+    <p><strong>Contadores:</strong></p>
+    <ul>
+      <li><strong>Vacaciones disponibles</strong> = lo que cargaste en "Días total de vacaciones asignados" menos lo que ya usaste. Puede quedar en negativo si te pasás, y se marca en rojo como aviso.</li>
+      <li><strong>Personal Day</strong> es mensual: 1 día completo o 2 medios días (AM+PM) por mes, se resetea solo cada mes.</li>
+    </ul>
+    <p><strong>Feriados:</strong> desplegá la sección "🗓️ Feriados" para cargar las fechas feriadas del año (fecha + nombre). Esos días quedan excluidos automáticamente al registrar.</p>
+    <p><strong>Exportar:</strong> "Copiar Mes/Todo" copia una tabla al portapapeles para pegar en Excel (usando el mes que elijas en el filtro). "Calendario del Año" descarga un archivo con todo el año marcado: verde (vacaciones) o naranja (Personal Day).</p>
+    <p><strong>Importar desde Excel:</strong> subí un archivo con columnas Fecha | Evento | Tiempo para cargar varios registros de una sola vez.</p>
+    <p><strong>Backup:</strong> "Descargar Backup" guarda todos tus datos (registros, feriados y configuración) en un archivo. "Cargar Backup" los restaura si cambiás de dispositivo o se borra el navegador.</p>
+  </details>
+
+  <footer id="teamName">
+    <a href="https://darkpassengerpy.github.io/tools/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+    let registros = JSON.parse(localStorage.getItem("registrosVacaciones")) || [];
+    let config = JSON.parse(localStorage.getItem("configVacaciones")) || { totalVacaciones: 0 };
+    let feriados = JSON.parse(localStorage.getItem("feriadosVacaciones")) || [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const hoy = new Date().toISOString().split("T")[0];
+
+      document.getElementById("fechaTardia").value = hoy;
+      document.getElementById("mesFiltro").value = hoy.slice(0, 7);
+      document.getElementById("totalVacaciones2").value = config.totalVacaciones;
+      document.getElementById("fechaFeriado").value = hoy;
+
+      actualizarDiaPreview();
+      mostrarRegistros();
+      actualizarContadores();
+      mostrarFeriados();
+    });
+
+    function guardarDatos() {
+      localStorage.setItem("registrosVacaciones", JSON.stringify(registros));
+    }
+
+    function guardarConfig() {
+      const valor = event.target.value;
+      config.totalVacaciones = parseFloat(valor) || 0;
+      document.getElementById("totalVacaciones2").value = config.totalVacaciones;
+      localStorage.setItem("configVacaciones", JSON.stringify(config));
+    }
+
+    function guardarFeriados() {
+      localStorage.setItem("feriadosVacaciones", JSON.stringify(feriados));
+    }
+
+    function esFeriado(fechaStr) {
+      return feriados.some(f => f.fecha === fechaStr);
+    }
+
+    function agregarFeriado() {
+      const fecha = document.getElementById("fechaFeriado").value;
+      const nombre = document.getElementById("nombreFeriado").value.trim();
+      if (!fecha) return alert("Selecciona una fecha para el feriado.");
+      if (feriados.some(f => f.fecha === fecha)) return alert("Ese día ya está cargado como feriado.");
+
+      feriados.push({ fecha, nombre: nombre || "Feriado" });
+      feriados.sort((a, b) => a.fecha.localeCompare(b.fecha));
+      guardarFeriados();
+      mostrarFeriados();
+      document.getElementById("nombreFeriado").value = "";
+    }
+
+    function eliminarFeriado(fecha) {
+      feriados = feriados.filter(f => f.fecha !== fecha);
+      guardarFeriados();
+      mostrarFeriados();
+    }
+
+    function mostrarFeriados() {
+      const div = document.getElementById("listaFeriados");
+      if (feriados.length === 0) {
+        div.innerHTML = "<p style='color:#888; font-size:12px; margin:6px 0 0;'>No hay feriados cargados.</p>";
+        return;
+      }
+      let html = "";
+      feriados.forEach(f => {
+        const partes = f.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        html += `
+          <div class="feriado-row">
+            <span>${fechaFormateada} - ${f.nombre}</span>
+            <button class="delete-btn" onclick="eliminarFeriado('${f.fecha}')">🗑️</button>
+          </div>`;
+      });
+      div.innerHTML = html;
+    }
+
+    function toggleModoRango() {
+      const rango = document.getElementById("modoRango").checked;
+      document.getElementById("campoFechaUnica").style.display = rango ? "none" : "block";
+      document.getElementById("campoRango").style.display = rango ? "block" : "none";
+      document.getElementById("turnoRegistro").style.display = rango ? "none" : "block";
+    }
+
+    function valorTurno(turno) {
+      return turno === "Completo" ? 1 : 0.5;
+    }
+
+    function obtenerNombreDia(fechaStr) {
+      const [anio, mes, dia] = fechaStr.split("-");
+      const fecha = new Date(anio, mes - 1, dia);
+      const opciones = { weekday: 'long' };
+      let nombre = fecha.toLocaleDateString('es-ES', opciones);
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function esFinDeSemana(fechaStr) {
+      const [anio, mes, dia] = fechaStr.split("-");
+      const diaSemana = new Date(anio, mes - 1, dia).getDay();
+      return diaSemana === 0 || diaSemana === 6;
+    }
+
+    function actualizarDiaPreview() {
+      const fechaVal = document.getElementById("fechaTardia").value;
+      if (fechaVal) {
+        const diaSemana = obtenerNombreDia(fechaVal);
+        let aviso = "";
+        if (esFinDeSemana(fechaVal)) aviso = " ⚠️ No válido (fin de semana)";
+        else if (esFeriado(fechaVal)) aviso = " ⚠️ Es feriado";
+        document.getElementById("previewDia").innerText = `📅 ${diaSemana}${aviso}`;
+      } else {
+        document.getElementById("previewDia").innerText = "";
+      }
+    }
+
+    function diasUsadosVacaciones() {
+      return registros
+        .filter(r => r.tipo === "Vacaciones")
+        .reduce((acc, r) => acc + valorTurno(r.turno), 0);
+    }
+
+    function personalDayUsadoEnMes(mesKey) {
+      return registros
+        .filter(r => r.tipo === "Personal Day" && r.fecha.startsWith(mesKey))
+        .reduce((acc, r) => acc + valorTurno(r.turno), 0);
+    }
+
+    function actualizarContadores() {
+      const usadasVac = diasUsadosVacaciones();
+      const disponibles = (config.totalVacaciones || 0) - usadasVac;
+      const numVacEl = document.getElementById("numVacaciones");
+      numVacEl.innerText = disponibles;
+      numVacEl.classList.toggle("negativo", disponibles <= 0);
+      document.getElementById("avisoVac").style.display = disponibles <= 0 ? "block" : "none";
+
+      const mesActual = new Date().toISOString().slice(0, 7);
+      const usadoPDMesActual = personalDayUsadoEnMes(mesActual);
+      const disponiblePD = 1 - usadoPDMesActual;
+      const numPDEl = document.getElementById("numPersonalDay");
+      numPDEl.innerText = disponiblePD;
+      numPDEl.classList.toggle("negativo", disponiblePD <= 0);
+      document.getElementById("avisoPD").style.display = disponiblePD <= 0 ? "block" : "none";
+    }
+
+    // Intenta registrar un solo día. Devuelve { ok: true } o { ok: false, motivo }.
+    // No guarda en localStorage ni refresca la UI (eso lo hace quien la llama).
+    function intentarRegistrarUnDia(tipo, fecha, turno, nota) {
+      if (esFinDeSemana(fecha)) return { ok: false, motivo: "fin de semana" };
+      if (esFeriado(fecha)) return { ok: false, motivo: "feriado" };
+
+      const entradasMismaFecha = registros.filter(r => r.fecha === fecha);
+      if (entradasMismaFecha.some(r => r.turno === "Completo")) {
+        return { ok: false, motivo: "ya registrado (día completo)" };
+      }
+      if (turno === "Completo" && entradasMismaFecha.length > 0) {
+        return { ok: false, motivo: "ya tiene un registro parcial" };
+      }
+      if (entradasMismaFecha.some(r => r.turno === turno)) {
+        return { ok: false, motivo: `ya registrado para el turno ${turno}` };
+      }
+
+      if (tipo === "Personal Day") {
+        const mesKey = fecha.slice(0, 7);
+        const usado = personalDayUsadoEnMes(mesKey);
+        if (usado + valorTurno(turno) > 1) {
+          return { ok: false, motivo: "límite mensual de Personal Day alcanzado" };
+        }
+      }
+
+      registros.push({ fecha, tipo, turno, nota: nota || "" });
+      return { ok: true };
+    }
+
+    function registrarTardia() {
+      const tipo = document.getElementById("tipoRegistro").value;
+      const nota = document.getElementById("notaRegistro").value.trim();
+      const modoRango = document.getElementById("modoRango").checked;
+
+      if (!modoRango) {
+        const fecha = document.getElementById("fechaTardia").value;
+        const turno = document.getElementById("turnoRegistro").value;
+        if (!fecha) return alert("Selecciona una fecha válida");
+
+        const resultado = intentarRegistrarUnDia(tipo, fecha, turno, nota);
+        if (!resultado.ok) {
+          const mensajes = {
+            "fin de semana": "Solo se pueden registrar días de lunes a viernes.",
+            "feriado": "Ese día es feriado, no se puede registrar.",
+            "ya registrado (día completo)": "Ese día ya está registrado como día completo.",
+            "ya tiene un registro parcial": "Ese día ya tiene un registro parcial. No se puede marcar como completo.",
+            "límite mensual de Personal Day alcanzado": "Ya alcanzaste el límite de Personal Day para ese mes (1 día completo o 2 medios días)."
+          };
+          return alert(mensajes[resultado.motivo] || (resultado.motivo.startsWith("ya registrado para el turno") ? `Ese día ya tiene un registro para ese turno.` : resultado.motivo));
+        }
+
+        registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+        guardarDatos();
+        mostrarRegistros();
+        actualizarContadores();
+        document.getElementById("mesFiltro").value = fecha.slice(0, 7);
+        document.getElementById("notaRegistro").value = "";
+        return;
+      }
+
+      // Modo rango: registra cada día hábil (no feriado) del rango como día completo
+      const desde = document.getElementById("fechaDesde").value;
+      const hasta = document.getElementById("fechaHasta").value;
+      if (!desde || !hasta) return alert("Completá las dos fechas del rango.");
+      if (desde > hasta) return alert("La fecha 'desde' no puede ser posterior a 'hasta'.");
+
+      let agregados = 0;
+      let saltados = [];
+      let cursor = new Date(desde + "T00:00:00");
+      const fin = new Date(hasta + "T00:00:00");
+
+      while (cursor <= fin) {
+        const fechaStr = cursor.toISOString().split("T")[0];
+        if (esFinDeSemana(fechaStr)) {
+          // fin de semana, se salta sin avisar
+        } else if (esFeriado(fechaStr)) {
+          saltados.push(`${fechaStr} (feriado)`);
+        } else {
+          const resultado = intentarRegistrarUnDia(tipo, fechaStr, "Completo", nota);
+          if (resultado.ok) agregados++;
+          else saltados.push(`${fechaStr} (${resultado.motivo})`);
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+      guardarDatos();
+      mostrarRegistros();
+      actualizarContadores();
+      document.getElementById("mesFiltro").value = desde.slice(0, 7);
+      document.getElementById("notaRegistro").value = "";
+
+      let mensaje = `Se registraron ${agregados} día(s).`;
+      if (saltados.length > 0) mensaje += `\nSe saltaron: ${saltados.join(", ")}`;
+      alert(mensaje);
+    }
+
+    function eliminarRegistro(fecha, turno) {
+      registros = registros.filter(r => !(r.fecha === fecha && r.turno === turno));
+      guardarDatos();
+      mostrarRegistros();
+      actualizarContadores();
+    }
+
+    function obtenerNombreMes(anioMes) {
+      const [anio, mes] = anioMes.split("-");
+      const fecha = new Date(anio, mes - 1, 1);
+      const nombre = fecha.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function generarTextoExcel(tipoExport) {
+      let listaAExportar = [];
+
+      if (tipoExport === "mes") {
+        const mesSeleccionado = document.getElementById("mesFiltro").value;
+        if (!mesSeleccionado) return "";
+        listaAExportar = registros.filter(r => r.fecha.startsWith(mesSeleccionado));
+      } else {
+        listaAExportar = [...registros].sort((a, b) => a.fecha.localeCompare(b.fecha));
+      }
+
+      if (listaAExportar.length === 0) return "No hay registros en este período.";
+
+      let texto = "Día\tFecha\tTipo\tTurno\tNota\n";
+      listaAExportar.forEach(item => {
+        const partes = item.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const diaSemana = obtenerNombreDia(item.fecha);
+        texto += `${diaSemana}\t${fechaFormateada}\t${item.tipo}\t${item.turno}\t${item.nota || ""}\n`;
+      });
+      return texto;
+    }
+
+    function mostrarRegistros() {
+      const div = document.getElementById("listaRegistros");
+      const totalGeneralDiv = document.getElementById("totalGeneral");
+
+      totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
+
+      if (registros.length === 0) {
+        div.innerHTML = `
+          <details class="mes-grupo">
+            <summary><span>📋 Registros</span></summary>
+            <div class="mes-contenido">
+              <p style="color: #888; margin: 0;">No hay registros todavía.</p>
+            </div>
+          </details>`;
+        return;
+      }
+
+      // Agrupar primero por año, y dentro de cada año por mes
+      let agrupadosPorAnio = {};
+      registros.forEach(item => {
+        const anioKey = item.fecha.slice(0, 4);
+        const mesKey = item.fecha.slice(0, 7);
+        if (!agrupadosPorAnio[anioKey]) agrupadosPorAnio[anioKey] = {};
+        if (!agrupadosPorAnio[anioKey][mesKey]) agrupadosPorAnio[anioKey][mesKey] = [];
+        agrupadosPorAnio[anioKey][mesKey].push(item);
+      });
+
+      const aniosOrdenados = Object.keys(agrupadosPorAnio).sort().reverse();
+      const anioActual = new Date().getFullYear().toString();
+      const mesActualKey = new Date().toISOString().slice(0, 7);
+
+      let html = `
+        <details class="mes-grupo">
+          <summary>
+            <span>📋 Registros</span>
+            <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${registros.length} registros</span>
+          </summary>
+          <div class="mes-contenido">`;
+      aniosOrdenados.forEach(anioKey => {
+        const mesesDelAnio = agrupadosPorAnio[anioKey];
+        const mesesOrdenados = Object.keys(mesesDelAnio).sort().reverse();
+        const totalAnio = Object.values(mesesDelAnio).reduce((acc, dias) => acc + dias.length, 0);
+        const isOpenAnio = anioKey === anioActual ? "open" : "";
+
+        html += `
+          <details class="anio-grupo" ${isOpenAnio}>
+            <summary>
+              <span>📆 ${anioKey}</span>
+              <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${totalAnio} registros</span>
+            </summary>
+            <div class="mes-contenido">`;
+
+        mesesOrdenados.forEach(mesKey => {
+          const diasDelMes = mesesDelAnio[mesKey].sort((a, b) => b.fecha.localeCompare(a.fecha));
+          const nombreMes = obtenerNombreMes(mesKey);
+          const isOpenMes = mesKey === mesActualKey ? "open" : "";
+
+          html += `
+            <details class="mes-grupo" ${isOpenMes}>
+              <summary>
+                <span>📅 ${nombreMes}</span>
+                <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${diasDelMes.length} registros</span>
+              </summary>
+              <div class="mes-contenido">
+                <table>`;
+
+          diasDelMes.forEach(item => {
+            const partes = item.fecha.split("-");
+            const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            const diaSemana = obtenerNombreDia(item.fecha);
+            const badgeTipo = item.tipo === "Vacaciones"
+              ? `<span class="badge badge-vac">VAC</span>`
+              : `<span class="badge badge-pd">PD</span>`;
+            const notaHtml = item.nota ? `<br><span style="color:#aaa; font-size:11px;">📝 ${item.nota}</span>` : "";
+
+            html += `
+                  <tr>
+                    <td>${badgeTipo}<span class="badge badge-turno">${item.turno}</span><br><strong>${diaSemana}</strong> ${fechaFormateada}${notaHtml}</td>
+                    <td><button class="delete-btn" onclick="eliminarRegistro('${item.fecha}','${item.turno}')">🗑️</button></td>
+                  </tr>`;
+          });
+
+          html += `
+                </table>
+              </div>
+            </details>`;
+        });
+
+        html += `
+            </div>
+          </details>`;
+      });
+
+      html += `
+          </div>
+        </details>`;
+
+      div.innerHTML = html;
+    }
+
+    function exportar(tipoExport) {
+      const texto = generarTextoExcel(tipoExport);
+      if (!texto || texto.startsWith("No hay")) {
+        return alert("No hay registros para exportar en el período seleccionado.");
+      }
+
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("¡Copiado para Excel! Ya podés pegarlo (Ctrl + V) en tu planilla ✅");
+      }).catch(() => {
+        alert("Error al copiar automáticamente.");
+      });
+    }
+
+    // ============ CALENDARIO EXCEL (mensual y anual) ============
+    const DIAS_SEMANA_DOM = ["D", "L", "M", "X", "J", "V", "S"];
+
+    function numeroSemanaAnio(fecha, anio) {
+      const inicioAnio = new Date(anio, 0, 1);
+      const diaSemanaInicio = inicioAnio.getDay();
+      const primerDomingo = new Date(anio, 0, 1 - diaSemanaInicio);
+      const diffDias = Math.round((fecha - primerDomingo) / 86400000);
+      return Math.floor(diffDias / 7) + 1;
+    }
+
+    function generarSemanasMes(anio, mes) {
+      const primerDia = new Date(anio, mes - 1, 1);
+      const ultimoDia = new Date(anio, mes, 0);
+
+      let inicioSemana = new Date(primerDia);
+      inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay());
+
+      let semanas = [];
+      while (inicioSemana <= ultimoDia) {
+        const weekNum = numeroSemanaAnio(inicioSemana, anio);
+        let dias = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(inicioSemana);
+          d.setDate(d.getDate() + i);
+          dias.push(d.getMonth() === mes - 1 ? d.getDate() : null);
+        }
+        semanas.push({ weekNum, dias });
+        inicioSemana.setDate(inicioSemana.getDate() + 7);
+      }
+      return semanas;
+    }
+
+    function estiloCelda(fechaStr) {
+      const entradas = registros.filter(r => r.fecha === fechaStr);
+      if (entradas.length === 0) return "border:1px solid #999999;padding:14px;";
+
+      const tieneVac = entradas.some(r => r.tipo === "Vacaciones");
+      const tienePD = entradas.some(r => r.tipo === "Personal Day");
+      const completo = entradas.some(r => r.turno === "Completo") || entradas.length >= 2;
+
+      let color = tieneVac ? "#2e7d32" : "#ff9800";
+      if (tieneVac && tienePD) color = "#9c27b0";
+
+      if (completo) {
+        return `border:1px solid #999999;background:${color};color:#ffffff;font-weight:bold;padding:14px;`;
+      }
+      // medio día: color más claro
+      return `border:1px solid #999999;background:${color}55;color:#000000;font-weight:bold;padding:14px;`;
+    }
+
+    function generarTablaCalendarioMes(anio, mes) {
+      const nombreMes = obtenerNombreMes(`${anio}-${String(mes).padStart(2, "0")}`);
+      const semanas = generarSemanasMes(anio, mes);
+
+      let html = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; text-align:center;">`;
+      html += `<tr><td style="border:none;"></td><td colspan="7" style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;font-size:14px;padding:6px;">${nombreMes}</td></tr>`;
+      html += `<tr><td style="border:none;"></td>${DIAS_SEMANA_DOM.map(d => `<td style="border:1px solid #999999;background:#dddddd;font-weight:bold;padding:4px;">${d}</td>`).join("")}</tr>`;
+
+      semanas.forEach(semana => {
+        html += `<tr><td style="border:none;background:#f0f0f0;font-size:11px;color:#888888;">${semana.weekNum}</td>`;
+        semana.dias.forEach(d => {
+          if (d === null) {
+            html += `<td style="border:1px solid #999999;padding:14px;">&nbsp;</td>`;
+          } else {
+            const fechaStr = `${anio}-${String(mes).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            html += `<td style="${estiloCelda(fechaStr)}">${d}</td>`;
+          }
+        });
+        html += "</tr>";
+      });
+      html += "</table>";
+      return html;
+    }
+
+    function generarBloqueTresMeses(anio, mesInicio) {
+      const meses = [mesInicio, mesInicio + 1, mesInicio + 2];
+      const datosMeses = meses.map(mes => ({
+        mes,
+        nombreMes: obtenerNombreMes(`${anio}-${String(mes).padStart(2, "0")}`),
+        semanas: generarSemanasMes(anio, mes)
+      }));
+
+      const maxSemanas = Math.max(...datosMeses.map(m => m.semanas.length));
+      const espaciador = `<td style="border:none;width:14px;"></td>`;
+
+      let html = "<tr>";
+      datosMeses.forEach((m, idx) => {
+        html += `<td style="border:none;"></td><td colspan="7" style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;font-size:13px;padding:5px;">${m.nombreMes}</td>`;
+        if (idx < datosMeses.length - 1) html += espaciador;
+      });
+      html += "</tr><tr>";
+      datosMeses.forEach((m, idx) => {
+        html += `<td style="border:none;"></td>${DIAS_SEMANA_DOM.map(d => `<td style="border:1px solid #999999;background:#dddddd;font-weight:bold;padding:3px;font-size:11px;">${d}</td>`).join("")}`;
+        if (idx < datosMeses.length - 1) html += espaciador;
+      });
+      html += "</tr>";
+
+      for (let i = 0; i < maxSemanas; i++) {
+        html += "<tr>";
+        datosMeses.forEach((m, idx) => {
+          const semana = m.semanas[i];
+          if (!semana) {
+            html += `<td style="border:none;"></td>${Array(7).fill('<td style="border:1px solid #999999;padding:8px;">&nbsp;</td>').join("")}`;
+          } else {
+            html += `<td style="border:none;background:#f0f0f0;font-size:10px;color:#888888;">${semana.weekNum}</td>`;
+            semana.dias.forEach(d => {
+              if (d === null) {
+                html += `<td style="border:1px solid #999999;padding:8px;">&nbsp;</td>`;
+              } else {
+                const fechaStr = `${anio}-${String(m.mes).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+                html += `<td style="${estiloCelda(fechaStr)}">${d}</td>`;
+              }
+            });
+          }
+          if (idx < datosMeses.length - 1) html += espaciador;
+        });
+        html += "</tr>";
+      }
+
+      return html;
+    }
+
+    function descargarHTMLComoExcel(htmlContenido, nombreArchivo) {
+      const plantilla = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"></head>
+        <body>${htmlContenido}</body>
+        </html>`;
+      const blob = new Blob(["\ufeff", plantilla], { type: "application/vnd.ms-excel" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportarCalendarioAnio() {
+      const mesSeleccionado = document.getElementById("mesFiltro").value;
+      if (!mesSeleccionado) return alert("Selecciona un mes primero (se usará el año de esa fecha).");
+      const anio = Number(mesSeleccionado.split("-")[0]);
+
+      let html = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; text-align:center;">`;
+      html += `<tr><td colspan="26" style="border:none;font-size:18px;font-weight:bold;text-align:center;padding:8px;">${anio}</td></tr>`;
+      html += generarBloqueTresMeses(anio, 1);
+      html += generarBloqueTresMeses(anio, 4);
+      html += generarBloqueTresMeses(anio, 7);
+      html += generarBloqueTresMeses(anio, 10);
+      html += "</table>";
+
+      descargarHTMLComoExcel(html, `calendario_anual_${anio}.xls`);
+    }
+
+    function parseFechaImportada(valor) {
+      if (valor instanceof Date && !isNaN(valor)) {
+        const y = valor.getUTCFullYear();
+        const m = String(valor.getUTCMonth() + 1).padStart(2, "0");
+        const d = String(valor.getUTCDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+      const str = String(valor).trim();
+      let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+      m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+      return null;
+    }
+
+    function normalizarTipoImportado(valor) {
+      const v = String(valor).trim().toLowerCase();
+      if (v.includes("personal")) return "Personal Day";
+      if (v.includes("vac")) return "Vacaciones";
+      return null;
+    }
+
+    function normalizarTurnoImportado(valor) {
+      const v = String(valor).trim().toLowerCase();
+      if (v === "am") return "AM";
+      if (v === "pm") return "PM";
+      if (v.includes("comple")) return "Completo";
+      return null;
+    }
+
+    function importarExcel(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array", cellDates: true });
+          const primeraHoja = workbook.Sheets[workbook.SheetNames[0]];
+          const filas = XLSX.utils.sheet_to_json(primeraHoja, { header: 1, defval: "" });
+
+          let agregados = 0;
+          let saltados = [];
+
+          filas.forEach((fila, idx) => {
+            if (idx === 0) return; // fila de encabezado
+            const [fechaCelda, eventoCelda, tiempoCelda] = fila;
+            if (!fechaCelda && !eventoCelda && !tiempoCelda) return; // fila vacía
+
+            const fecha = parseFechaImportada(fechaCelda);
+            const tipo = normalizarTipoImportado(eventoCelda);
+            const turno = normalizarTurnoImportado(tiempoCelda);
+
+            if (!fecha || !tipo || !turno) {
+              saltados.push(`Fila ${idx + 1} (datos no reconocidos)`);
+              return;
+            }
+
+            const resultado = intentarRegistrarUnDia(tipo, fecha, turno, "");
+            if (resultado.ok) agregados++;
+            else saltados.push(`${fecha} (${resultado.motivo})`);
+          });
+
+          registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+          guardarDatos();
+          mostrarRegistros();
+          actualizarContadores();
+
+          let mensaje = `Se importaron ${agregados} registro(s).`;
+          if (saltados.length > 0) {
+            const detalle = saltados.slice(0, 15).join(", ") + (saltados.length > 15 ? "…" : "");
+            mensaje += `\nSe saltaron ${saltados.length}: ${detalle}`;
+          }
+          alert(mensaje);
+        } catch (err) {
+          alert("Error al leer el archivo. Verificá que sea un Excel válido con columnas Fecha, Evento y Tiempo.");
+        }
+        event.target.value = "";
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function importarExcelFeriados(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array", cellDates: true });
+          const primeraHoja = workbook.Sheets[workbook.SheetNames[0]];
+          const filas = XLSX.utils.sheet_to_json(primeraHoja, { header: 1, defval: "" });
+
+          let agregados = 0;
+          let saltados = [];
+
+          filas.forEach((fila, idx) => {
+            if (idx === 0) return; // fila de encabezado
+            const [fechaCelda, nombreCelda] = fila;
+            if (!fechaCelda && !nombreCelda) return; // fila vacía
+
+            const fecha = parseFechaImportada(fechaCelda);
+            const nombre = String(nombreCelda || "").trim() || "Feriado";
+
+            if (!fecha) {
+              saltados.push(`Fila ${idx + 1} (fecha no reconocida)`);
+              return;
+            }
+            if (feriados.some(f => f.fecha === fecha)) {
+              saltados.push(`${fecha} (ya cargado)`);
+              return;
+            }
+
+            feriados.push({ fecha, nombre });
+            agregados++;
+          });
+
+          feriados.sort((a, b) => a.fecha.localeCompare(b.fecha));
+          guardarFeriados();
+          mostrarFeriados();
+
+          let mensaje = `Se importaron ${agregados} feriado(s).`;
+          if (saltados.length > 0) {
+            const detalle = saltados.slice(0, 15).join(", ") + (saltados.length > 15 ? "…" : "");
+            mensaje += `\nSe saltaron ${saltados.length}: ${detalle}`;
+          }
+          alert(mensaje);
+        } catch (err) {
+          alert("Error al leer el archivo. Verificá que sea un Excel válido con columnas FECHA y FERIADO.");
+        }
+        event.target.value = "";
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function descargarBackup() {
+      if (registros.length === 0) {
+        return alert("No hay registros para respaldar.");
+      }
+      const payload = { registros, config, feriados };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `backup_vacaciones_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importarBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const datosCargados = JSON.parse(e.target.result);
+          const listaCargada = Array.isArray(datosCargados) ? datosCargados : datosCargados.registros;
+          const configCargada = Array.isArray(datosCargados) ? null : datosCargados.config;
+          const feriadosCargados = Array.isArray(datosCargados) ? null : datosCargados.feriados;
+
+          if (Array.isArray(listaCargada)) {
+            if (confirm(`Se encontraron ${listaCargada.length} registros en el archivo. ¿Deseas reemplazar todos tus datos actuales? (Aceptar = Reemplazar, Cancelar = Combinar con los existentes)`)) {
+              registros = listaCargada;
+              if (configCargada) config = configCargada;
+              if (feriadosCargados) feriados = feriadosCargados;
+            } else {
+              listaCargada.forEach(nuevo => {
+                if (!registros.some(r => r.fecha === nuevo.fecha && r.turno === nuevo.turno)) {
+                  registros.push(nuevo);
+                }
+              });
+              if (feriadosCargados) {
+                feriadosCargados.forEach(nuevo => {
+                  if (!feriados.some(f => f.fecha === nuevo.fecha)) feriados.push(nuevo);
+                });
+              }
+            }
+            registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+            feriados.sort((a, b) => a.fecha.localeCompare(b.fecha));
+            guardarDatos();
+            guardarFeriados();
+            localStorage.setItem("configVacaciones", JSON.stringify(config));
+            document.getElementById("totalVacaciones2").value = config.totalVacaciones || 0;
+            mostrarRegistros();
+            actualizarContadores();
+            mostrarFeriados();
+            alert("¡Copia de seguridad restaurada con éxito! ✅");
+          } else {
+            alert("El archivo no tiene el formato correcto.");
+          }
+        } catch (err) {
+          alert("Error al leer el archivo JSON.");
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    }
+
+    function borrarTodo() {
+      if (confirm("¿Estás seguro de borrar todos los registros?")) {
+        registros = [];
+        localStorage.removeItem("registrosVacaciones");
+        mostrarRegistros();
+        actualizarContadores();
+      }
+    }
+  </script>
+</body>
+</html>

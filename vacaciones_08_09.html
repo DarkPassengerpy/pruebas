@@ -793,6 +793,22 @@
       return `border:1px solid #999999;background:${color}55;color:#000000;font-weight:bold;padding:14px;`;
     }
 
+    function etiquetaCelda(fechaStr) {
+      const entradas = registros.filter(r => r.fecha === fechaStr);
+      if (entradas.length === 0) return "";
+
+      const tieneVac = entradas.some(r => r.tipo === "Vacaciones");
+      const tienePD = entradas.some(r => r.tipo === "Personal Day");
+      const completo = entradas.some(r => r.turno === "Completo") || entradas.length >= 2;
+
+      if (completo) {
+        if (tieneVac && tienePD) return "Vac+PD";
+        return tieneVac ? "Vacaciones" : "Personal Day";
+      }
+      // medio día: mostrar el turno
+      return entradas[0].turno;
+    }
+
     function generarTablaCalendarioMes(anio, mes) {
       const nombreMes = obtenerNombreMes(`${anio}-${String(mes).padStart(2, "0")}`);
       const semanas = generarSemanasMes(anio, mes);
@@ -808,7 +824,9 @@
             html += `<td style="border:1px solid #999999;padding:14px;">&nbsp;</td>`;
           } else {
             const fechaStr = `${anio}-${String(mes).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-            html += `<td style="${estiloCelda(fechaStr)}">${d}</td>`;
+            const etiqueta = etiquetaCelda(fechaStr);
+            const etiquetaHtml = etiqueta ? `<br><span style="font-size:9px;">${etiqueta}</span>` : "";
+            html += `<td style="${estiloCelda(fechaStr)}">${d}${etiquetaHtml}</td>`;
           }
         });
         html += "</tr>";
@@ -853,7 +871,9 @@
                 html += `<td style="border:1px solid #999999;padding:8px;">&nbsp;</td>`;
               } else {
                 const fechaStr = `${anio}-${String(m.mes).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-                html += `<td style="${estiloCelda(fechaStr)}">${d}</td>`;
+                const etiqueta = etiquetaCelda(fechaStr);
+                const etiquetaHtml = etiqueta ? `<br><span style="font-size:7px;">${etiqueta}</span>` : "";
+                html += `<td style="${estiloCelda(fechaStr)}">${d}${etiquetaHtml}</td>`;
               }
             });
           }

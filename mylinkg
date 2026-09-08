@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dark Passenger Tools</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="ico.png">
+  <style>
+    html, body {
+      height: 100%;           /* ocupa toda la pantalla */
+      margin: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url("myfondo.jpg"); /* fondo local */
+      background-size: cover;               /* ajusta para cubrir todo */
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      color: #fff;
+      text-align: center;
+      display: flex;                        /* centra contenido */
+      flex-direction: column;
+      justify-content: center;              /* centra verticalmente */
+      align-items: center;                  /* centra horizontalmente */
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 3em;
+      margin: 20px;
+      color: #a60000;                       /* rojo oscuro elegido */
+      text-shadow: 
+        -2px -2px 0 #fff,                    /* borde blanco arriba-izquierda */
+         2px -2px 0 #fff,                    /* borde blanco arriba-derecha */
+        -2px  2px 0 #fff,                    /* borde blanco abajo-izquierda */
+         2px  2px 0 #fff,                    /* borde blanco abajo-derecha */
+         0 0 15px #8B0000,                   /* sombra roja oscura degradada */
+         0 0 25px #000;                      /* sombra negra para profundidad */
+    }
+    .links {
+      margin-top: 30px;
+    }
+    .links a {
+      display: block;
+      margin: 15px auto;
+      padding: 12px 20px;
+      width: 250px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1.2em;
+      transition: background 0.3s;
+    }
+    .links a:hover {
+      background: rgba(166,0,0,0.8); /* hover con el mismo rojo oscuro */
+    }
+  </style>
+</head>
+<body>
+  <h1>Dark Passenger Tools</h1>
+  <div class="links">
+    <a href="https://darkpassenger-mytools.netlify.app/cobranza.html" target="_blank">🧾 Mi Cobranza</a>
+    <a href="https://darkpassenger-mytools.netlify.app/escaladepuntuacion.html" target="_blank">📊 Conversor de Escalas</a>
+    <a href="https://darkpassenger-mytools.netlify.app/milistadecompra.html" target="_blank">🛒 Mi Lista de Compras</a>
+    <a href="https://darkpassenger-mytools.netlify.app/registro_chely_negocio.html" target="_blank">💰 Registro Chely / Negocio</a>
+    <a href="https://darkpassenger-mytools.netlify.app/llegada.html" target="_blank">⏱️ Registro de Llegadas</a>
+    <a href="https://darkpassenger-mytools.netlify.app/vacaciones.html" target="_blank">🧳 Control de Vacaciones</a>
+    <a href="https://darkpassenger-mytools.netlify.app/cantina" target="_blank">🍽 Registro de Cantina</a>
+  </div>
+</body>
+</html>

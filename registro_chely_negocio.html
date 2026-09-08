@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro Chely / Negocio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="icon" type="image/png" href="ico.png">
+  <style>
+    /* ============================================================
+       PLANTILLA BASE — Dark Passenger Tools
+       ============================================================ */
+
+    body {
+      font-family: "Aptos", Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      font-size: 15px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-sizing: border-box;
+      transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 0 0 8px 0;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 16px;
+      border-bottom: 1px solid;
+      padding-bottom: 5px;
+    }
+
+    .bloque {
+      max-width: 500px;
+      width: 100%;
+      margin: 15px auto;
+      padding: 16px;
+      border-radius: 10px;
+      box-sizing: border-box;
+      transition: background 0.3s, color 0.3s, box-shadow 0.3s, border 0.3s;
+    }
+
+    input, select {
+      font-family: "Aptos", Arial, sans-serif;
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 14px;
+      border-radius: 6px;
+      box-sizing: border-box;
+      outline: none;
+      transition: background 0.3s, border 0.3s, color 0.3s;
+    }
+
+    label {
+      font-size: 12px;
+      opacity: 0.8;
+      display: block;
+      margin-top: 8px;
+    }
+
+    button {
+      font-family: "Aptos", Arial, sans-serif;
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 14px;
+      border-radius: 6px;
+      box-sizing: border-box;
+      cursor: pointer;
+      border: none;
+      color: #fff;
+      transition: 0.3s;
+    }
+
+    .btn-principal {
+      background: #1976d2;
+    }
+    .btn-principal:hover {
+      background: #0d47a1;
+    }
+
+    .btn-copiar {
+      background: #25d366;
+      font-weight: bold;
+    }
+    .btn-copiar:hover {
+      background: #128c7e;
+    }
+
+    .btn-borrar {
+      background: #d32f2f;
+      font-weight: bold;
+      width: auto;
+      padding: 10px 20px;
+      display: block;
+      margin: 20px auto;
+    }
+    .btn-borrar:hover {
+      background: #b71c1c;
+    }
+
+    .btn-eliminar-chico {
+      background: #f44336;
+      width: auto;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+    .btn-eliminar-chico:hover {
+      background: #d32f2f;
+    }
+
+    .btn-compartir {
+      background: #7e57c2;
+      font-size: 13px;
+    }
+    .btn-compartir:hover {
+      background: #5e35b1;
+    }
+
+    #toggleTheme {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 12px;
+      height: auto;
+      margin-top: 5px;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: background 0.3s, border 0.3s, color 0.3s;
+    }
+
+    li span {
+      flex: 1;
+      word-break: break-word;
+    }
+
+    /* Tabla de resumen por fecha */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 8px 6px;
+      text-align: center;
+    }
+    th {
+      border-bottom: 2px solid;
+    }
+    td {
+      border-bottom: 1px solid;
+    }
+    tfoot td {
+      font-weight: bold;
+      border-top: 2px solid;
+      border-bottom: none;
+    }
+    .total-general {
+      text-align: center;
+      font-size: 15px;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    /* --- TEMA CLARO --- */
+    body.light {
+      background: #f5f5f5;
+      color: #333;
+    }
+    body.light h1 {
+      color: #1976d2;
+    }
+    body.light .bloque,
+    body.light .container {
+      background: #ffffff;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      color: #333;
+    }
+    body.light .bloque h2 {
+      color: #1976d2;
+      border-bottom-color: #eee;
+    }
+    body.light input,
+    body.light select {
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      color: #333;
+    }
+    body.light li {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      color: #333;
+    }
+    body.light th, body.light td {
+      border-color: #ddd;
+    }
+    body.light #toggleTheme {
+      background: #e0e0e0;
+      color: #333;
+    }
+    body.light #toggleTheme:hover {
+      background: #d0d0d0;
+    }
+
+    /* --- TEMA OSCURO --- */
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
+    }
+    body.dark h1 {
+      color: #ff5252;
+    }
+    body.dark .bloque,
+    body.dark .container {
+      background: #262626;
+      border: 1px solid #444;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      color: #e0e0e0;
+    }
+    body.dark .bloque h2 {
+      color: #81c784;
+      border-bottom-color: #444;
+    }
+    body.dark input,
+    body.dark select {
+      background: #1e1e1e;
+      border: 1px solid #444;
+      color: #fff;
+    }
+    body.dark li {
+      background: #1e1e1e;
+      border: 1px solid #444;
+      color: #e0e0e0;
+    }
+    body.dark th, body.dark td {
+      border-color: #444;
+    }
+    body.dark #toggleTheme {
+      background: #333;
+      color: #fff;
+    }
+    body.dark #toggleTheme:hover {
+      background: #444;
+    }
+
+    footer#teamName {
+      text-align: center;
+      margin-top: 30px;
+      font-family: "Aptos", Arial, sans-serif;
+      font-size: 15px;
+      font-weight: normal;
+      color: #aaa;
+    }
+    footer#teamName a {
+      color: #81c784;
+      text-decoration: none;
+    }
+    footer#teamName a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="dark">
+
+  <header>
+    <h1>💰 Registro Chely / Negocio</h1>
+    <button id="toggleTheme">🌞 Tema Claro</button>
+  </header>
+
+  <div class="bloque">
+    <h2>📌 Cargar monto</h2>
+    <label for="inputFecha">Fecha</label>
+    <input type="date" id="inputFecha">
+
+    <label for="inputCuenta">Cuenta</label>
+    <select id="inputCuenta">
+      <option value="Chely">Chely</option>
+      <option value="Negocio">Negocio</option>
+    </select>
+
+    <label for="inputMonto">Monto</label>
+    <input type="number" id="inputMonto" placeholder="Ej: 150000" min="0" step="any">
+
+    <button class="btn-principal" onclick="agregarMovimiento()">➕ Agregar</button>
+  </div>
+
+  <div class="bloque">
+    <h2>📄 Movimientos cargados</h2>
+    <ul id="listaMovimientos"></ul>
+  </div>
+
+  <div class="bloque">
+    <div id="capturaTablaFecha">
+      <h2>📊 Tabla por fecha</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Chely</th>
+            <th>Negocio</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTabla"></tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td id="totalChely">0</td>
+            <td id="totalNegocio">0</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="total-general" id="totalGeneral"></div>
+    </div>
+    <button class="btn-compartir" onclick="compartirComoImagen('capturaTablaFecha', 'tabla_por_fecha.png')">📤 Compartir como imagen</button>
+  </div>
+
+  <div class="bloque">
+    <div id="capturaTablaChely">
+      <h2>📊 Tabla Chely</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Monto</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaChely"></tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td id="totalChelySola">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <button class="btn-compartir" onclick="compartirComoImagen('capturaTablaChely', 'tabla_chely.png')">📤 Compartir como imagen</button>
+  </div>
+
+  <div class="bloque">
+    <div id="capturaTablaNegocio">
+      <h2>📊 Tabla Negocio</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Monto</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaNegocio"></tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td id="totalNegocioSolo">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <button class="btn-compartir" onclick="compartirComoImagen('capturaTablaNegocio', 'tabla_negocio.png')">📤 Compartir como imagen</button>
+  </div>
+
+  <div class="bloque">
+    <button class="btn-copiar" onclick="copiarResumen()">📋 Copiar resumen</button>
+    <div id="resumen" style="margin-top: 10px; line-height: 1.5; font-size: 13px;"></div>
+  </div>
+
+  <button class="btn-borrar" onclick="borrarTodo()">🗑 Borrar datos</button>
+
+  <div class="bloque">
+    <h2>ℹ️ ¿Qué es "Registro Chely / Negocio"?</h2>
+    <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">Herramienta para registrar montos ingresados a las cuentas Chely y Negocio por fecha, con sumatorias automáticas por cuenta y el total general.</p>
+  </div>
+
+  <footer id="teamName">
+    <a href="https://darkpassengerpy.github.io/tools/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+  </footer>
+
+  <script>
+    // ============================================================
+    // ESTADO
+    // ============================================================
+    let movimientos = JSON.parse(localStorage.getItem("REGISTRO_CHELY_NEGOCIO")) || [];
+    const toggleBtn = document.getElementById("toggleTheme");
+    const inputFecha = document.getElementById("inputFecha");
+
+    // Fecha actual como valor por defecto (editable por el usuario)
+    function fechaHoy() {
+      const hoy = new Date();
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+      const dd = String(hoy.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    inputFecha.value = fechaHoy();
+
+    function guardarDatos() {
+      localStorage.setItem("REGISTRO_CHELY_NEGOCIO", JSON.stringify(movimientos));
+    }
+
+    function formatearFecha(fechaISO) {
+      const [y, m, d] = fechaISO.split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    function formatearMonto(n) {
+      return n.toLocaleString("es-PY", { maximumFractionDigits: 2 });
+    }
+
+    // ------------------------------------------------------------
+    // AGREGAR / ELIMINAR MOVIMIENTOS
+    // ------------------------------------------------------------
+    function agregarMovimiento() {
+      const fecha = inputFecha.value;
+      const cuenta = document.getElementById("inputCuenta").value;
+      const montoStr = document.getElementById("inputMonto").value;
+      const monto = parseFloat(montoStr);
+
+      if (!fecha || isNaN(monto) || monto <= 0) {
+        alert("Completá la fecha y un monto válido.");
+        return;
+      }
+
+      movimientos.push({ fecha, cuenta, monto });
+      guardarDatos();
+      document.getElementById("inputMonto").value = "";
+      renderTodo();
+    }
+
+    function eliminarMovimiento(i) {
+      movimientos.splice(i, 1);
+      guardarDatos();
+      renderTodo();
+    }
+
+    // ------------------------------------------------------------
+    // LISTA DE MOVIMIENTOS (crudos)
+    // ------------------------------------------------------------
+    function renderLista() {
+      const ul = document.getElementById("listaMovimientos");
+      if (movimientos.length === 0) {
+        ul.innerHTML = "<li><span><i>Sin movimientos aún</i></span></li>";
+        return;
+      }
+      // Mostrar más recientes primero
+      const orden = movimientos
+        .map((m, i) => ({ ...m, i }))
+        .sort((a, b) => b.fecha.localeCompare(a.fecha) || b.i - a.i);
+
+      ul.innerHTML = orden.map(m => `
+        <li>
+          <span>${formatearFecha(m.fecha)} — ${m.cuenta}: ${formatearMonto(m.monto)}</span>
+          <button class="btn-eliminar-chico" onclick="eliminarMovimiento(${m.i})">🗑</button>
+        </li>
+      `).join("");
+    }
+
+    // ------------------------------------------------------------
+    // TABLA — un renglón por cada carga (sin agrupar por fecha)
+    // ------------------------------------------------------------
+    function renderTabla() {
+      // Orden cronológico; si hay varias del mismo día, la más nueva queda arriba
+      // y la primera que se cargó ese día queda abajo
+      const ordenados = movimientos
+        .map((m, i) => ({ ...m, i }))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha) || b.i - a.i);
+
+      const tbody = document.getElementById("cuerpoTabla");
+      if (ordenados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3"><i>Sin datos aún</i></td></tr>`;
+      } else {
+        tbody.innerHTML = ordenados.map(m => `
+          <tr>
+            <td>${formatearFecha(m.fecha)}</td>
+            <td>${m.cuenta === "Chely" ? formatearMonto(m.monto) : "—"}</td>
+            <td>${m.cuenta === "Negocio" ? formatearMonto(m.monto) : "—"}</td>
+          </tr>
+        `).join("");
+      }
+
+      const totalChely = movimientos.filter(m => m.cuenta === "Chely").reduce((s, m) => s + m.monto, 0);
+      const totalNegocio = movimientos.filter(m => m.cuenta === "Negocio").reduce((s, m) => s + m.monto, 0);
+
+      document.getElementById("totalChely").textContent = formatearMonto(totalChely);
+      document.getElementById("totalNegocio").textContent = formatearMonto(totalNegocio);
+      document.getElementById("totalGeneral").textContent = `Total general: ${formatearMonto(totalChely + totalNegocio)}`;
+
+      return { ordenados, totalChely, totalNegocio };
+    }
+
+    // ------------------------------------------------------------
+    // TABLAS INDIVIDUALES — solo Chely y solo Negocio
+    // ------------------------------------------------------------
+    function renderTablasIndividuales() {
+      const ordenarCuenta = (cuenta) => movimientos
+        .map((m, i) => ({ ...m, i }))
+        .filter(m => m.cuenta === cuenta)
+        .sort((a, b) => a.fecha.localeCompare(b.fecha) || b.i - a.i);
+
+      const chely = ordenarCuenta("Chely");
+      const negocio = ordenarCuenta("Negocio");
+
+      const cuerpoChely = document.getElementById("cuerpoTablaChely");
+      cuerpoChely.innerHTML = chely.length === 0
+        ? `<tr><td colspan="2"><i>Sin datos aún</i></td></tr>`
+        : chely.map(m => `
+            <tr>
+              <td>${formatearFecha(m.fecha)}</td>
+              <td>${formatearMonto(m.monto)}</td>
+            </tr>
+          `).join("");
+      document.getElementById("totalChelySola").textContent =
+        formatearMonto(chely.reduce((s, m) => s + m.monto, 0));
+
+      const cuerpoNegocio = document.getElementById("cuerpoTablaNegocio");
+      cuerpoNegocio.innerHTML = negocio.length === 0
+        ? `<tr><td colspan="2"><i>Sin datos aún</i></td></tr>`
+        : negocio.map(m => `
+            <tr>
+              <td>${formatearFecha(m.fecha)}</td>
+              <td>${formatearMonto(m.monto)}</td>
+            </tr>
+          `).join("");
+      document.getElementById("totalNegocioSolo").textContent =
+        formatearMonto(negocio.reduce((s, m) => s + m.monto, 0));
+    }
+
+    // ------------------------------------------------------------
+    // RESUMEN COPIABLE
+    // ------------------------------------------------------------
+    function mostrarResumen() {
+      const { ordenados, totalChely, totalNegocio } = renderTabla();
+      let texto = "";
+      if (ordenados.length === 0) {
+        texto = "<i>Sin datos aún</i>";
+      } else {
+        texto = ordenados.map(m =>
+          `• ${formatearFecha(m.fecha)} — ${m.cuenta}: ${formatearMonto(m.monto)}`
+        ).join("\n");
+        texto += `\n\nTotal Chely: ${formatearMonto(totalChely)}`;
+        texto += `\nTotal Negocio: ${formatearMonto(totalNegocio)}`;
+        texto += `\nTotal general: ${formatearMonto(totalChely + totalNegocio)}`;
+      }
+      document.getElementById("resumen").innerHTML = texto.replace(/\n/g, "<br>");
+    }
+
+    function copiarResumen() {
+      const resumenTexto = document.getElementById("resumen").innerText;
+      const resumenConCredito = resumenTexto + "\n\n✨ Hecho con: https://darkpassengerpy.github.io/tools/";
+      const temp = document.createElement("textarea");
+      temp.value = resumenConCredito;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+      alert("Resumen copiado ✅");
+    }
+
+    function borrarTodo() {
+      if (confirm("¿Estás seguro de borrar todos los datos?")) {
+        movimientos = [];
+        localStorage.removeItem("REGISTRO_CHELY_NEGOCIO");
+        alert("Todos los datos fueron borrados ✅");
+        renderTodo();
+      }
+    }
+
+    function renderTodo() {
+      renderLista();
+      renderTabla();
+      renderTablasIndividuales();
+      mostrarResumen();
+    }
+
+    // ------------------------------------------------------------
+    // COMPARTIR TABLA COMO IMAGEN
+    // ------------------------------------------------------------
+    async function compartirComoImagen(elementId, nombreArchivo) {
+      const el = document.getElementById(elementId);
+      const bgColor = getComputedStyle(document.querySelector(".bloque")).backgroundColor;
+
+      const canvas = await html2canvas(el, {
+        backgroundColor: bgColor,
+        scale: 2
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          alert("No se pudo generar la imagen.");
+          return;
+        }
+        const file = new File([blob], nombreArchivo, { type: "image/png" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: nombreArchivo });
+          } catch (e) {
+            // El usuario canceló el compartir, no hacer nada
+          }
+        } else {
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = nombreArchivo;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      }, "image/png");
+    }
+
+    // ------------------------------------------------------------
+    // TEMA CLARO/OSCURO
+    // ------------------------------------------------------------
+    const CLAVE_TEMA = "temaRegistroChelyNegocio";
+
+    toggleBtn.onclick = () => {
+      document.body.classList.toggle("dark");
+      document.body.classList.toggle("light");
+      const esDark = document.body.classList.contains("dark");
+      toggleBtn.textContent = esDark ? "🌞 Tema Claro" : "🌙 Tema Oscuro";
+      localStorage.setItem(CLAVE_TEMA, esDark ? "dark" : "light");
+    };
+
+    const temaGuardado = localStorage.getItem(CLAVE_TEMA);
+    if (temaGuardado) {
+      document.body.classList.remove("light", "dark");
+      document.body.classList.add(temaGuardado);
+      toggleBtn.textContent = temaGuardado === "dark" ? "🌞 Tema Claro" : "🌙 Tema Oscuro";
+    }
+
+    // ------------------------------------------------------------
+    // INICIALIZACIÓN
+    // ------------------------------------------------------------
+    renderTodo();
+  </script>
+</body>
+</html>

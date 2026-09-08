@@ -789,8 +789,10 @@
       if (completo) {
         return `border:1px solid #999999;background:${color};color:#ffffff;font-weight:bold;padding:14px;`;
       }
-      // medio día: color más claro
-      return `border:1px solid #999999;background:${color}55;color:#000000;font-weight:bold;padding:14px;`;
+      // medio día: color más claro, específico para AM/PM
+      let colorMedioDia = tieneVac ? "#6DC971" : "#FFBB57";
+      if (tieneVac && tienePD) colorMedioDia = "#9c27b0";
+      return `border:1px solid #999999;background:${colorMedioDia};color:#000000;font-weight:bold;padding:14px;`;
     }
 
     function generarTablaCalendarioMes(anio, mes) {

@@ -888,6 +888,7 @@
         .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
       let html = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; font-size:11px;">`;
+      html += `<tr><td colspan="3" style="border:none; padding:0; height:1px;">&nbsp;</td></tr>`;
       html += `<tr><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Fecha</td><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Tipo</td><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Turno</td></tr>`;
 
       delAnio.forEach(item => {
@@ -917,7 +918,8 @@
 
       let html = `<table border="0" style="border-collapse:collapse;"><tr>`;
       html += `<td style="vertical-align:top;">${calendario}</td>`;
-      html += `<td style="vertical-align:top; padding-left:20px;">${detalle}</td>`;
+      html += `<td style="border:none; width:20px;"></td>`;
+      html += `<td style="vertical-align:top;">${detalle}</td>`;
       html += `</tr></table>`;
 
       descargarHTMLComoExcel(html, `calendario_anual_${anio}.xls`);

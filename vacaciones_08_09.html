@@ -249,11 +249,6 @@
 
     <div id="listaRegistros"></div>
 
-    <div class="config-box">
-      <label for="totalVacaciones2">Días total de vacaciones asignados:</label>
-      <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="guardarConfig(); actualizarContadores();">
-    </div>
-
     <details class="mes-grupo">
       <summary><span>🗓️ Feriados</span></summary>
       <div class="mes-contenido">
@@ -279,8 +274,13 @@
           <label for="mesFiltro" style="font-size: 13px; display: block; margin-bottom: 4px; text-align: left;">Filtrar por mes:</label>
           <input type="month" id="mesFiltro">
         </div>
+        <div style="margin-bottom: 10px;">
+          <label for="anioFiltro" style="font-size: 13px; display: block; margin-bottom: 4px; text-align: left;">Filtrar por año:</label>
+          <input type="number" id="anioFiltro" min="2000" max="2100" step="1">
+        </div>
         <div style="text-align: center;">
           <button class="btn-exportar" onclick="exportar('mes')">Copiar Mes 📋</button>
+          <button class="btn-exportar" onclick="exportar('anio')">Copiar Año 📋</button>
           <button class="btn-exportar" onclick="exportar('todo')">Copiar Todo 📋</button>
         </div>
         <div style="text-align: center; margin-top: 8px;">
@@ -314,6 +314,11 @@
       </div>
     </details>
 
+    <div class="config-box">
+      <label for="totalVacaciones2">Días total de vacaciones asignados:</label>
+      <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="guardarConfig(); actualizarContadores();">
+    </div>
+
     <div style="margin-top: 15px;">
       <button class="btn-limpiar" onclick="borrarTodo()">Borrar Todo</button>
     </div>
@@ -331,13 +336,13 @@
       <li><strong>Personal Day</strong> es mensual: 1 día completo o 2 medios días (AM+PM) por mes, se resetea solo cada mes.</li>
     </ul>
     <p><strong>Feriados:</strong> desplegá la sección "🗓️ Feriados" para cargar las fechas feriadas del año (fecha + nombre). Esos días quedan excluidos automáticamente al registrar.</p>
-    <p><strong>Exportar:</strong> "Copiar Mes/Todo" copia una tabla al portapapeles para pegar en Excel (usando el mes que elijas en el filtro). "Calendario del Año" descarga un archivo con todo el año marcado: verde (vacaciones) o naranja (Personal Day).</p>
+    <p><strong>Exportar:</strong> "Copiar Mes/Año/Todo" copia una tabla al portapapeles para pegar en Excel (usando el mes o año que elijas en los filtros). "Calendario del Año" descarga un archivo con el año elegido marcado: verde (vacaciones) o naranja (Personal Day).</p>
     <p><strong>Importar desde Excel:</strong> subí un archivo con columnas Fecha | Evento | Tiempo para cargar varios registros de una sola vez.</p>
     <p><strong>Backup:</strong> "Descargar Backup" guarda todos tus datos (registros, feriados y configuración) en un archivo. "Cargar Backup" los restaura si cambiás de dispositivo o se borra el navegador.</p>
   </details>
 
   <footer id="teamName">
-    <a href="https://darkpassengerpy.github.io/tools/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+    <a href="https://darkpassenger-tools.netlify.app/" target="_blank">Desarrollado por Dark Passenger Tools</a>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -352,6 +357,7 @@
 
       document.getElementById("fechaTardia").value = hoy;
       document.getElementById("mesFiltro").value = hoy.slice(0, 7);
+      document.getElementById("anioFiltro").value = hoy.slice(0, 4);
       document.getElementById("totalVacaciones2").value = config.totalVacaciones;
       document.getElementById("fechaFeriado").value = hoy;
 
@@ -603,6 +609,10 @@
         const mesSeleccionado = document.getElementById("mesFiltro").value;
         if (!mesSeleccionado) return "";
         listaAExportar = registros.filter(r => r.fecha.startsWith(mesSeleccionado));
+      } else if (tipoExport === "anio") {
+        const anioSeleccionado = document.getElementById("anioFiltro").value;
+        if (!anioSeleccionado) return "";
+        listaAExportar = registros.filter(r => r.fecha.startsWith(anioSeleccionado)).sort((a, b) => a.fecha.localeCompare(b.fecha));
       } else {
         listaAExportar = [...registros].sort((a, b) => a.fecha.localeCompare(b.fecha));
       }
@@ -873,9 +883,9 @@
     }
 
     function exportarCalendarioAnio() {
-      const mesSeleccionado = document.getElementById("mesFiltro").value;
-      if (!mesSeleccionado) return alert("Selecciona un mes primero (se usará el año de esa fecha).");
-      const anio = Number(mesSeleccionado.split("-")[0]);
+      const anioSeleccionado = document.getElementById("anioFiltro").value;
+      if (!anioSeleccionado) return alert("Selecciona un año primero.");
+      const anio = Number(anioSeleccionado);
 
       let html = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; text-align:center;">`;
       html += `<tr><td colspan="26" style="border:none;font-size:18px;font-weight:bold;text-align:center;padding:8px;">${anio}</td></tr>`;

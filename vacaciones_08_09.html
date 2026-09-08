@@ -336,7 +336,7 @@
       <li><strong>Personal Day</strong> es mensual: 1 día completo o 2 medios días (AM+PM) por mes, se resetea solo cada mes.</li>
     </ul>
     <p><strong>Feriados:</strong> desplegá la sección "🗓️ Feriados" para cargar las fechas feriadas del año (fecha + nombre). Esos días quedan excluidos automáticamente al registrar.</p>
-    <p><strong>Exportar:</strong> "Copiar Mes/Año/Todo" copia una tabla al portapapeles para pegar en Excel (usando el mes o año que elijas en los filtros). "Calendario del Año" descarga un archivo con el año elegido marcado: verde (vacaciones) o naranja (Personal Day).</p>
+    <p><strong>Exportar:</strong> "Copiar Mes/Año/Todo" copia una tabla al portapapeles para pegar en Excel (usando el mes o año que elijas en los filtros). "Calendario del Año" descarga un archivo con el año elegido marcado (verde = vacaciones, naranja = Personal Day), junto con una tabla de detalle (Fecha, Tipo, Turno) al lado.</p>
     <p><strong>Importar desde Excel:</strong> subí un archivo con columnas Fecha | Evento | Tiempo para cargar varios registros de una sola vez.</p>
     <p><strong>Backup:</strong> "Descargar Backup" guarda todos tus datos (registros, feriados y configuración) en un archivo. "Cargar Backup" los restaura si cambiás de dispositivo o se borra el navegador.</p>
   </details>
@@ -882,18 +882,43 @@
       URL.revokeObjectURL(url);
     }
 
+    function generarTablaDetalleAnio(anio) {
+      const delAnio = registros
+        .filter(r => r.fecha.startsWith(String(anio)))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+      let html = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; font-size:11px;">`;
+      html += `<tr><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Fecha</td><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Tipo</td><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Turno</td></tr>`;
+
+      delAnio.forEach(item => {
+        const partes = item.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        html += `<tr><td style="border:1px solid #999999;padding:3px 8px;">${fechaFormateada}</td><td style="border:1px solid #999999;padding:3px 8px;">${item.tipo}</td><td style="border:1px solid #999999;padding:3px 8px;">${item.turno}</td></tr>`;
+      });
+
+      html += "</table>";
+      return html;
+    }
+
     function exportarCalendarioAnio() {
       const anioSeleccionado = document.getElementById("anioFiltro").value;
       if (!anioSeleccionado) return alert("Selecciona un año primero.");
       const anio = Number(anioSeleccionado);
 
-      let html = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; text-align:center;">`;
-      html += `<tr><td colspan="26" style="border:none;font-size:18px;font-weight:bold;text-align:center;padding:8px;">${anio}</td></tr>`;
-      html += generarBloqueTresMeses(anio, 1);
-      html += generarBloqueTresMeses(anio, 4);
-      html += generarBloqueTresMeses(anio, 7);
-      html += generarBloqueTresMeses(anio, 10);
-      html += "</table>";
+      let calendario = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; text-align:center;">`;
+      calendario += `<tr><td colspan="26" style="border:none;font-size:18px;font-weight:bold;text-align:center;padding:8px;">${anio}</td></tr>`;
+      calendario += generarBloqueTresMeses(anio, 1);
+      calendario += generarBloqueTresMeses(anio, 4);
+      calendario += generarBloqueTresMeses(anio, 7);
+      calendario += generarBloqueTresMeses(anio, 10);
+      calendario += "</table>";
+
+      const detalle = generarTablaDetalleAnio(anio);
+
+      let html = `<table border="0" style="border-collapse:collapse;"><tr>`;
+      html += `<td style="vertical-align:top;">${calendario}</td>`;
+      html += `<td style="vertical-align:top; padding-left:20px;">${detalle}</td>`;
+      html += `</tr></table>`;
 
       descargarHTMLComoExcel(html, `calendario_anual_${anio}.xls`);
     }

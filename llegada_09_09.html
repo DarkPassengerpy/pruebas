@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Llegadas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="ico.png">
+  <style>
+    body {
+      font-family: "Aptos", Arial, sans-serif;
+      margin: 0; padding: 20px;
+      background: #121212;
+      color: #333;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #262626;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      text-align: center;
+      color: #e0e0e0;
+      box-sizing: border-box;
+    }
+
+    h1 { color: #ff5252; }
+
+    input, select {
+      font-family: "Aptos", Arial, sans-serif;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #1e1e1e;
+      color: #fff;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+
+    button {
+      background: #1976d2; border: none; cursor: pointer;
+      font-size: 14px; color: white; width: 120px;
+      height: 36px; border-radius: 4px; padding: 0;
+      line-height: 1; display: inline-flex;
+      align-items: center; justify-content: center; margin: 6px;
+      transition: 0.3s;
+    }
+    button:hover { background: #0d47a1; }
+
+    .btn-exportar {
+      background: #25d366;
+      color: #fff;
+      width: auto;
+      padding: 0 15px;
+      font-weight: bold;
+    }
+    .btn-exportar:hover { background: #128c7e; }
+
+    .btn-calendario {
+      background: #f57c00;
+      color: #fff;
+      width: auto;
+      padding: 0 15px;
+      font-weight: bold;
+    }
+    .btn-calendario:hover { background: #e65100; }
+    .btn-calendario:disabled {
+      background: #6d4c1f;
+      cursor: not-allowed;
+    }
+
+    .btn-limpiar {
+      background: #d32f2f;
+    }
+    .btn-limpiar:hover { background: #b71c1c; }
+
+    .mes-grupo {
+      background: #1e1e1e;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      overflow: hidden;
+      text-align: left;
+    }
+    summary {
+      padding: 12px 15px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #81c784;
+      background: #222;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+    }
+    summary:hover {
+      background: #2a2a2a;
+    }
+    .mes-contenido {
+      padding: 10px;
+    }
+
+    table { width: 100%; border-collapse: collapse; color: #e0e0e0; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #444; color: #e0e0e0; font-size: 13px; }
+    td:last-child { text-align: right; }
+
+    .delete-btn {
+      background: #f44336; border: none; cursor: pointer;
+      font-size: 16px; color: white; width: 28px; height: 28px;
+      border-radius: 4px; padding: 0; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .delete-btn:hover { background: #d32f2f; }
+
+    .export-section {
+      margin-top: 20px; padding: 15px;
+      background: #1e1e1e; border-radius: 8px; text-align: left;
+    }
+    .export-section h3 { color: #81c784; margin-top: 0; font-size: 16px; }
+    .export-section label { font-size: 13px; display: block; margin-bottom: 4px; text-align: left; }
+
+    .bloque {
+      max-width: 500px;
+      width: 100%;
+      margin: 15px auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: #262626;
+      box-sizing: border-box;
+      text-align: left;
+      color: #e0e0e0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .bloque h2 {
+      margin-top: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+      color: #ff5252;
+    }
+    .bloque p {
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 8px 0 0;
+      color: #ccc;
+    }
+
+    footer#teamName {
+      text-align: center;
+      margin-top: 30px;
+      font-family: "Aptos", Arial, sans-serif;
+      font-size: 15px;
+      font-weight: normal;
+      color: #aaa;
+    }
+    footer#teamName a {
+      color: #81c784;
+      text-decoration: none;
+    }
+    footer#teamName a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏱️ Registro de Llegadas</h1>
+
+    <input type="date" id="fechaTardia" onchange="actualizarDiaPreview()">
+    <div id="previewDia" style="font-size: 13px; color: #81c784; margin-bottom: 5px; font-weight: bold;"></div>
+    
+    <input type="text" id="horaTardia" placeholder="Ej: 07:45" maxlength="5">
+    
+    <button onclick="registrarTardia()">Registrar</button>
+
+    <div style="margin-top: 10px; font-size: 14px; color: #aaa;" id="totalGeneral"></div>
+
+    <div id="listaRegistros"></div>
+
+    <!-- Sección de Exportar Registros para Excel -->
+    <div class="export-section">
+      <h3>📤 Exportar Registros (Excel)</h3>
+      <div style="margin-bottom: 10px;">
+        <label for="mesFiltro">Filtrar por mes:</label>
+        <input type="month" id="mesFiltro">
+      </div>
+      <div style="text-align: center;">
+        <button class="btn-exportar" onclick="exportar('mes')">Copiar Mes 📋</button>
+        <button class="btn-exportar" onclick="exportar('todo')">Copiar Todo 📋</button>
+      </div>
+
+      <div style="margin-top: 14px; margin-bottom: 10px;">
+        <label for="anioExportar">Año del calendario:</label>
+        <select id="anioExportar"></select>
+      </div>
+      <div style="text-align: center;">
+        <button class="btn-calendario" id="btnExportarAnual" onclick="exportarCalendarioAnioExcel()">📅 Calendario Anual (Excel)</button>
+      </div>
+    </div>
+
+    <!-- Sección de Copia de Seguridad (Backup) -->
+    <div class="export-section">
+      <h3>💾 Copia de Seguridad (Backup)</h3>
+      <p style="font-size: 12px; color: #aaa; margin-top: 0; margin-bottom: 10px;">Guardá un archivo de respaldo en tu PC para no perder datos si el navegador se limpia.</p>
+      <div style="text-align: center; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+        <button class="btn-exportar" onclick="descargarBackup()">📥 Descargar Backup</button>
+        <label class="btn-exportar" style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 15px; border-radius: 4px; margin: 6px;">
+          📤 Cargar Backup <input type="file" id="inputBackup" accept=".json" style="display: none;" onchange="importarBackup(event)">
+        </label>
+      </div>
+    </div>
+
+    <div style="margin-top: 15px;">
+      <button class="btn-limpiar" onclick="borrarTodo()">Borrar Todo</button>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h2>ℹ️ ¿Qué es "⏱️ Registro de Llegadas"?</h2>
+    <p>Es una herramienta web diseñada para llevar el control diario de tus llegadas tarde digitando la hora libremente con formateo automático. Permite registrar fechas, visualizar los registros agrupados por mes, exportar directamente a Excel y realizar copias de seguridad en archivo.</p>
+  </div>
+
+  <footer id="teamName">
+    <a href="https://darkpassenger-tools.netlify.app/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script>
+    let registros = JSON.parse(localStorage.getItem("registrosTardias")) || [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const hoy = new Date().toISOString().split("T")[0];
+      const horaActual = new Date().toTimeString().slice(0, 5);
+      
+      document.getElementById("fechaTardia").value = hoy;
+      document.getElementById("horaTardia").value = horaActual;
+      document.getElementById("mesFiltro").value = hoy.slice(0, 7);
+
+      poblarSelectorAnio();
+      actualizarDiaPreview();
+      mostrarRegistros();
+    });
+
+    // Formateo automático de la hora para mantener siempre el `:`
+    const inputHora = document.getElementById("horaTardia");
+    inputHora.addEventListener("input", function(e) {
+      let valor = this.value.replace(/\D/g, "");
+      if (valor.length > 4) valor = valor.slice(0, 4);
+      
+      if (valor.length >= 3) {
+        this.value = valor.slice(0, 2) + ":" + valor.slice(2);
+      } else {
+        this.value = valor;
+      }
+    });
+
+    // Arma el selector de año con un rango razonable alrededor del año actual,
+    // asegurando que se incluyan también los años con registros cargados.
+    function poblarSelectorAnio() {
+      const anioActual = new Date().getFullYear();
+      let anios = new Set();
+      for (let a = anioActual - 3; a <= anioActual + 2; a++) anios.add(a);
+      registros.forEach(r => anios.add(Number(r.fecha.slice(0, 4))));
+
+      const select = document.getElementById("anioExportar");
+      select.innerHTML = "";
+      [...anios].sort((a, b) => a - b).forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a;
+        opt.textContent = a;
+        if (a === anioActual) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function obtenerNombreDia(fechaStr) {
+      const [anio, mes, dia] = fechaStr.split("-");
+      const fecha = new Date(anio, mes - 1, dia);
+      const opciones = { weekday: 'long' };
+      let nombre = fecha.toLocaleDateString('es-ES', opciones);
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function actualizarDiaPreview() {
+      const fechaVal = document.getElementById("fechaTardia").value;
+      if (fechaVal) {
+        const diaSemana = obtenerNombreDia(fechaVal);
+        document.getElementById("previewDia").innerText = `📅 ${diaSemana}`;
+      } else {
+        document.getElementById("previewDia").innerText = "";
+      }
+    }
+
+    function guardarDatos() {
+      localStorage.setItem("registrosTardias", JSON.stringify(registros));
+    }
+
+    function registrarTardia() {
+      const fecha = document.getElementById("fechaTardia").value;
+      const horaInput = document.getElementById("horaTardia").value.trim();
+      
+      if (!fecha) return alert("Selecciona una fecha válida");
+
+      if (registros.some(r => r.fecha === fecha)) {
+        return alert("¡Ese día ya está registrado!");
+      }
+
+      const hora = horaInput !== "" ? horaInput : "No especificada";
+
+      registros.push({ fecha, hora });
+      registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+      guardarDatos();
+      mostrarRegistros();
+      poblarSelectorAnio();
+
+      document.getElementById("mesFiltro").value = fecha.slice(0, 7);
+    }
+
+    function eliminarRegistro(fechaAEliminar) {
+      registros = registros.filter(r => r.fecha !== fechaAEliminar);
+      guardarDatos();
+      mostrarRegistros();
+    }
+
+    function obtenerNombreMes(anioMes) {
+      const [anio, mes] = anioMes.split("-");
+      const fecha = new Date(anio, mes - 1, 1);
+      const nombre = fecha.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function generarTextoExcel(tipo) {
+      let listaAExportar = [];
+
+      if (tipo === "mes") {
+        const mesSeleccionado = document.getElementById("mesFiltro").value;
+        if (!mesSeleccionado) return "";
+        listaAExportar = registros.filter(r => r.fecha.startsWith(mesSeleccionado));
+      } else {
+        listaAExportar = [...registros].sort((a, b) => a.fecha.localeCompare(b.fecha));
+      }
+
+      if (listaAExportar.length === 0) return "No hay registros en este período.";
+
+      let texto = "Día\tFecha\tHora\n";
+      listaAExportar.forEach(item => {
+        const partes = item.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const diaSemana = obtenerNombreDia(item.fecha);
+        texto += `${diaSemana}\t${fechaFormateada}\t${item.hora}\n`;
+      });
+      return texto;
+    }
+
+    function mostrarRegistros() {
+      const div = document.getElementById("listaRegistros");
+      const totalGeneralDiv = document.getElementById("totalGeneral");
+      
+      totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
+
+      if (registros.length === 0) {
+        div.innerHTML = "<p style='color: #888; margin-top: 15px;'>No hay registros todavía.</p>";
+        return;
+      }
+
+      let agrupados = {};
+      registros.forEach(item => {
+        const mesKey = item.fecha.slice(0, 7);
+        if (!agrupados[mesKey]) {
+          agrupados[mesKey] = [];
+        }
+        agrupados[mesKey].push(item);
+      });
+
+      const mesesOrdenados = Object.keys(agrupados).sort().reverse();
+      const mesActualKey = new Date().toISOString().slice(0, 7);
+
+      let html = "";
+      mesesOrdenados.forEach(mesKey => {
+        const diasDelMes = agrupados[mesKey].sort((a, b) => b.fecha.localeCompare(a.fecha));
+        const nombreMes = obtenerNombreMes(mesKey);
+        const isOpen = mesKey === mesActualKey ? "open" : "";
+
+        html += `
+          <details class="mes-grupo" ${isOpen}>
+            <summary>
+              <span>📅 ${nombreMes}</span>
+              <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${diasDelMes.length} registros</span>
+            </summary>
+            <div class="mes-contenido">
+              <table>`;
+        
+        diasDelMes.forEach(item => {
+          const partes = item.fecha.split("-");
+          const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+          const diaSemana = obtenerNombreDia(item.fecha);
+          
+          html += `
+                <tr>
+                  <td>🔹 <strong>${diaSemana}</strong> ${fechaFormateada}<br><span style="color: #aaa; font-size: 11px;">🕒 ${item.hora}</span></td>
+                  <td><button class="delete-btn" onclick="eliminarRegistro('${item.fecha}')">🗑️</button></td>
+                </tr>`;
+        });
+
+        html += `
+              </table>
+            </div>
+          </details>`;
+      });
+
+      div.innerHTML = html;
+    }
+
+    function exportar(tipo) {
+      const texto = generarTextoExcel(tipo);
+      if (!texto || texto.startsWith("No hay")) {
+        return alert("No hay registros para exportar en el período seleccionado.");
+      }
+
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("¡Copiado para Excel! Ya podés pegarlo (Ctrl + V) en tu planilla ✅");
+      }).catch(() => {
+        alert("Error al copiar automáticamente.");
+      });
+    }
+
+    // ============ CALENDARIO ANUAL EN EXCEL REAL (ExcelJS) ============
+    // La semana arranca en Domingo (D L M X J V S), con columna de
+    // número de semana, igual que la plantilla de referencia.
+    // Disposición: 3 meses por fila, 4 filas de bloques (12 meses).
+
+    const DIAS_SEMANA_DOM = ["D", "L", "M", "X", "J", "V", "S"];
+
+    // Número de semana continuo dentro del año (semana que contiene el
+    // 1 de enero = semana 1). Una semana partida entre dos meses tiene
+    // el mismo número en ambos meses, igual que en la plantilla.
+    function numeroSemanaAnio(fecha, anio) {
+      const inicioAnio = new Date(anio, 0, 1);
+      const diaSemanaInicio = inicioAnio.getDay(); // 0 = Domingo
+      const primerDomingo = new Date(anio, 0, 1 - diaSemanaInicio);
+      const diffDias = Math.round((fecha - primerDomingo) / 86400000);
+      return Math.floor(diffDias / 7) + 1;
+    }
+
+    // Arma las semanas (Domingo a Sábado) que cubren un mes. Cada
+    // semana trae su número y los 7 días (null si el día es de otro mes).
+    function generarSemanasMes(anio, mes) {
+      const primerDia = new Date(anio, mes - 1, 1);
+      const ultimoDia = new Date(anio, mes, 0);
+
+      let inicioSemana = new Date(primerDia);
+      inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay());
+
+      let semanas = [];
+      while (inicioSemana <= ultimoDia) {
+        const weekNum = numeroSemanaAnio(inicioSemana, anio);
+        let dias = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(inicioSemana);
+          d.setDate(d.getDate() + i);
+          dias.push(d.getMonth() === mes - 1 ? d.getDate() : null);
+        }
+        semanas.push({ weekNum, dias });
+        inicioSemana.setDate(inicioSemana.getDate() + 7);
+      }
+      return semanas;
+    }
+
+    // Columna (1-indexada) donde arranca cada mes de un bloque de 3
+    // (esa columna es la del número de semana; el mes ocupa esa + 7 más).
+    const COL_INICIO_MES = [1, 10, 19];
+    const COLUMNAS_TOTALES = 26; // 3 * (1 + 7) + 2 columnas espaciadoras
+
+    function agregarBloqueTresMesesExcel(ws, anio, mesInicio, filaInicio, bordeCompleto) {
+      const meses = [mesInicio, mesInicio + 1, mesInicio + 2];
+      const datosMeses = meses.map(mes => {
+        const mesKey = `${anio}-${String(mes).padStart(2, "0")}`;
+        return {
+          mes,
+          nombreMes: obtenerNombreMes(mesKey),
+          semanas: generarSemanasMes(anio, mes),
+          fechasRegistradas: new Set(
+            registros.filter(r => r.fecha.startsWith(mesKey)).map(r => r.fecha)
+          )
+        };
+      });
+
+      const maxSemanas = Math.max(...datosMeses.map(m => m.semanas.length));
+      let fila = filaInicio;
+
+      // Fila de título de cada mes
+      datosMeses.forEach((m, idx) => {
+        const colBase = COL_INICIO_MES[idx];
+        ws.mergeCells(fila, colBase + 1, fila, colBase + 7);
+        for (let c = colBase + 1; c <= colBase + 7; c++) {
+          const celda = ws.getCell(fila, c);
+          celda.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+          celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } };
+          celda.alignment = { horizontal: "center", vertical: "middle" };
+          celda.border = bordeCompleto;
+        }
+        ws.getCell(fila, colBase + 1).value = m.nombreMes;
+      });
+      fila++;
+
+      // Fila de encabezado de días (D L M X J V S)
+      datosMeses.forEach((m, idx) => {
+        const colBase = COL_INICIO_MES[idx];
+        DIAS_SEMANA_DOM.forEach((d, i) => {
+          const celda = ws.getCell(fila, colBase + 1 + i);
+          celda.value = d;
+          celda.font = { bold: true };
+          celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDDDDDD" } };
+          celda.alignment = { horizontal: "center" };
+          celda.border = bordeCompleto;
+        });
+      });
+      fila++;
+
+      // Filas de semanas
+      for (let i = 0; i < maxSemanas; i++) {
+        datosMeses.forEach((m, idx) => {
+          const colBase = COL_INICIO_MES[idx];
+          const semana = m.semanas[i];
+
+          // Columna de número de semana: sin borde, a propósito
+          const celdaSemana = ws.getCell(fila, colBase);
+          if (semana) {
+            celdaSemana.value = semana.weekNum;
+            celdaSemana.font = { size: 9, color: { argb: "FF888888" } };
+            celdaSemana.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0F0F0" } };
+            celdaSemana.alignment = { horizontal: "center" };
+          }
+
+          for (let d = 0; d < 7; d++) {
+            const celda = ws.getCell(fila, colBase + 1 + d);
+            celda.border = bordeCompleto;
+            celda.alignment = { horizontal: "center" };
+            if (semana && semana.dias[d] !== null) {
+              const dia = semana.dias[d];
+              celda.value = dia;
+              const fechaStr = `${anio}-${String(m.mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+              if (m.fechasRegistradas.has(fechaStr)) {
+                celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFF0000" } };
+                celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+              }
+            }
+          }
+        });
+        fila++;
+      }
+
+      return fila;
+    }
+
+    async function exportarCalendarioAnioExcel() {
+      const anio = Number(document.getElementById("anioExportar").value);
+      if (!anio) return alert("Selecciona un año.");
+
+      const btn = document.getElementById("btnExportarAnual");
+      const textoOriginal = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = "Generando...";
+
+      try {
+        const workbook = new ExcelJS.Workbook();
+        const ws = workbook.addWorksheet(`${anio}`);
+
+        const bordeFino = { style: "thin", color: { argb: "FF999999" } };
+        const bordeCompleto = { top: bordeFino, left: bordeFino, bottom: bordeFino, right: bordeFino };
+
+        // Título del año
+        ws.mergeCells(1, 1, 1, COLUMNAS_TOTALES);
+        const celdaAnio = ws.getCell(1, 1);
+        celdaAnio.value = anio;
+        celdaAnio.font = { bold: true, size: 16 };
+        celdaAnio.alignment = { horizontal: "center" };
+
+        let fila = 2;
+        [1, 4, 7, 10].forEach(mesInicio => {
+          fila = agregarBloqueTresMesesExcel(ws, anio, mesInicio, fila, bordeCompleto);
+          fila++; // fila en blanco entre bloques
+        });
+
+        // Anchos de columna (más angostas las de semana y las espaciadoras)
+        for (let c = 1; c <= COLUMNAS_TOTALES; c++) {
+          const esColumnaSemana = COL_INICIO_MES.includes(c);
+          const esEspaciador = c === 9 || c === 18;
+          ws.getColumn(c).width = esEspaciador ? 2 : (esColumnaSemana ? 4 : 5);
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `calendario_anual_${anio}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert("Error al generar el Excel. Probá de nuevo.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+      }
+    }
+
+    // Funciones para Backup (Exportar / Importar Archivo JSON)
+    function descargarBackup() {
+      if (registros.length === 0) {
+        return alert("No hay registros para respaldar.");
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `backup_llegada_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importarBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const datosCargados = JSON.parse(e.target.result);
+          if (Array.isArray(datosCargados)) {
+            if (confirm(`Se encontraron ${datosCargados.length} registros en el archivo. ¿Deseas reemplazar todos tus datos actuales? (Aceptar = Reemplazar, Cancelar = Combinar con los existentes)`)) {
+              registros = datosCargados;
+            } else {
+              datosCargados.forEach(nuevo => {
+                if (!registros.some(r => r.fecha === nuevo.fecha)) {
+                  registros.push(nuevo);
+                }
+              });
+            }
+            registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+            guardarDatos();
+            mostrarRegistros();
+            poblarSelectorAnio();
+            alert("¡Copia de seguridad restaurada con éxito! ✅");
+          } else {
+            alert("El archivo no tiene el formato correcto.");
+          }
+        } catch (err) {
+          alert("Error al leer el archivo JSON.");
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    }
+
+    function borrarTodo() {
+      if (confirm("¿Estás seguro de borrar todos los registros?")) {
+        registros = [];
+        localStorage.removeItem("registrosTardias");
+        mostrarRegistros();
+        poblarSelectorAnio();
+      }
+    }
+  </script>
+</body>
+</html>

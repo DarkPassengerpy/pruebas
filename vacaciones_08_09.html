@@ -146,6 +146,18 @@
     }
     .export-section h3 { color: #81c784; margin-top: 0; font-size: 16px; }
 
+    .warning-note {
+      margin-top: 15px;
+      padding: 10px 12px;
+      background-color: #2a2415;
+      border: 1px solid #66521a;
+      border-radius: 6px;
+      font-size: 0.8em;
+      color: #d1b06a;
+      text-align: center;
+      line-height: 1.4;
+    }
+
     .bloque {
       max-width: 500px;
       width: 100%;
@@ -321,6 +333,10 @@
 
     <div style="margin-top: 15px;">
       <button class="btn-limpiar" onclick="borrarTodo()">Borrar Todo</button>
+    </div>
+
+    <div class="warning-note">
+      ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Puedes limpiar el historial y la caché sin problemas, pero borrar <strong>Cookies / Datos de sitios</strong> eliminará tus registros. Usa la Copia de Seguridad para resguardar tus datos.
     </div>
   </div>
 
@@ -792,7 +808,7 @@
       // medio día: color más claro, específico para AM/PM
       let colorMedioDia = tieneVac ? "#6DC971" : "#FFBB57";
       if (tieneVac && tienePD) colorMedioDia = "#9c27b0";
-      return `border:1px solid #999999;background:${colorMedioDia};color:#000000;font-weight:bold;padding:14px;`;
+      return `border:1px solid #999999;background:${colorMedioDia};color:#ffffff;font-weight:bold;padding:14px;`;
     }
 
     function generarTablaCalendarioMes(anio, mes) {
@@ -889,8 +905,18 @@
         .filter(r => r.fecha.startsWith(String(anio)))
         .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
+      const totalVac = delAnio
+        .filter(r => r.tipo === "Vacaciones")
+        .reduce((acc, r) => acc + valorTurno(r.turno), 0);
+      const totalPD = delAnio
+        .filter(r => r.tipo === "Personal Day")
+        .reduce((acc, r) => acc + valorTurno(r.turno), 0);
+
       let html = `<table border="0" style="border-collapse:collapse; font-family:Aptos, Arial, sans-serif; font-size:11px;">`;
       html += `<tr><td colspan="3" style="border:none;padding:8px;">&nbsp;</td></tr>`;
+      html += `<tr><td style="border:1px solid #999999;padding:4px 8px;font-weight:bold;">Total de Vacaciones:</td><td colspan="2" style="border:1px solid #999999;padding:4px 8px;">${totalVac}</td></tr>`;
+      html += `<tr><td style="border:1px solid #999999;padding:4px 8px;font-weight:bold;">Total de Personal Day:</td><td colspan="2" style="border:1px solid #999999;padding:4px 8px;">${totalPD}</td></tr>`;
+      html += `<tr><td colspan="3" style="border:none;padding:4px;">&nbsp;</td></tr>`;
       html += `<tr><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Fecha</td><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Tipo</td><td style="border:1px solid #999999;background:#333333;color:#ffffff;font-weight:bold;padding:4px 8px;">Turno</td></tr>`;
 
       delAnio.forEach(item => {

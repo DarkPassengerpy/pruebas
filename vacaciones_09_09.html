@@ -894,11 +894,15 @@
       let filaDetalle = 3;
       sheet.getCell(filaDetalle, colDetalle).value = "Total de Vacaciones:";
       sheet.getCell(filaDetalle, colDetalle).font = { bold: true };
+      sheet.getCell(filaDetalle, colDetalle).alignment = { horizontal: "center" };
       sheet.getCell(filaDetalle, colDetalle + 1).value = totalVac;
+      sheet.getCell(filaDetalle, colDetalle + 1).alignment = { horizontal: "center" };
       filaDetalle++;
       sheet.getCell(filaDetalle, colDetalle).value = "Total de Personal Day:";
       sheet.getCell(filaDetalle, colDetalle).font = { bold: true };
+      sheet.getCell(filaDetalle, colDetalle).alignment = { horizontal: "center" };
       sheet.getCell(filaDetalle, colDetalle + 1).value = totalPD;
+      sheet.getCell(filaDetalle, colDetalle + 1).alignment = { horizontal: "center" };
       filaDetalle += 2;
 
       ["Fecha", "Tipo", "Turno"].forEach((titulo, i) => {
@@ -907,6 +911,7 @@
         celda.font = { bold: true, color: { argb: COLOR_HEADER_TXT } };
         celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLOR_HEADER_BG } };
         celda.border = BORDES;
+        celda.alignment = { horizontal: "center" };
       });
       filaDetalle++;
 
@@ -916,7 +921,11 @@
         sheet.getCell(filaDetalle, colDetalle).value = fechaFormateada;
         sheet.getCell(filaDetalle, colDetalle + 1).value = item.tipo;
         sheet.getCell(filaDetalle, colDetalle + 2).value = item.turno;
-        for (let c = 0; c < 3; c++) sheet.getCell(filaDetalle, colDetalle + c).border = BORDES;
+        for (let c = 0; c < 3; c++) {
+          const celda = sheet.getCell(filaDetalle, colDetalle + c);
+          celda.border = BORDES;
+          celda.alignment = { horizontal: "center" };
+        }
         filaDetalle++;
       });
 

@@ -327,8 +327,11 @@
     </details>
 
     <div class="config-box">
-      <label for="totalVacaciones2">Días total de vacaciones asignados:</label>
-      <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="guardarConfig(); actualizarContadores();">
+      <label for="totalVacaciones2">Saldo inicial de vacaciones:</label>
+      <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="actualizarSaldoInicial();">
+      <label for="fechaIngreso" style="margin-top:10px;">Fecha de ingreso a la empresa:</label>
+      <input type="date" id="fechaIngreso" onchange="guardarFechaIngreso();">
+      <p style="font-size: 11px; color: #888; margin: 6px 0 0;">El saldo inicial es lo que tenés disponible hoy. Con la fecha de ingreso, el sistema suma automáticamente los días nuevos en cada aniversario (12/18/30 según la antigüedad), sin que tengas que tocar nada.</p>
     </div>
 
     <div style="margin-top: 15px;">
@@ -345,10 +348,10 @@
     <p><strong>Registrar un día:</strong> elegí el tipo (Vacaciones o Personal Day), la fecha y el turno (Día completo, AM o PM), y presioná "Registrar". Solo se pueden cargar días de lunes a viernes que no sean feriados.</p>
     <p><strong>Registrar varios días juntos:</strong> tildá "Registrar un rango de fechas", elegí desde/hasta y se cargan automáticamente todos los días hábiles del rango como día completo (saltando fines de semana y feriados).</p>
     <p><strong>Nota opcional:</strong> podés agregar un texto corto a cada registro (ej: "viaje", "trámite") para recordar el motivo.</p>
-    <p><strong>Días total de vacaciones asignados:</strong> es la cantidad de días que tenés disponibles para usar. No es algo que se carga una sola vez: sumale ahí mismo cada vez que te asignen vacaciones nuevas (por ejemplo, al empezar un nuevo período o si te dan días extra), y el número total va a ir subiendo. El sistema resta automáticamente lo que ya usaste para mostrarte cuántos te quedan.</p>
+    <p><strong>Saldo inicial de vacaciones:</strong> cargá acá lo que realmente tenés disponible <strong>hoy</strong> (a la fecha en que lo estás llenando). Si además completás la "Fecha de ingreso a la empresa", el sistema suma solo, en cada aniversario laboral, los días que correspondan según la antigüedad (12 días/año del 1° al 5° año, 18 días/año del 6° al 10°, 30 días/año del 11° en adelante) — no hace falta que vuelvas a tocar este campo cada año. Si en algún momento corregís el saldo inicial, esa fecha se actualiza sola y el cálculo automático arranca a contar de nuevo desde ahí, para no duplicar.</p>
     <p><strong>Contadores:</strong></p>
     <ul>
-      <li><strong>Vacaciones disponibles</strong> = lo que cargaste en "Días total de vacaciones asignados" menos lo que ya usaste. Puede quedar en negativo si te pasás, y se marca en rojo como aviso.</li>
+      <li><strong>Vacaciones disponibles</strong> = saldo inicial + días sumados automáticamente por antigüedad − lo que ya registraste. Puede quedar en negativo si te pasás, y se marca en rojo como aviso.</li>
       <li><strong>Personal Day</strong> es mensual: 1 día completo o 2 medios días (AM+PM) por mes, se resetea solo cada mes.</li>
     </ul>
     <p><strong>Feriados:</strong> desplegá la sección "🗓️ Feriados" para cargar las fechas feriadas del año (fecha + nombre). Esos días quedan excluidos automáticamente al registrar.</p>
@@ -366,8 +369,17 @@
 
   <script>
     let registros = JSON.parse(localStorage.getItem("registrosVacaciones")) || [];
-    let config = JSON.parse(localStorage.getItem("configVacaciones")) || { totalVacaciones: 0 };
+    let config = JSON.parse(localStorage.getItem("configVacaciones")) || { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: null };
     let feriados = JSON.parse(localStorage.getItem("feriadosVacaciones")) || [];
+
+    // Migración: versiones anteriores guardaban "totalVacaciones" en vez de "saldoInicial"
+    if (config.saldoInicial === undefined && config.totalVacaciones !== undefined) {
+      config.saldoInicial = config.totalVacaciones;
+      delete config.totalVacaciones;
+    }
+    if (!config.fechaSaldoInicial) {
+      config.fechaSaldoInicial = new Date().toISOString().split("T")[0];
+    }
 
     document.addEventListener("DOMContentLoaded", () => {
       const hoy = new Date().toISOString().split("T")[0];
@@ -375,9 +387,11 @@
       document.getElementById("fechaTardia").value = hoy;
       document.getElementById("mesFiltro").value = hoy.slice(0, 7);
       document.getElementById("anioFiltro").value = hoy.slice(0, 4);
-      document.getElementById("totalVacaciones2").value = config.totalVacaciones;
+      document.getElementById("totalVacaciones2").value = config.saldoInicial || 0;
+      document.getElementById("fechaIngreso").value = config.fechaIngreso || "";
       document.getElementById("fechaFeriado").value = hoy;
 
+      guardarConfigCompleta();
       actualizarDiaPreview();
       mostrarRegistros();
       actualizarContadores();
@@ -388,11 +402,56 @@
       localStorage.setItem("registrosVacaciones", JSON.stringify(registros));
     }
 
-    function guardarConfig() {
-      const valor = event.target.value;
-      config.totalVacaciones = parseFloat(valor) || 0;
-      document.getElementById("totalVacaciones2").value = config.totalVacaciones;
+    function guardarConfigCompleta() {
       localStorage.setItem("configVacaciones", JSON.stringify(config));
+    }
+
+    // Cada vez que se corrige el saldo inicial, se toma como "verdad" a partir de hoy:
+    // el cálculo automático de días por antigüedad solo suma aniversarios posteriores a esta fecha.
+    function actualizarSaldoInicial() {
+      const valor = document.getElementById("totalVacaciones2").value;
+      config.saldoInicial = parseFloat(valor) || 0;
+      config.fechaSaldoInicial = new Date().toISOString().split("T")[0];
+      guardarConfigCompleta();
+      actualizarContadores();
+    }
+
+    function guardarFechaIngreso() {
+      config.fechaIngreso = document.getElementById("fechaIngreso").value || null;
+      guardarConfigCompleta();
+      actualizarContadores();
+    }
+
+    // Cuántos días corresponden por el aniversario número "n" (1er año cumplido, 2do, etc.)
+    function diasPorAniversario(n) {
+      if (n <= 5) return 12;
+      if (n <= 10) return 18;
+      return 30;
+    }
+
+    // Días acumulados automáticamente por antigüedad desde que se fijó el saldo inicial.
+    // Solo cuenta los aniversarios (fecha de ingreso + n años) que ya pasaron, y que son
+    // posteriores a la fecha en que se fijó/corrigió el saldo inicial (para no duplicar).
+    function calcularDiasAcumuladosAutomaticos() {
+      if (!config.fechaIngreso) return 0;
+
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      const [iy, im, id] = config.fechaIngreso.split("-").map(Number);
+      const refStr = config.fechaSaldoInicial || config.fechaIngreso;
+      const [ry, rm, rd] = refStr.split("-").map(Number);
+      const referencia = new Date(ry, rm - 1, rd);
+
+      let total = 0;
+      for (let n = 1; n <= 100; n++) {
+        const aniversario = new Date(iy + n, im - 1, id);
+        if (aniversario > hoy) break;
+        if (aniversario > referencia) {
+          total += diasPorAniversario(n);
+        }
+      }
+      return total;
     }
 
     function guardarFeriados() {
@@ -493,7 +552,8 @@
 
     function actualizarContadores() {
       const usadasVac = diasUsadosVacaciones();
-      const disponibles = (config.totalVacaciones || 0) - usadasVac;
+      const acumuladoAuto = calcularDiasAcumuladosAutomaticos();
+      const disponibles = (config.saldoInicial || 0) + acumuladoAuto - usadasVac;
       const numVacEl = document.getElementById("numVacaciones");
       numVacEl.innerText = disponibles;
       numVacEl.classList.toggle("negativo", disponibles <= 0);
@@ -1134,8 +1194,14 @@
             feriados.sort((a, b) => a.fecha.localeCompare(b.fecha));
             guardarDatos();
             guardarFeriados();
-            localStorage.setItem("configVacaciones", JSON.stringify(config));
-            document.getElementById("totalVacaciones2").value = config.totalVacaciones || 0;
+            if (config.saldoInicial === undefined && config.totalVacaciones !== undefined) {
+              config.saldoInicial = config.totalVacaciones;
+              delete config.totalVacaciones;
+            }
+            if (!config.fechaSaldoInicial) config.fechaSaldoInicial = new Date().toISOString().split("T")[0];
+            guardarConfigCompleta();
+            document.getElementById("totalVacaciones2").value = config.saldoInicial || 0;
+            document.getElementById("fechaIngreso").value = config.fechaIngreso || "";
             mostrarRegistros();
             actualizarContadores();
             mostrarFeriados();

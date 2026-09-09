@@ -372,7 +372,6 @@
     let config = JSON.parse(localStorage.getItem("configVacaciones")) || { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: null };
     let feriados = JSON.parse(localStorage.getItem("feriadosVacaciones")) || [];
 
-    // Migración: versiones anteriores guardaban "totalVacaciones" en vez de "saldoInicial"
     if (config.saldoInicial === undefined && config.totalVacaciones !== undefined) {
       config.saldoInicial = config.totalVacaciones;
       delete config.totalVacaciones;
@@ -406,8 +405,6 @@
       localStorage.setItem("configVacaciones", JSON.stringify(config));
     }
 
-    // Cada vez que se corrige el saldo inicial, se toma como "verdad" a partir de hoy:
-    // el cálculo automático de días por antigüedad solo suma aniversarios posteriores a esta fecha.
     function actualizarSaldoInicial() {
       const valor = document.getElementById("totalVacaciones2").value;
       config.saldoInicial = parseFloat(valor) || 0;
@@ -422,7 +419,6 @@
       actualizarContadores();
     }
 
-    // Cuántos días corresponden por el aniversario número "n" (1er año cumplido, 2do, etc.)
     function diasPorAniversario(n) {
       if (n <= 5) return 12;
       if (n <= 10) return 18;
@@ -1207,9 +1203,16 @@
     }
 
     function borrarTodo() {
-      if (confirm("¿Estás seguro de borrar todos los registros?")) {
+      if (confirm("¿Estás seguro de borrar todos los registros, el saldo inicial y la fecha de ingreso?")) {
         registros = [];
+        config = { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: new Date().toISOString().split("T")[0] };
+
         localStorage.removeItem("registrosVacaciones");
+        localStorage.removeItem("configVacaciones");
+
+        document.getElementById("totalVacaciones2").value = 0;
+        document.getElementById("fechaIngreso").value = "";
+
         mostrarRegistros();
         actualizarContadores();
       }

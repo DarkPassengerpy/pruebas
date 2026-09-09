@@ -177,6 +177,8 @@
     <div id="previewDia" style="font-size: 13px; color: #81c784; margin-bottom: 5px; font-weight: bold;"></div>
     
     <input type="text" id="horaTardia" placeholder="Ej: 07:45" maxlength="5">
+
+    <input type="text" id="motivoTardia" placeholder="Motivo (opcional)">
     
     <button onclick="registrarTardia()">Registrar</button>
 
@@ -305,6 +307,7 @@
     function registrarTardia() {
       const fecha = document.getElementById("fechaTardia").value;
       const horaInput = document.getElementById("horaTardia").value.trim();
+      const motivoInput = document.getElementById("motivoTardia").value.trim();
       
       if (!fecha) return alert("Selecciona una fecha válida");
 
@@ -313,14 +316,16 @@
       }
 
       const hora = horaInput !== "" ? horaInput : "No especificada";
+      const motivo = motivoInput !== "" ? motivoInput : "";
 
-      registros.push({ fecha, hora });
+      registros.push({ fecha, hora, motivo });
       registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
       guardarDatos();
       mostrarRegistros();
       poblarSelectorAnio();
 
       document.getElementById("mesFiltro").value = fecha.slice(0, 7);
+      document.getElementById("motivoTardia").value = "";
     }
 
     function eliminarRegistro(fechaAEliminar) {
@@ -349,12 +354,12 @@
 
       if (listaAExportar.length === 0) return "No hay registros en este período.";
 
-      let texto = "Día\tFecha\tHora\n";
+      let texto = "Día\tFecha\tHora\tMotivo\n";
       listaAExportar.forEach(item => {
         const partes = item.fecha.split("-");
         const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
         const diaSemana = obtenerNombreDia(item.fecha);
-        texto += `${diaSemana}\t${fechaFormateada}\t${item.hora}\n`;
+        texto += `${diaSemana}\t${fechaFormateada}\t${item.hora}\t${item.motivo || ""}\n`;
       });
       return texto;
     }
@@ -401,10 +406,11 @@
           const partes = item.fecha.split("-");
           const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
           const diaSemana = obtenerNombreDia(item.fecha);
+          const lineaMotivo = item.motivo ? `<br><span style="color: #aaa; font-size: 11px;">📝 ${item.motivo}</span>` : "";
           
           html += `
                 <tr>
-                  <td>🔹 <strong>${diaSemana}</strong> ${fechaFormateada}<br><span style="color: #aaa; font-size: 11px;">🕒 ${item.hora}</span></td>
+                  <td>🔹 <strong>${diaSemana}</strong> ${fechaFormateada}<br><span style="color: #aaa; font-size: 11px;">🕒 ${item.hora}</span>${lineaMotivo}</td>
                   <td><button class="delete-btn" onclick="eliminarRegistro('${item.fecha}')">🗑️</button></td>
                 </tr>`;
         });
@@ -477,6 +483,7 @@
     // (esa columna es la del número de semana; el mes ocupa esa + 7 más).
     const COL_INICIO_MES = [1, 10, 19];
     const COLUMNAS_TOTALES = 26; // 3 * (1 + 7) + 2 columnas espaciadoras
+    const COL_TABLA_INICIO = COLUMNAS_TOTALES + 2; // deja la columna 27 vacía como separador
 
     function agregarBloqueTresMesesExcel(ws, anio, mesInicio, filaInicio, bordeCompleto) {
       const meses = [mesInicio, mesInicio + 1, mesInicio + 2];
@@ -560,6 +567,60 @@
       return fila;
     }
 
+    // Tabla de Fecha | Hora | Motivo, ubicada al lado del calendario,
+    // arrancando en la misma fila (2) que el primer bloque de meses.
+    function agregarTablaRegistrosExcel(ws, anio, colInicio, bordeCompleto) {
+      const filaInicio = 2;
+      const registrosAnio = registros
+        .filter(r => r.fecha.startsWith(String(anio)))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+      const encabezados = ["Fecha", "Hora", "Motivo"];
+      encabezados.forEach((titulo, i) => {
+        const celda = ws.getCell(filaInicio, colInicio + i);
+        celda.value = titulo;
+        celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } };
+        celda.alignment = { horizontal: "center" };
+        celda.border = bordeCompleto;
+      });
+
+      if (registrosAnio.length === 0) {
+        const celda = ws.getCell(filaInicio + 1, colInicio);
+        ws.mergeCells(filaInicio + 1, colInicio, filaInicio + 1, colInicio + 2);
+        celda.value = "Sin registros en este año";
+        celda.font = { italic: true, color: { argb: "FF888888" } };
+        celda.alignment = { horizontal: "center" };
+        celda.border = bordeCompleto;
+        return filaInicio + 2;
+      }
+
+      registrosAnio.forEach((r, idx) => {
+        const fila = filaInicio + 1 + idx;
+        const partes = r.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const valores = [fechaFormateada, r.hora || "-", r.motivo || "-"];
+        const filaPar = idx % 2 === 1;
+
+        valores.forEach((valor, i) => {
+          const celda = ws.getCell(fila, colInicio + i);
+          celda.value = valor;
+          celda.alignment = { horizontal: i === 2 ? "left" : "center" };
+          celda.border = bordeCompleto;
+          if (filaPar) {
+            celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F5F5" } };
+          }
+        });
+      });
+
+      ws.getColumn(colInicio).width = 12;
+      ws.getColumn(colInicio + 1).width = 8;
+      ws.getColumn(colInicio + 2).width = 24;
+      ws.getColumn(colInicio - 1).width = 2; // columna separadora sin contenido
+
+      return filaInicio + 1 + registrosAnio.length;
+    }
+
     async function exportarCalendarioAnioExcel() {
       const anio = Number(document.getElementById("anioExportar").value);
       if (!anio) return alert("Selecciona un año.");
@@ -588,6 +649,9 @@
           fila = agregarBloqueTresMesesExcel(ws, anio, mesInicio, fila, bordeCompleto);
           fila++; // fila en blanco entre bloques
         });
+
+        // Tabla de Fecha | Hora | Motivo al lado del calendario, desde la fila 2
+        agregarTablaRegistrosExcel(ws, anio, COL_TABLA_INICIO, bordeCompleto);
 
         // Anchos de columna (más angostas las de semana y las espaciadoras)
         for (let c = 1; c <= COLUMNAS_TOTALES; c++) {

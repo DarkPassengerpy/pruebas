@@ -429,9 +429,6 @@
       return 30;
     }
 
-    // Días acumulados automáticamente por antigüedad desde que se fijó el saldo inicial.
-    // Solo cuenta los aniversarios (fecha de ingreso + n años) que ya pasaron, y que son
-    // posteriores a la fecha en que se fijó/corrigió el saldo inicial (para no duplicar).
     function calcularDiasAcumuladosAutomaticos() {
       if (!config.fechaIngreso) return 0;
 
@@ -568,8 +565,6 @@
       document.getElementById("avisoPD").style.display = disponiblePD <= 0 ? "block" : "none";
     }
 
-    // Intenta registrar un solo día. Devuelve { ok: true } o { ok: false, motivo }.
-    // No guarda en localStorage ni refresca la UI (eso lo hace quien la llama).
     function intentarRegistrarUnDia(tipo, fecha, turno, nota) {
       if (esFinDeSemana(fecha)) return { ok: false, motivo: "fin de semana" };
       if (esFeriado(fecha)) return { ok: false, motivo: "feriado" };
@@ -628,7 +623,6 @@
         return;
       }
 
-      // Modo rango: registra cada día hábil (no feriado) del rango como día completo
       const desde = document.getElementById("fechaDesde").value;
       const hasta = document.getElementById("fechaHasta").value;
       if (!desde || !hasta) return alert("Completá las dos fechas del rango.");
@@ -723,7 +717,6 @@
         return;
       }
 
-      // Agrupar primero por año, y dentro de cada año por mes
       let agrupadosPorAnio = {};
       registros.forEach(item => {
         const anioKey = item.fecha.slice(0, 4);
@@ -819,7 +812,6 @@
       });
     }
 
-    // ============ CALENDARIO EXCEL (mensual y anual) ============
     const DIAS_SEMANA_DOM = ["D", "L", "M", "X", "J", "V", "S"];
 
     function numeroSemanaAnio(fecha, anio) {
@@ -882,7 +874,6 @@
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet(`Calendario ${anio}`);
 
-      // Título del año
       sheet.mergeCells(1, 1, 1, 26);
       const celdaTitulo = sheet.getCell(1, 1);
       celdaTitulo.value = anio;
@@ -897,7 +888,7 @@
         let maxSemanas = 0;
 
         meses.forEach((mes, idxMes) => {
-          const colBase = idxMes * 9 + 1; // 8 columnas por mes + 1 de separación
+          const colBase = idxMes * 9 + 1;
           const semanas = generarSemanasMes(anio, mes);
           maxSemanas = Math.max(maxSemanas, semanas.length);
 
@@ -943,7 +934,6 @@
         filaActual = filaInicioBloque + 2 + maxSemanas + 1;
       });
 
-      // Tabla de detalle, a la derecha del calendario
       const colDetalle = 28;
       const delAnio = registros
         .filter(r => r.fecha.startsWith(String(anio)))
@@ -987,7 +977,6 @@
         filaDetalle++;
       });
 
-      // Anchos de columna razonables
       sheet.getColumn(1).width = 4;
       for (let c = 2; c <= 26; c++) sheet.getColumn(c).width = 5;
       sheet.getColumn(colDetalle).width = 20;
@@ -1056,9 +1045,9 @@
           let saltados = [];
 
           filas.forEach((fila, idx) => {
-            if (idx === 0) return; // fila de encabezado
+            if (idx === 0) return;
             const [fechaCelda, eventoCelda, tiempoCelda] = fila;
-            if (!fechaCelda && !eventoCelda && !tiempoCelda) return; // fila vacía
+            if (!fechaCelda && !eventoCelda && !tiempoCelda) return;
 
             const fecha = parseFechaImportada(fechaCelda);
             const tipo = normalizarTipoImportado(eventoCelda);
@@ -1109,9 +1098,9 @@
           let saltados = [];
 
           filas.forEach((fila, idx) => {
-            if (idx === 0) return; // fila de encabezado
+            if (idx === 0) return;
             const [fechaCelda, nombreCelda] = fila;
-            if (!fechaCelda && !nombreCelda) return; // fila vacía
+            if (!fechaCelda && !nombreCelda) return;
 
             const fecha = parseFechaImportada(fechaCelda);
             const nombre = String(nombreCelda || "").trim() || "Feriado";

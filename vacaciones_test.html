@@ -296,7 +296,7 @@
     </details>
 
     <details class="mes-grupo">
-      <summary><span>📥 Importar registro de vacaciones desde Excel</span></summary>
+      <summary><span>📥 Importar desde Excel</span></summary>
       <div class="mes-contenido">
         <p style="font-size: 12px; color: #aaa; margin-top: 0; margin-bottom: 10px;">Subí un archivo .xlsx con columnas <strong>Fecha</strong> | <strong>Evento</strong> | <strong>Tiempo</strong> (ej: 05/09/2026 | Vacaciones | Completo).</p>
         <div style="text-align: center;">
@@ -538,9 +538,11 @@
     }
 
     function eliminarFeriado(fecha) {
-      feriados = feriados.filter(f => f.fecha !== fecha);
-      guardarFeriados();
-      mostrarFeriados();
+      if (confirm("¿Estás seguro de que deseas eliminar este feriado?")) {
+        feriados = feriados.filter(f => f.fecha !== fecha);
+        guardarFeriados();
+        mostrarFeriados();
+      }
     }
 
     function mostrarFeriados() {
@@ -726,10 +728,12 @@
     }
 
     function eliminarRegistro(fecha, turno) {
-      registros = registros.filter(r => !(r.fecha === fecha && r.turno === turno));
-      guardarDatos();
-      mostrarRegistros();
-      actualizarContadores();
+      if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
+        registros = registros.filter(r => !(r.fecha === fecha && r.turno === turno));
+        guardarDatos();
+        mostrarRegistros();
+        actualizarContadores();
+      }
     }
 
     function obtenerNombreMes(anioMes) {
@@ -1055,7 +1059,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `calendario_anual_vacaciones_${anio}.xlsx`;
+        a.download = `calendario_anual_${anio}.xlsx`;
         document.body.appendChild(a);
         a.click();
         a.remove();

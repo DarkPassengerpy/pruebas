@@ -179,15 +179,22 @@
       color: #ccc;
     }
 
+    /* Estilo sobrio para el pie de página */
     footer#teamName {
       text-align: center;
       margin-top: 30px;
-      font-family: "Courier New", monospace;
-      font-size: 20px;
-      font-weight: bold;
-      color: #6a1b9a;
-      letter-spacing: 2px;
-      text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+      font-family: "Aptos", Arial, sans-serif;
+      font-size: 13px;
+      color: #888;
+    }
+    footer#teamName a {
+      color: #64b5f6;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    footer#teamName a:hover {
+      color: #90caf9;
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -276,7 +283,9 @@
     <p>Es una herramienta web diseñada para llevar el control de tus consumos en la cantina. Permite realizar múltiples registros por día indicando fecha, producto o descripción obligatoria, estado de pago al contado, número de ticket opcional, filtrar rápidamente con botones entre Contado y Crédito, agruparlos por mes, copiar registros mensuales para Excel o descargar archivos anuales formateados, y realizar copias de seguridad.</p>
   </div>
 
-  <footer id="teamName">Dark Passenger</footer>
+  <footer id="teamName">
+    Desarrollado por <a href="https://darkpassenger-tools.netlify.app/" target="_blank" rel="noopener noreferrer">Dark Passenger Tools</a>
+  </footer>
 
   <script>
     let registros = JSON.parse(localStorage.getItem("cantinaRegistros")) || [];
@@ -353,10 +362,13 @@
       document.getElementById("numeroTicket").value = "";
     }
 
+    // Eliminación con confirmación de seguridad
     function eliminarRegistro(idAEliminar) {
-      registros = registros.filter(r => r.id !== idAEliminar);
-      guardarDatos();
-      mostrarRegistros();
+      if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
+        registros = registros.filter(r => r.id !== idAEliminar);
+        guardarDatos();
+        mostrarRegistros();
+      }
     }
 
     function obtenerNombreMes(anioMes) {

@@ -39,6 +39,12 @@
       box-sizing: border-box;
       text-align: center;
     }
+    input:disabled {
+      background: #141414;
+      color: #888;
+      border-color: #333;
+      cursor: not-allowed;
+    }
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="month"]::-webkit-calendar-picker-indicator {
       filter: invert(1);
@@ -133,12 +139,6 @@
       display: flex; align-items: center; justify-content: center;
     }
     .delete-btn:hover { background: #d32f2f; }
-
-    .export-section {
-      margin-top: 20px; padding: 15px;
-      background: #1e1e1e; border-radius: 8px; text-align: left;
-    }
-    .export-section h3 { color: #81c784; margin-top: 0; font-size: 16px; }
 
     .warning-note {
       margin-top: 15px;
@@ -324,10 +324,26 @@
       <summary><span>⚙️ Carga de datos iniciales</span></summary>
       <div class="mes-contenido">
         <label for="totalVacaciones2" style="font-size: 12px; color: #aaa; display: block; margin-bottom: 4px; text-align: left;">Saldo inicial de vacaciones:</label>
-        <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="actualizarSaldoInicial();">
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="number" id="totalVacaciones2" min="0" step="0.5" style="margin: 0;" disabled>
+          <button id="btnLockSaldo" type="button" onclick="toggleLockSaldo()" style="width: auto; padding: 0 12px; margin: 0; background: #444;">✏️ Editar</button>
+        </div>
+
+        <div style="background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #444; margin-bottom: 12px; text-align: left;">
+          <label style="font-size: 12px; color: #81c784; display: block; font-weight: bold; margin-bottom: 4px;">Ajuste manual de días:</label>
+          <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 8px;">
+            Ajuste acumulado: <strong id="lblAjusteAcumulado" style="color:#64b5f6;">0</strong> días
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <input type="number" id="cantAjuste" step="0.5" min="0.5" placeholder="Cantidad" style="margin: 0; flex: 1;">
+            <button type="button" onclick="aplicarAjuste(1)" style="width: auto; padding: 0 10px; margin: 0; background: #2e7d32;">➕ Sumar</button>
+            <button type="button" onclick="aplicarAjuste(-1)" style="width: auto; padding: 0 10px; margin: 0; background: #c62828;">➖ Restar</button>
+          </div>
+        </div>
+
         <label for="fechaIngreso" style="font-size: 12px; color: #aaa; display: block; margin-top: 10px; margin-bottom: 4px; text-align: left;">Fecha de ingreso a la empresa:</label>
         <input type="date" id="fechaIngreso" onchange="guardarFechaIngreso();">
-        <p style="font-size: 11px; color: #888; margin: 6px 0 0; text-align: left;">El saldo inicial es lo que tenés disponible hoy. Con la fecha de ingreso, el sistema suma automáticamente los días nuevos en cada aniversario (12/18/30 según la antigüedad), sin que tengas que tocar nada.</p>
+        <p style="font-size: 11px; color: #888; margin: 6px 0 0; text-align: left;">El saldo inicial se ingresa una sola vez y queda guardado. La fecha de ingreso suma automáticamente días en cada aniversario. Si necesitás corregir días en el futuro, usá la opción de Ajuste manual.</p>
       </div>
     </details>
 
@@ -345,14 +361,15 @@
     <p><strong>Registrar un día:</strong> elegí el tipo (Vacaciones o Personal Day), la fecha y el turno (Día completo, AM o PM), y presioná "Registrar". Solo se pueden cargar días de lunes a viernes que no sean feriados.</p>
     <p><strong>Registrar varios días juntos:</strong> tildá "Registrar un rango de fechas", elegí desde/hasta y se cargan automáticamente todos los días hábiles del rango como día completo (saltando fines de semana y feriados).</p>
     <p><strong>Nota opcional:</strong> podés agregar un texto corto a cada registro (ej: "viaje", "trámite") para recordar el motivo.</p>
-    <p><strong>Saldo inicial de vacaciones:</strong> cargá acá lo que realmente tenés disponible <strong>hoy</strong> (a la fecha en que lo estás llenando). Si además completás la "Fecha de ingreso a la empresa", el sistema suma solo, en cada aniversario laboral, los días que correspondan según la antigüedad (12 días/año del 1° al 5° año, 18 días/año del 6° al 10°, 30 días/año del 11° en adelante) — no hace falta que vuelvas a tocar este campo cada año. Si en algún momento corregís el saldo inicial, esa fecha se actualiza sola y el cálculo automático arranca a contar de nuevo desde ahí, para no duplicar.</p>
+    <p><strong>Saldo inicial de vacaciones:</strong> cargá acá lo que realmente tenés disponible <strong>hoy</strong> (a la fecha en que lo estás llenando). Al guardarse, queda bloqueado para evitar cambios accidentales. Si además completás la "Fecha de ingreso a la empresa", el sistema suma solo, en cada aniversario laboral, los días que correspondan según la antigüedad (12 días/año del 1° al 5° año, 18 días/año del 6° al 10°, 30 días/año del 11° en adelante).</p>
+    <p><strong>Ajuste manual de días:</strong> si en el futuro necesitás agregar o restar días específicos (por correcciones de RRHH, permisos especiales o días extra otorgados), usá los botones ➕ Sumar o ➖ Restar. Esto modifica tus días disponibles de forma limpia sin alterar tu saldo inicial ni el cálculo por antigüedad.</p>
     <p><strong>Contadores:</strong></p>
     <ul>
-      <li><strong>Vacaciones disponibles</strong> = saldo inicial + días sumados automáticamente por antigüedad − lo que ya registraste. Puede quedar en negativo si te pasás, y se marca en rojo como aviso.</li>
+      <li><strong>Vacaciones disponibles</strong> = saldo inicial + días sumados por antigüedad + ajustes manuales − lo que ya registraste. Puede quedar en negativo si te pasás, y se marca en rojo como aviso.</li>
       <li><strong>Personal Day</strong> es mensual: 1 día completo o 2 medios días (AM+PM) por mes, se resetea solo cada mes.</li>
     </ul>
     <p><strong>Feriados:</strong> desplegá la sección "🗓️ Feriados" para cargar las fechas feriadas del año (fecha + nombre). Esos días quedan excluidos automáticamente al registrar.</p>
-    <p><strong>Exportar:</strong> "Copiar Mes/Año/Todo" copia una tabla al portapapeles para pegar en Excel (usando el mes o año que elijas en los filtros). "Calendario del Año" descarga un archivo con el año elegido marcado (verde = vacaciones, naranja = Personal Day), junto con una tabla de detalle (Fecha, Tipo, Turno) al lado.</p>
+    <p><strong>Exportar:</strong> "Copiar Mes/Año/Todo" copia una tabla al portapapeles para pegar en Excel. "Calendario del Año" descarga un archivo con el año elegido marcado junto con una tabla de detalle al lado.</p>
     <p><strong>Importar desde Excel:</strong> subí un archivo con columnas Fecha | Evento | Tiempo para cargar varios registros de una sola vez.</p>
     <p><strong>Backup:</strong> "Descargar Backup" guarda todos tus datos (registros, feriados y configuración) en un archivo. "Cargar Backup" los restaura si cambiás de dispositivo o se borra el navegador.</p>
   </details>
@@ -366,7 +383,7 @@
 
   <script>
     let registros = JSON.parse(localStorage.getItem("registrosVacaciones")) || [];
-    let config = JSON.parse(localStorage.getItem("configVacaciones")) || { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: null };
+    let config = JSON.parse(localStorage.getItem("configVacaciones")) || { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: null, ajustes: 0 };
     let feriados = JSON.parse(localStorage.getItem("feriadosVacaciones")) || [];
 
     if (config.saldoInicial === undefined && config.totalVacaciones !== undefined) {
@@ -375,6 +392,9 @@
     }
     if (!config.fechaSaldoInicial) {
       config.fechaSaldoInicial = new Date().toISOString().split("T")[0];
+    }
+    if (config.ajustes === undefined) {
+      config.ajustes = 0;
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -388,6 +408,7 @@
       document.getElementById("fechaFeriado").value = hoy;
 
       guardarConfigCompleta();
+      actualizarInterfazAjustes();
       actualizarDiaPreview();
       mostrarRegistros();
       actualizarContadores();
@@ -402,12 +423,47 @@
       localStorage.setItem("configVacaciones", JSON.stringify(config));
     }
 
-    function actualizarSaldoInicial() {
-      const valor = document.getElementById("totalVacaciones2").value;
-      config.saldoInicial = parseFloat(valor) || 0;
-      config.fechaSaldoInicial = new Date().toISOString().split("T")[0];
+    function toggleLockSaldo() {
+      const input = document.getElementById("totalVacaciones2");
+      const btn = document.getElementById("btnLockSaldo");
+
+      if (input.disabled) {
+        input.disabled = false;
+        btn.innerText = "💾 Guardar";
+        btn.style.background = "#2e7d32";
+        input.focus();
+      } else {
+        input.disabled = true;
+        btn.innerText = "✏️ Editar";
+        btn.style.background = "#444";
+        config.saldoInicial = parseFloat(input.value) || 0;
+        config.fechaSaldoInicial = new Date().toISOString().split("T")[0];
+        guardarConfigCompleta();
+        actualizarContadores();
+      }
+    }
+
+    function aplicarAjuste(signo) {
+      const input = document.getElementById("cantAjuste");
+      const cant = parseFloat(input.value);
+
+      if (isNaN(cant) || cant <= 0) {
+        return alert("Ingresá una cantidad válida de días (mayor a 0).");
+      }
+
+      config.ajustes = (config.ajustes || 0) + (cant * signo);
       guardarConfigCompleta();
+      actualizarInterfazAjustes();
       actualizarContadores();
+      input.value = "";
+    }
+
+    function actualizarInterfazAjustes() {
+      const lbl = document.getElementById("lblAjusteAcumulado");
+      const val = config.ajustes || 0;
+      const signoStr = val > 0 ? "+" : "";
+      lbl.innerText = `${signoStr}${val}`;
+      lbl.style.color = val < 0 ? "#ff5252" : (val > 0 ? "#81c784" : "#64b5f6");
     }
 
     function guardarFechaIngreso() {
@@ -543,7 +599,8 @@
     function actualizarContadores() {
       const usadasVac = diasUsadosVacaciones();
       const acumuladoAuto = calcularDiasAcumuladosAutomaticos();
-      const disponibles = (config.saldoInicial || 0) + acumuladoAuto - usadasVac;
+      const ajustes = config.ajustes || 0;
+      const disponibles = (config.saldoInicial || 0) + acumuladoAuto + ajustes - usadasVac;
       const numVacEl = document.getElementById("numVacaciones");
       numVacEl.innerText = disponibles;
       numVacEl.classList.toggle("negativo", disponibles <= 0);
@@ -1130,8 +1187,8 @@
     }
 
     function descargarBackup() {
-      if (registros.length === 0) {
-        return alert("No hay registros para respaldar.");
+      if (registros.length === 0 && !config.saldoInicial) {
+        return alert("No hay registros o configuración para respaldar.");
       }
       const payload = { registros, config, feriados };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
@@ -1176,14 +1233,24 @@
             feriados.sort((a, b) => a.fecha.localeCompare(b.fecha));
             guardarDatos();
             guardarFeriados();
+
             if (config.saldoInicial === undefined && config.totalVacaciones !== undefined) {
               config.saldoInicial = config.totalVacaciones;
               delete config.totalVacaciones;
             }
             if (!config.fechaSaldoInicial) config.fechaSaldoInicial = new Date().toISOString().split("T")[0];
+            if (config.ajustes === undefined) config.ajustes = 0;
+
             guardarConfigCompleta();
-            document.getElementById("totalVacaciones2").value = config.saldoInicial || 0;
+
+            const inputSaldo = document.getElementById("totalVacaciones2");
+            inputSaldo.value = config.saldoInicial || 0;
+            inputSaldo.disabled = true;
+            document.getElementById("btnLockSaldo").innerText = "✏️ Editar";
+            document.getElementById("btnLockSaldo").style.background = "#444";
+
             document.getElementById("fechaIngreso").value = config.fechaIngreso || "";
+            actualizarInterfazAjustes();
             mostrarRegistros();
             actualizarContadores();
             mostrarFeriados();
@@ -1202,14 +1269,20 @@
     function borrarTodo() {
       if (confirm("¿Estás seguro de borrar todos los registros, el saldo inicial y la fecha de ingreso?")) {
         registros = [];
-        config = { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: new Date().toISOString().split("T")[0] };
+        config = { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: new Date().toISOString().split("T")[0], ajustes: 0 };
 
         localStorage.removeItem("registrosVacaciones");
         localStorage.removeItem("configVacaciones");
 
-        document.getElementById("totalVacaciones2").value = 0;
+        const inputSaldo = document.getElementById("totalVacaciones2");
+        inputSaldo.value = 0;
+        inputSaldo.disabled = true;
+        document.getElementById("btnLockSaldo").innerText = "✏️ Editar";
+        document.getElementById("btnLockSaldo").style.background = "#444";
+
         document.getElementById("fechaIngreso").value = "";
 
+        actualizarInterfazAjustes();
         mostrarRegistros();
         actualizarContadores();
       }

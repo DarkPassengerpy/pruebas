@@ -578,7 +578,7 @@
     function playAlarmSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const vol = 0.5;
+            const vol = 0.7; // Volumen aumentado al 70% (50% + 20%)
             
             const playBeep = (startTime) => {
                 const osc = ctx.createOscillator();
@@ -726,7 +726,6 @@
         }
     }
 
-    // --- FUNCIÓN CON CONFIRMACIÓN DE BORRADO ---
     function deleteTask(id) {
         const task = tasks.find(t => t.id === id);
         const taskText = task ? `"${task.text}"` : "esta tarea";

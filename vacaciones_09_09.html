@@ -92,12 +92,6 @@
     }
     .feriado-row:last-child { border-bottom: none; }
 
-    .config-box {
-      margin-top: 12px; padding: 10px; background: #1e1e1e;
-      border-radius: 8px; border: 1px solid #444; text-align: left;
-    }
-    .config-box label { font-size: 12px; color: #aaa; display: block; margin-bottom: 4px; }
-
     .mes-grupo {
       background: #1e1e1e; margin-top: 15px; border-radius: 8px;
       border: 1px solid #444; overflow: hidden; text-align: left;
@@ -326,13 +320,16 @@
       </div>
     </details>
 
-    <div class="config-box">
-      <label for="totalVacaciones2">Saldo inicial de vacaciones:</label>
-      <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="actualizarSaldoInicial();">
-      <label for="fechaIngreso" style="margin-top:10px;">Fecha de ingreso a la empresa:</label>
-      <input type="date" id="fechaIngreso" onchange="guardarFechaIngreso();">
-      <p style="font-size: 11px; color: #888; margin: 6px 0 0;">El saldo inicial es lo que tenés disponible hoy. Con la fecha de ingreso, el sistema suma automáticamente los días nuevos en cada aniversario (12/18/30 según la antigüedad), sin que tengas que tocar nada.</p>
-    </div>
+    <details class="mes-grupo">
+      <summary><span>⚙️ Carga de datos iniciales</span></summary>
+      <div class="mes-contenido">
+        <label for="totalVacaciones2" style="font-size: 12px; color: #aaa; display: block; margin-bottom: 4px; text-align: left;">Saldo inicial de vacaciones:</label>
+        <input type="number" id="totalVacaciones2" min="0" step="0.5" onchange="actualizarSaldoInicial();">
+        <label for="fechaIngreso" style="font-size: 12px; color: #aaa; display: block; margin-top: 10px; margin-bottom: 4px; text-align: left;">Fecha de ingreso a la empresa:</label>
+        <input type="date" id="fechaIngreso" onchange="guardarFechaIngreso();">
+        <p style="font-size: 11px; color: #888; margin: 6px 0 0; text-align: left;">El saldo inicial es lo que tenés disponible hoy. Con la fecha de ingreso, el sistema suma automáticamente los días nuevos en cada aniversario (12/18/30 según la antigüedad), sin que tengas que tocar nada.</p>
+      </div>
+    </details>
 
     <div style="margin-top: 15px;">
       <button class="btn-limpiar" onclick="borrarTodo()">Borrar Todo</button>

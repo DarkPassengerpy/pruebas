@@ -527,8 +527,8 @@
         </div>
         <div class="alarm-input-row">
             <span class="alarm-label">⏰ ALARMA:</span>
-            <input type="date" id="alarmDateInput" title="Selecciona el día (Opcional)">
-            <input type="time" id="alarmTimeInput" title="Ingresa la hora (Opcional)">
+            <input type="date" id="alarmDateInput" title="Día de la alarma (Por defecto, hoy)">
+            <input type="time" id="alarmTimeInput" title="Hora de la alarma">
         </div>
     </div>
 
@@ -569,34 +569,43 @@
     let tasks = [];
     let editingTaskId = null;
 
-    // --- REPRODUCTOR DE SONIDO DOBLE BIP (Volumen 50%) ---
+    // Setear la fecha de hoy por defecto al cargar la página
+    function setDateToToday() {
+        const dateInput = document.getElementById('alarmDateInput');
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    // --- REPRODUCTOR DE SONIDO (Sonido original - Doble Bip al 50%) ---
     function playAlarmSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const vol = 0.5;
+            const vol = 0.5; // Volumen al 50%
+            
             const playBeep = (startTime) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, startTime);
-                osc.frequency.exponentialRampToValueAtTime(1200, startTime + 0.1);
+                osc.type = 'sine'; // Sonido original (suave)
+                osc.frequency.setValueAtTime(587.33, startTime);
+                osc.frequency.setValueAtTime(880, startTime + 0.15);
                 
                 gain.gain.setValueAtTime(vol, startTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
                 
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 
                 osc.start(startTime);
-                osc.stop(startTime + 0.15);
+                osc.stop(startTime + 0.3);
             };
 
             const now = ctx.currentTime;
-            playBeep(now);              
-            playBeep(now + 0.2);        
-            playBeep(now + 0.8);        
-            playBeep(now + 1.0);
+            playBeep(now);              // Primer Bip
+            playBeep(now + 0.4);        // Segundo Bip
             
         } catch(e) {
             console.warn("Audio Context error:", e);
@@ -673,23 +682,14 @@
 
         let finalAlarmISO = null;
         
-        // Si ingresó ambos (fecha y hora)
-        if (dateInput.value && timeInput.value) {
-            finalAlarmISO = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
-        } 
-        // Si ingresó solo la hora, asumimos el día de hoy
-        else if (!dateInput.value && timeInput.value) {
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD local
-            const tempDate = new Date(`${today}T${timeInput.value}`);
-            // Si la hora ya pasó hoy, asume que es para mañana
-            if(tempDate < new Date()) {
-                tempDate.setDate(tempDate.getDate() + 1);
+        // Solo guarda alarma si el usuario ingresó la hora (la fecha ya está por defecto)
+        if (timeInput.value) {
+            if (dateInput.value) {
+                finalAlarmISO = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
+            } else {
+                const today = new Date().toISOString().split('T')[0];
+                finalAlarmISO = new Date(`${today}T${timeInput.value}`).toISOString();
             }
-            finalAlarmISO = tempDate.toISOString();
-        }
-        // Si ingresó solo fecha, le ponemos una hora por defecto (ej: 09:00 AM)
-        else if (dateInput.value && !timeInput.value) {
-            finalAlarmISO = new Date(`${dateInput.value}T09:00`).toISOString();
         }
 
         const newTask = {
@@ -705,8 +705,8 @@
 
         tasks.push(newTask);
         input.value = '';
-        dateInput.value = '';
-        timeInput.value = '';
+        timeInput.value = ''; // Limpiamos solo la hora, dejamos la fecha en "hoy"
+        setDateToToday();     // Por si el usuario había cambiado de día
         saveAndRender();
         input.focus();
     }
@@ -1027,8 +1027,9 @@
         event.target.value = '';
     }
 
+    setDateToToday();
     loadTasks();
-    setInterval(checkAlarms, 10000); // Revisa las alarmas cada 10 segundos
+    setInterval(checkAlarms, 60000); // Revisa las alarmas cada 1 minuto
 </script>
 
 </body>

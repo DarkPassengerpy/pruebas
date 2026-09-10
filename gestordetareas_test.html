@@ -54,6 +54,7 @@
         .alarm-input-row {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
             background-color: #1e1e1e;
             padding: 10px 15px;
@@ -72,6 +73,14 @@
             white-space: nowrap;
         }
 
+        .alarm-help {
+            font-size: 0.75em;
+            color: #888;
+            width: 100%;
+            margin-top: -5px;
+            margin-bottom: 5px;
+        }
+
         input[type="text"], input[type="datetime-local"] {
             padding: 12px;
             border: 1px solid #444;
@@ -82,25 +91,39 @@
             box-sizing: border-box;
         }
 
-        input[type="text"] {
+        input[type="text"]:focus, input[type="datetime-local"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .input-task {
             flex: 1;
             min-width: 200px;
         }
 
-        input[type="datetime-local"] {
+        .input-alarm-quick {
             flex: 1;
+            min-width: 160px;
             padding: 10px;
             font-size: 14px;
         }
 
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
+        .input-alarm-calendar {
+            width: 40px;
+            padding: 10px;
+            font-size: 14px;
+            color: transparent; /* Ocultar el texto del input date, solo mostrar icono */
             cursor: pointer;
         }
 
-        input[type="text"]:focus, input[type="datetime-local"]:focus {
-            outline: none;
-            border-color: #007bff;
+        .input-alarm-calendar::-webkit-datetime-edit { display: none; }
+        .input-alarm-calendar::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         button {
@@ -120,15 +143,9 @@
             min-width: 120px;
         }
 
-        .btn-add:hover {
-            background-color: #0056b3;
-        }
+        .btn-add:hover { background-color: #0056b3; }
 
-        .task-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+        .task-list { list-style: none; padding: 0; margin: 0; }
 
         .task-item {
             background-color: #252525;
@@ -142,16 +159,8 @@
             transition: all 0.3s ease;
         }
 
-        .task-item.is-priority {
-            border-color: #ff4d4d;
-            background-color: #2c1a1a;
-        }
-
-        .task-item.completed {
-            opacity: 0.7;
-            background-color: #1a1a1a;
-            border-color: #333;
-        }
+        .task-item.is-priority { border-color: #ff4d4d; background-color: #2c1a1a; }
+        .task-item.completed { opacity: 0.7; background-color: #1a1a1a; border-color: #333; }
 
         .task-checkbox {
             margin-top: 5px;
@@ -161,9 +170,7 @@
             accent-color: #28a745;
         }
 
-        .task-content {
-            flex: 1;
-        }
+        .task-content { flex: 1; }
 
         .task-text {
             font-size: 16px;
@@ -175,10 +182,7 @@
             flex-wrap: wrap;
         }
 
-        .completed .task-text {
-            text-decoration: line-through;
-            color: #888;
-        }
+        .completed .task-text { text-decoration: line-through; color: #888; }
 
         .tag-overdue {
             background-color: #dc3545;
@@ -190,7 +194,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Disposición horizontal de las fechas */
         .task-dates {
             font-size: 0.75em;
             color: #888;
@@ -201,135 +204,42 @@
             gap: 6px;
         }
 
-        .date-alarm {
-            color: #17a2b8;
-            font-weight: bold;
-        }
+        .date-alarm { color: #17a2b8; font-weight: bold; }
+        .date-done { color: #28a745; }
+        .date-separator { color: #555; user-select: none; }
 
-        .date-done {
-            color: #28a745;
-        }
+        .task-actions { display: flex; align-items: center; gap: 8px; }
 
-        .date-separator {
-            color: #555;
-            user-select: none;
-        }
-
-        .task-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-priority {
+        .btn-action-small {
             background: none;
             border: none;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            opacity: 0.3;
-            transition: opacity 0.2s, transform 0.2s;
-            filter: grayscale(100%);
-        }
-
-        .btn-priority:hover {
-            opacity: 1;
-            transform: scale(1.2);
-            filter: grayscale(0%);
-        }
-
-        .btn-priority.active {
-            opacity: 1;
-            filter: grayscale(0%);
-        }
-
-        .btn-delete {
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-size: 20px;
             cursor: pointer;
             padding: 0 4px;
             line-height: 1;
             transition: color 0.2s, transform 0.2s;
         }
 
-        .btn-delete:hover {
-            color: #c82333;
-            transform: scale(1.2);
-        }
+        .btn-priority { font-size: 16px; opacity: 0.3; filter: grayscale(100%); }
+        .btn-priority:hover { opacity: 1; transform: scale(1.2); filter: grayscale(0%); }
+        .btn-priority.active { opacity: 1; filter: grayscale(0%); }
 
-        .btn-edit {
-            background: none;
-            border: none;
-            color: #ffc107;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            transition: color 0.2s, transform 0.2s;
-        }
+        .btn-delete { color: #dc3545; font-size: 20px; }
+        .btn-delete:hover { color: #c82333; transform: scale(1.2); }
 
-        .btn-edit:hover {
-            color: #ffda6a;
-            transform: scale(1.2);
-        }
+        .btn-edit { color: #ffc107; font-size: 16px; }
+        .btn-edit:hover { color: #ffda6a; transform: scale(1.2); }
 
-        .btn-save {
-            background: none;
-            border: none;
-            color: #28a745;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            transition: color 0.2s, transform 0.2s;
-        }
+        .btn-save { color: #28a745; font-size: 20px; }
+        .btn-save:hover { color: #34c759; transform: scale(1.2); }
 
-        .btn-save:hover {
-            color: #34c759;
-            transform: scale(1.2);
-        }
-
-        .btn-cancel {
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            transition: color 0.2s, transform 0.2s;
-        }
-
-        .btn-cancel:hover {
-            color: #c82333;
-            transform: scale(1.2);
-        }
+        .btn-cancel { color: #dc3545; font-size: 18px; }
+        .btn-cancel:hover { color: #c82333; transform: scale(1.2); }
 
         .edit-container {
             display: flex;
             flex-direction: column;
             gap: 8px;
             width: 100%;
-        }
-
-        .edit-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #007bff;
-            border-radius: 4px;
-            background-color: #2d2d2d;
-            color: #ffffff;
-            font-size: 15px;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-
-        .edit-input:focus {
-            outline: none;
-            border-color: #5cadff;
         }
 
         .section-title {
@@ -344,164 +254,44 @@
             flex-wrap: wrap;
         }
 
-        .urgent-tag {
-            color: #ff4d4d;
-            text-transform: none;
-            font-weight: normal;
-            margin-left: 4px;
-        }
+        .urgent-tag { color: #ff4d4d; text-transform: none; font-weight: normal; margin-left: 4px; }
 
-        details.completed-details {
-            margin-top: 25px;
-            border-top: 1px solid #2a2a2a;
-            padding-top: 10px;
-        }
-
+        details.completed-details { margin-top: 25px; border-top: 1px solid #2a2a2a; padding-top: 10px; }
         summary.completed-summary {
-            font-size: 0.9em;
-            color: #b0b0b0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            user-select: none;
-            font-weight: bold;
-            padding: 5px 0;
-            transition: color 0.2s;
+            font-size: 0.9em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; user-select: none; font-weight: bold; padding: 5px 0; transition: color 0.2s;
         }
+        summary.completed-summary:hover { color: #ffffff; }
 
-        summary.completed-summary:hover {
-            color: #ffffff;
-        }
-
-        details.month-details {
-            margin: 10px 0 10px 15px;
-            border-left: 2px solid #333;
-            padding-left: 10px;
-        }
-
-        summary.month-summary {
-            font-size: 0.85em;
-            color: #17a2b8;
-            cursor: pointer;
-            user-select: none;
-            font-weight: bold;
-            padding: 4px 0;
-        }
-
-        summary.month-summary:hover {
-            color: #5cdb95;
-        }
+        details.month-details { margin: 10px 0 10px 15px; border-left: 2px solid #333; padding-left: 10px; }
+        summary.month-summary { font-size: 0.85em; color: #17a2b8; cursor: pointer; user-select: none; font-weight: bold; padding: 4px 0; }
+        summary.month-summary:hover { color: #5cdb95; }
 
         .backup-panel {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: #252525;
-            border: 1px solid #333;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            margin-top: 25px; padding: 15px; background-color: #252525; border: 1px solid #333; border-radius: 6px;
+            display: flex; flex-direction: column; gap: 10px;
         }
-
-        .backup-title {
-            font-size: 0.85em;
-            color: #b0b0b0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
-
-        .backup-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-backup {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 0.85em;
-            background-color: #333;
-            color: #e0e0e0;
-            border: 1px solid #444;
-            border-radius: 4px;
-        }
-
-        .btn-backup:hover {
-            background-color: #444;
-            color: #fff;
-        }
+        .backup-title { font-size: 0.85em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .backup-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
+        .btn-backup:hover { background-color: #444; color: #fff; }
 
         .warning-note {
-            margin-top: 15px;
-            padding: 10px 12px;
-            background-color: #2a2415;
-            border: 1px solid #66521a;
-            border-radius: 6px;
-            font-size: 0.8em;
-            color: #d1b06a;
-            text-align: center;
-            line-height: 1.4;
+            margin-top: 15px; padding: 10px 12px; background-color: #2a2415; border: 1px solid #66521a;
+            border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4;
         }
 
-        .bloque {
-            max-width: 650px;
-            width: 100%;
-            margin: 15px auto 0;
-            padding: 20px;
-            border-radius: 10px;
-            background: #262626;
-            box-sizing: border-box;
-            text-align: left;
-            color: #e0e0e0;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-        }
-
-        .bloque h2 {
-            margin-top: 0;
-            font-size: 18px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 5px;
-            color: #ff5252;
-            text-align: left;
-        }
-
-        .bloque p {
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 8px 0 0;
-            color: #ccc;
-        }
-
-        .credits {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.85em;
-        }
-
-        .credits a {
-            color: #007bff;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .credits a:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        .bloque { max-width: 650px; width: 100%; margin: 15px auto 0; padding: 20px; border-radius: 10px; background: #262626; box-sizing: border-box; text-align: left; color: #e0e0e0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .bloque h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #444; padding-bottom: 5px; color: #ff5252; }
+        .bloque p { font-size: 14px; line-height: 1.5; margin: 8px 0 0; color: #ccc; }
+        .credits { text-align: center; margin-top: 20px; font-size: 0.85em; }
+        .credits a { color: #007bff; text-decoration: none; transition: color 0.2s; }
+        .credits a:hover { color: #0056b3; text-decoration: underline; }
+        .hidden { display: none !important; }
 
         @media (max-width: 520px) {
-            .task-input-row, .alarm-input-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .btn-add {
-                width: 100%;
-            }
+            .task-input-row { flex-direction: column; }
+            .btn-add { width: 100%; }
         }
     </style>
 </head>
@@ -512,12 +302,14 @@
 
     <div class="task-form">
         <div class="task-input-row">
-            <input type="text" id="taskInput" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
+            <input type="text" id="taskInput" class="input-task" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
             <button class="btn-add" onclick="addTask()">Agregar</button>
         </div>
         <div class="alarm-input-row">
             <span class="alarm-label">⏰ ALARMA:</span>
-            <input type="datetime-local" id="alarmInput" title="Selecciona la fecha y hora del recordatorio (Opcional)">
+            <input type="text" id="alarmQuickInput" class="input-alarm-quick" placeholder="Ej: 15:30 o mañana 09:00" onkeypress="handleKeyPress(event)">
+            <input type="datetime-local" id="alarmCalendar" class="input-alarm-calendar" title="Abrir Calendario" onchange="syncCalendarToQuick()">
+            <div class="alarm-help">Formatos: "15:30" (hoy), "mañana 10:00", o "12/09 14:00"</div>
         </div>
     </div>
 
@@ -541,13 +333,13 @@
     </div>
 
     <div class="warning-note">
-        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Puedes limpiar el historial y la caché sin problemas, pero borrar <strong>Cookies / Datos de sitios</strong> eliminará tus tareas. Usa la Copia de Seguridad para resguardar tus datos.
+        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Usa la Copia de Seguridad para resguardar tus datos.
     </div>
 </div>
 
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
-    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar o restaurar tu información mediante copias de seguridad en formato JSON.</p>
+    <p>Herramienta diseñada para organizar actividades. Escribe tu tarea y agregale una alarma con formatos rápidos. Soporta prioridades, auto-agrupado de tareas terminadas y copias de seguridad.</p>
 </div>
 
 <div class="credits">
@@ -558,24 +350,36 @@
     let tasks = [];
     let editingTaskId = null;
 
+    // --- REPRODUCTOR DE SONIDO DOBLE BIP (Volumen 50%) ---
     function playAlarmSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
+            const vol = 0.5; // 50% de volumen
+            const playBeep = (startTime) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'square'; // Un tono más de "reloj digital"
+                osc.frequency.setValueAtTime(800, startTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, startTime + 0.1);
+                
+                gain.gain.setValueAtTime(vol, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.15);
+            };
+
+            // Secuencia de doble bip: 
+            const now = ctx.currentTime;
+            playBeep(now);              // Primer bip
+            playBeep(now + 0.2);        // Segundo bip (200ms después)
+            playBeep(now + 0.8);        // Se repite un poco más tarde
+            playBeep(now + 1.0);
             
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
-            
-            gain.gain.setValueAtTime(0.3, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-            
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            
-            osc.start();
-            osc.stop(ctx.currentTime + 0.5);
         } catch(e) {
             console.warn("Audio Context error:", e);
         }
@@ -586,6 +390,59 @@
             Notification.requestPermission();
         }
     }
+
+    // --- SISTEMA DE PARSEO RÁPIDO DE FECHAS ---
+    function parseQuickDate(inputStr) {
+        if (!inputStr) return null;
+        const str = inputStr.trim().toLowerCase();
+        const now = new Date();
+        const year = now.getFullYear();
+        let targetDate = new Date();
+
+        // Detectar si dice "mañana"
+        const isTomorrow = str.includes("mañana");
+        if (isTomorrow) {
+            targetDate.setDate(targetDate.getDate() + 1);
+        }
+
+        // Buscar patrón de hora (ej: 15:30)
+        const timeMatch = str.match(/(\d{1,2}):(\d{2})/);
+        if (timeMatch) {
+            targetDate.setHours(parseInt(timeMatch[1], 10), parseInt(timeMatch[2], 10), 0, 0);
+        } else {
+            // Si no le puso hora, por defecto a las 09:00
+            targetDate.setHours(9, 0, 0, 0);
+        }
+
+        // Buscar patrón de fecha dd/mm (ej: 12/09)
+        const dateMatch = str.match(/(\d{1,2})[\/\-](\d{1,2})/);
+        if (dateMatch && !isTomorrow) {
+            targetDate.setDate(parseInt(dateMatch[1], 10));
+            targetDate.setMonth(parseInt(dateMatch[2], 10) - 1);
+        }
+
+        // Evitar programar en el pasado si solo se puso hora (ej. son las 15:00 y pone 10:00, pasa a mañana)
+        if (!isTomorrow && !dateMatch && timeMatch && targetDate < now) {
+            targetDate.setDate(targetDate.getDate() + 1);
+        }
+
+        return targetDate.toISOString();
+    }
+
+    // Si el usuario usa el calendario, llenar el texto rapido para mostrar la fecha elegida
+    function syncCalendarToQuick() {
+        const cal = document.getElementById('alarmCalendar');
+        const quick = document.getElementById('alarmQuickInput');
+        if(cal.value) {
+            const d = new Date(cal.value);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            quick.value = `${dd}/${mm} ${hh}:${min}`;
+        }
+    }
+
 
     function formatDate(dateString) {
         if (!dateString) return "Fecha desconocida";
@@ -641,12 +498,20 @@
 
     function addTask() {
         const input = document.getElementById('taskInput');
-        const alarmInput = document.getElementById('alarmInput');
+        const alarmQuick = document.getElementById('alarmQuickInput');
+        const alarmCal = document.getElementById('alarmCalendar');
         const text = input.value.trim();
 
         if (text === '') return;
 
         requestNotificationPermission();
+
+        let finalAlarmISO = null;
+        if (alarmQuick.value.trim() !== '') {
+            finalAlarmISO = parseQuickDate(alarmQuick.value);
+        } else if (alarmCal.value) {
+            finalAlarmISO = new Date(alarmCal.value).toISOString();
+        }
 
         const newTask = {
             id: Date.now().toString(),
@@ -655,21 +520,20 @@
             priority: false,
             createdAt: new Date().toISOString(),
             completedAt: null,
-            alarmAt: alarmInput.value ? new Date(alarmInput.value).toISOString() : null,
+            alarmAt: finalAlarmISO,
             alarmTriggered: false
         };
 
         tasks.push(newTask);
         input.value = '';
-        alarmInput.value = '';
+        alarmQuick.value = '';
+        alarmCal.value = '';
         saveAndRender();
         input.focus();
     }
 
     function handleKeyPress(e) {
-        if (e.key === 'Enter') {
-            addTask();
-        }
+        if (e.key === 'Enter') addTask();
     }
 
     function toggleTask(id) {
@@ -699,10 +563,7 @@
         renderTasks();
         setTimeout(() => {
             const input = document.getElementById('editInput_' + id);
-            if (input) {
-                input.focus();
-                input.select();
-            }
+            if (input) { input.focus(); input.select(); }
         }, 0);
     }
 
@@ -733,11 +594,8 @@
     }
 
     function handleEditKeyPress(e, id) {
-        if (e.key === 'Enter') {
-            saveEdit(id);
-        } else if (e.key === 'Escape') {
-            cancelEdit();
-        }
+        if (e.key === 'Enter') saveEdit(id);
+        else if (e.key === 'Escape') cancelEdit();
     }
 
     function saveAndRender() {
@@ -765,12 +623,9 @@
             saveTasks();
             playAlarmSound();
 
-            let message = "";
-            if (newlyOverdueCount === 1) {
-                message = `¡Se venció la tarea: "${lastOverdueTaskText}"!`;
-            } else {
-                message = `Se vencieron ${newlyOverdueCount} tareas mientras no estabas.`;
-            }
+            let message = newlyOverdueCount === 1 
+                ? `¡Se venció la tarea: "${lastOverdueTaskText}"!` 
+                : `Se vencieron ${newlyOverdueCount} tareas mientras no estabas.`;
 
             if ("Notification" in window && Notification.permission === "granted") {
                 new Notification("⏰ Gestor de Tareas", { body: message });
@@ -792,61 +647,42 @@
             const formattedAlarmValue = task.alarmAt ? new Date(task.alarmAt).toISOString().slice(0, 16) : '';
             li.innerHTML = `
                 <div class="edit-container">
-                    <input type="text" 
-                           id="editInput_${task.id}" 
-                           class="edit-input" 
-                           value="${task.text.replace(/"/g, '&quot;')}"
-                           onkeydown="handleEditKeyPress(event, '${task.id}')">
+                    <input type="text" id="editInput_${task.id}" class="edit-input" value="${task.text.replace(/"/g, '&quot;')}" onkeydown="handleEditKeyPress(event, '${task.id}')">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:12px; color:#17a2b8;">⏰</span>
-                        <input type="datetime-local" 
-                               id="editAlarm_${task.id}" 
-                               class="edit-input" 
-                               value="${formattedAlarmValue}">
+                        <input type="datetime-local" id="editAlarm_${task.id}" class="edit-input" value="${formattedAlarmValue}">
                     </div>
                 </div>
                 <div class="task-actions">
-                    <button class="btn-save" onclick="saveEdit('${task.id}')" title="Guardar">&#10003;</button>
-                    <button class="btn-cancel" onclick="cancelEdit()" title="Cancelar">&times;</button>
+                    <button class="btn-action-small btn-save" onclick="saveEdit('${task.id}')" title="Guardar">&#10003;</button>
+                    <button class="btn-action-small btn-cancel" onclick="cancelEdit()" title="Cancelar">&times;</button>
                 </div>
             `;
             return li;
         }
 
-        // Armar el bloque de fechas unidas por "|"
         const datesList = [];
         datesList.push(`<span>Creada: ${formatDate(task.createdAt || Number(task.id))}</span>`);
-        if (task.alarmAt) {
-            datesList.push(`<span class="date-alarm">🔔 Alarma: ${formatDate(task.alarmAt)}</span>`);
-        }
-        if (task.completed) {
-            datesList.push(`<span class="date-done">Completada: ${formatDate(task.completedAt)}</span>`);
-        }
+        if (task.alarmAt) datesList.push(`<span class="date-alarm">🔔 Alarma: ${formatDate(task.alarmAt)}</span>`);
+        if (task.completed) datesList.push(`<span class="date-done">Completada: ${formatDate(task.completedAt)}</span>`);
+        
         const datesHTML = datesList.join(' <span class="date-separator">|</span> ');
 
         li.innerHTML = `
-            <input type="checkbox" class="task-checkbox" 
-                   ${task.completed ? 'checked' : ''} 
-                   onchange="toggleTask('${task.id}')">
-            
+            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask('${task.id}')">
             <div class="task-content">
                 <div class="task-text">
                     ${task.text}
                     ${isOverdue ? `<span class="tag-overdue">⏰ VENCIDA</span>` : ''}
                 </div>
-                <div class="task-dates">
-                    ${datesHTML}
-                </div>
+                <div class="task-dates">${datesHTML}</div>
             </div>
-
             <div class="task-actions">
-                <button class="btn-priority ${task.priority ? 'active' : ''}" 
-                        onclick="togglePriority('${task.id}')" 
-                        title="${task.priority ? 'Quitar prioridad' : 'Marcar como urgente/prioritaria'}">
+                <button class="btn-action-small btn-priority ${task.priority ? 'active' : ''}" onclick="togglePriority('${task.id}')" title="Prioridad">
                     ${task.priority ? '❗' : '❕'}
                 </button>
-                <button class="btn-edit" onclick="startEdit('${task.id}')" title="Editar">&#9998;</button>
-                <button class="btn-delete" onclick="deleteTask('${task.id}')" title="Eliminar">&times;</button>
+                <button class="btn-action-small btn-edit" onclick="startEdit('${task.id}')" title="Editar">&#9998;</button>
+                <button class="btn-action-small btn-delete" onclick="deleteTask('${task.id}')" title="Eliminar">&times;</button>
             </div>
         `;
         return li;
@@ -863,17 +699,10 @@
         pendingList.innerHTML = '';
         completedContainer.innerHTML = '';
 
-        let pendingCount = 0;
-        let urgentCount = 0;
-        let completedCount = 0;
+        let pendingCount = 0, urgentCount = 0, completedCount = 0;
+        const pendingTasks = [], completedTasks = [];
 
-        const pendingTasks = [];
-        const completedTasks = [];
-
-        tasks.forEach(t => {
-            if (t.completed) completedTasks.push(t);
-            else pendingTasks.push(t);
-        });
+        tasks.forEach(t => t.completed ? completedTasks.push(t) : pendingTasks.push(t));
 
         pendingTasks.sort((a, b) => {
             if (a.priority !== b.priority) return a.priority ? -1 : 1;
@@ -887,22 +716,17 @@
         });
 
         const monthGroups = {};
-
         completedTasks.forEach(task => {
             completedCount++;
             const dateRef = task.completedAt || task.createdAt;
             const key = getMonthYearKey(dateRef);
             const label = getMonthYearLabel(dateRef);
 
-            if (!monthGroups[key]) {
-                monthGroups[key] = { label: label, items: [] };
-            }
+            if (!monthGroups[key]) monthGroups[key] = { label: label, items: [] };
             monthGroups[key].items.push(task);
         });
 
-        const sortedMonthKeys = Object.keys(monthGroups).sort().reverse();
-
-        sortedMonthKeys.forEach((key, index) => {
+        Object.keys(monthGroups).sort().reverse().forEach((key, index) => {
             const group = monthGroups[key];
             group.items.sort((a, b) => getTimestamp(a) - getTimestamp(b));
 
@@ -917,21 +741,16 @@
             const ul = document.createElement('ul');
             ul.className = 'task-list';
             ul.style.marginTop = '10px';
-
-            group.items.forEach(task => {
-                ul.appendChild(buildTaskElement(task));
-            });
+            group.items.forEach(task => ul.appendChild(buildTaskElement(task)));
 
             monthDetails.appendChild(monthSummary);
             monthDetails.appendChild(ul);
             completedContainer.appendChild(monthDetails);
         });
 
-        if (urgentCount > 0) {
-            pendingTitle.innerHTML = `Pendientes (${pendingCount}) <span class="urgent-tag">• ❗ ${urgentCount} ${urgentCount === 1 ? 'urgente' : 'urgentes'}</span>`;
-        } else {
-            pendingTitle.innerText = `Pendientes (${pendingCount})`;
-        }
+        pendingTitle.innerHTML = urgentCount > 0 
+            ? `Pendientes (${pendingCount}) <span class="urgent-tag">• ❗ ${urgentCount} urgentes</span>` 
+            : `Pendientes (${pendingCount})`;
 
         completedSummary.innerText = `Completadas (${completedCount})`;
         pendingSection.classList.toggle('hidden', pendingCount === 0);
@@ -939,15 +758,11 @@
     }
 
     function exportBackup() {
-        if (tasks.length === 0) {
-            alert("No hay tareas registradas para exportar.");
-            return;
-        }
+        if (tasks.length === 0) return alert("No hay tareas registradas para exportar.");
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
         const downloadAnchor = document.createElement('a');
-        const dateStr = new Date().toISOString().slice(0,10);
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `backup_tareas_${dateStr}.json`);
+        downloadAnchor.href = dataStr;
+        downloadAnchor.download = `backup_tareas_${new Date().toISOString().slice(0,10)}.json`;
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
@@ -962,25 +777,18 @@
             try {
                 const imported = JSON.parse(e.target.result);
                 if (Array.isArray(imported)) {
-                    if (confirm("¿Deseas restaurar esta copia de seguridad? Se reemplazarán las tareas actuales.")) {
-                        tasks = imported;
-                        saveAndRender();
-                        checkAlarms();
-                        alert("¡Copia de seguridad restaurada correctamente!");
+                    if (confirm("¿Restaurar copia? Se reemplazarán las tareas actuales.")) {
+                        tasks = imported; saveAndRender(); checkAlarms(); alert("¡Restaurado con éxito!");
                     }
-                } else {
-                    alert("El archivo no contiene un formato de backup de tareas válido.");
-                }
-            } catch (err) {
-                alert("Error al procesar el archivo JSON.");
-            }
+                } else alert("Formato inválido.");
+            } catch (err) { alert("Error al leer JSON."); }
         };
         reader.readAsText(file);
         event.target.value = '';
     }
 
     loadTasks();
-    setInterval(checkAlarms, 10000);
+    setInterval(checkAlarms, 10000); // Revisa las alarmas cada 10 segundos
 </script>
 
 </body>

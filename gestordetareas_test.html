@@ -35,11 +35,41 @@
             padding-bottom: 10px;
         }
 
-        .input-group {
+        .task-form {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .task-input-row {
             display: flex;
             gap: 10px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
+        }
+
+        .alarm-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #1e1e1e;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px dashed #444;
+        }
+
+        .alarm-label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #17a2b8;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
         }
 
         input[type="text"], input[type="datetime-local"] {
@@ -48,18 +78,19 @@
             border-radius: 6px;
             background-color: #2d2d2d;
             color: #ffffff;
-            font-size: 14px;
+            font-size: 15px;
             box-sizing: border-box;
         }
 
         input[type="text"] {
-            flex: 2;
+            flex: 1;
             min-width: 200px;
         }
 
         input[type="datetime-local"] {
             flex: 1;
-            min-width: 170px;
+            padding: 10px;
+            font-size: 14px;
         }
 
         input[type="datetime-local"]::-webkit-calendar-picker-indicator {
@@ -86,6 +117,7 @@
             background-color: #007bff;
             color: white;
             flex-shrink: 0;
+            min-width: 120px;
         }
 
         .btn-add:hover {
@@ -158,12 +190,15 @@
             letter-spacing: 0.5px;
         }
 
+        /* Disposición horizontal de las fechas */
         .task-dates {
             font-size: 0.75em;
             color: #888;
             display: flex;
-            flex-direction: column;
-            gap: 2px;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
         }
 
         .date-alarm {
@@ -173,6 +208,11 @@
 
         .date-done {
             color: #28a745;
+        }
+
+        .date-separator {
+            color: #555;
+            user-select: none;
         }
 
         .task-actions {
@@ -455,8 +495,9 @@
         }
 
         @media (max-width: 520px) {
-            .input-group {
+            .task-input-row, .alarm-input-row {
                 flex-direction: column;
+                align-items: stretch;
             }
             .btn-add {
                 width: 100%;
@@ -469,10 +510,15 @@
 <div class="container">
     <h2>Mis Tareas</h2>
 
-    <div class="input-group">
-        <input type="text" id="taskInput" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
-        <input type="datetime-local" id="alarmInput" title="Fecha y hora del recordatorio (opcional)">
-        <button class="btn-add" onclick="addTask()">Agregar</button>
+    <div class="task-form">
+        <div class="task-input-row">
+            <input type="text" id="taskInput" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
+            <button class="btn-add" onclick="addTask()">Agregar</button>
+        </div>
+        <div class="alarm-input-row">
+            <span class="alarm-label">⏰ ALARMA:</span>
+            <input type="datetime-local" id="alarmInput" title="Selecciona la fecha y hora del recordatorio (Opcional)">
+        </div>
     </div>
 
     <div id="pendingSection">
@@ -512,7 +558,6 @@
     let tasks = [];
     let editingTaskId = null;
 
-    // --- REPRODUCTOR DE SONIDO DE ALARMA (Web Audio API) ---
     function playAlarmSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -520,8 +565,8 @@
             const gain = ctx.createGain();
             
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Nota Re5
-            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // Nota La5
+            osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
             
             gain.gain.setValueAtTime(0.3, ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
@@ -536,7 +581,6 @@
         }
     }
 
-    // Pedir permiso para notificaciones del navegador
     function requestNotificationPermission() {
         if ("Notification" in window && Notification.permission === "default") {
             Notification.requestPermission();
@@ -588,7 +632,7 @@
         if (savedTasks) {
             tasks = JSON.parse(savedTasks);
         }
-        checkAlarms(); // Revisar si hubo alarmas vencidas mientras estaba cerrado
+        checkAlarms();
     }
 
     function saveTasks() {
@@ -619,6 +663,7 @@
         input.value = '';
         alarmInput.value = '';
         saveAndRender();
+        input.focus();
     }
 
     function handleKeyPress(e) {
@@ -680,7 +725,7 @@
             const newAlarm = alarmInput && alarmInput.value ? new Date(alarmInput.value).toISOString() : null;
             if (task.alarmAt !== newAlarm) {
                 task.alarmAt = newAlarm;
-                task.alarmTriggered = false; // Resetear bandera si cambió la fecha
+                task.alarmTriggered = false; 
             }
         }
         editingTaskId = null;
@@ -700,7 +745,6 @@
         renderTasks();
     }
 
-    // --- SISTEMA DE CONTROL DE ALARMAS ---
     function checkAlarms() {
         const now = new Date();
         let newlyOverdueCount = 0;
@@ -753,10 +797,13 @@
                            class="edit-input" 
                            value="${task.text.replace(/"/g, '&quot;')}"
                            onkeydown="handleEditKeyPress(event, '${task.id}')">
-                    <input type="datetime-local" 
-                           id="editAlarm_${task.id}" 
-                           class="edit-input" 
-                           value="${formattedAlarmValue}">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:12px; color:#17a2b8;">⏰</span>
+                        <input type="datetime-local" 
+                               id="editAlarm_${task.id}" 
+                               class="edit-input" 
+                               value="${formattedAlarmValue}">
+                    </div>
                 </div>
                 <div class="task-actions">
                     <button class="btn-save" onclick="saveEdit('${task.id}')" title="Guardar">&#10003;</button>
@@ -765,6 +812,17 @@
             `;
             return li;
         }
+
+        // Armar el bloque de fechas unidas por "|"
+        const datesList = [];
+        datesList.push(`<span>Creada: ${formatDate(task.createdAt || Number(task.id))}</span>`);
+        if (task.alarmAt) {
+            datesList.push(`<span class="date-alarm">🔔 Alarma: ${formatDate(task.alarmAt)}</span>`);
+        }
+        if (task.completed) {
+            datesList.push(`<span class="date-done">Completada: ${formatDate(task.completedAt)}</span>`);
+        }
+        const datesHTML = datesList.join(' <span class="date-separator">|</span> ');
 
         li.innerHTML = `
             <input type="checkbox" class="task-checkbox" 
@@ -777,9 +835,7 @@
                     ${isOverdue ? `<span class="tag-overdue">⏰ VENCIDA</span>` : ''}
                 </div>
                 <div class="task-dates">
-                    <span>Creada: ${formatDate(task.createdAt || Number(task.id))}</span>
-                    ${task.alarmAt ? `<span class="date-alarm">🔔 Alarma: ${formatDate(task.alarmAt)}</span>` : ''}
-                    ${task.completed ? `<span class="date-done">Completada: ${formatDate(task.completedAt)}</span>` : ''}
+                    ${datesHTML}
                 </div>
             </div>
 
@@ -923,7 +979,6 @@
         event.target.value = '';
     }
 
-    // Inicializar app y activar verificación periódica cada 10 segundos
     loadTasks();
     setInterval(checkAlarms, 10000);
 </script>

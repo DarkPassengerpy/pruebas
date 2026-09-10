@@ -35,71 +35,82 @@
             padding-bottom: 10px;
         }
 
-        .input-group {
-            display: flex;
-            gap: 10px;
+        /* --- Diseño del Formulario (2 Niveles) --- */
+        .task-form {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
             margin-bottom: 25px;
-            align-items: center;
-            flex-wrap: wrap;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        input[type="text"] {
-            flex: 2;
+        .task-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .alarm-input-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            background-color: #1e1e1e;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px dashed #444;
+        }
+
+        .alarm-label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #17a2b8;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        input[type="text"], input[type="date"], input[type="time"] {
             padding: 12px;
             border: 1px solid #444;
             border-radius: 6px;
             background-color: #2d2d2d;
             color: #ffffff;
             font-size: 15px;
-            min-width: 200px;
             box-sizing: border-box;
         }
 
-        /* Diseño compacto para el calendario */
-        .alarm-wrapper {
-            display: flex;
-            align-items: center;
-            background-color: #222;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 0 8px;
+        input[type="text"] {
             flex: 1;
-            min-width: 140px;
-            max-width: 220px;
+            min-width: 200px;
         }
 
-        .alarm-icon {
-            color: #17a2b8;
-            font-size: 16px;
-            margin-right: 5px;
+        /* Inputs de fecha y hora separados */
+        input[type="date"] {
+            width: 150px;
+            padding: 10px;
+            font-size: 14px;
         }
 
-        input[type="datetime-local"] {
-            background: transparent;
-            border: none;
-            color: #b0b0b0;
-            font-size: 13px;
-            padding: 10px 0;
-            width: 100%;
+        input[type="time"] {
+            width: 110px;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
             cursor: pointer;
         }
 
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.8);
-            cursor: pointer;
-            padding: 2px;
-        }
-
-        input[type="text"]:focus, input[type="datetime-local"]:focus {
+        input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus {
             outline: none;
-        }
-
-        .input-group:focus-within input[type="text"] {
             border-color: #007bff;
-        }
-
-        .alarm-wrapper:focus-within {
-            border-color: #17a2b8;
         }
 
         button {
@@ -116,12 +127,12 @@
             background-color: #007bff;
             color: white;
             flex-shrink: 0;
+            min-width: 120px;
         }
 
-        .btn-add:hover {
-            background-color: #0056b3;
-        }
+        .btn-add:hover { background-color: #0056b3; }
 
+        /* --- Lista de Tareas --- */
         .task-list {
             list-style: none;
             padding: 0;
@@ -493,12 +504,9 @@
         }
 
         @media (max-width: 550px) {
-            .input-group {
+            .task-input-row, .alarm-input-row {
                 flex-direction: column;
                 align-items: stretch;
-            }
-            .alarm-wrapper {
-                max-width: 100%;
             }
             .btn-add {
                 width: 100%;
@@ -511,16 +519,17 @@
 <div class="container">
     <h2>Mis Tareas</h2>
 
-    <div class="input-group">
-        <input type="text" id="taskInput" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
-        
-        <!-- Calendario Compacto -->
-        <div class="alarm-wrapper">
-            <span class="alarm-icon">⏰</span>
-            <input type="datetime-local" id="alarmInput" title="Fecha y hora de alarma (Opcional)">
+    <!-- Formulario en 2 niveles con Fecha y Hora separadas -->
+    <div class="task-form">
+        <div class="task-input-row">
+            <input type="text" id="taskInput" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
+            <button class="btn-add" onclick="addTask()">Agregar</button>
         </div>
-
-        <button class="btn-add" onclick="addTask()">Agregar</button>
+        <div class="alarm-input-row">
+            <span class="alarm-label">⏰ ALARMA:</span>
+            <input type="date" id="alarmDateInput" title="Selecciona el día (Opcional)">
+            <input type="time" id="alarmTimeInput" title="Ingresa la hora (Opcional)">
+        </div>
     </div>
 
     <div id="pendingSection">
@@ -564,7 +573,7 @@
     function playAlarmSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const vol = 0.5; // 50% de volumen
+            const vol = 0.5;
             const playBeep = (startTime) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
@@ -654,12 +663,34 @@
 
     function addTask() {
         const input = document.getElementById('taskInput');
-        const alarmInput = document.getElementById('alarmInput');
+        const dateInput = document.getElementById('alarmDateInput');
+        const timeInput = document.getElementById('alarmTimeInput');
         const text = input.value.trim();
 
         if (text === '') return;
 
         requestNotificationPermission();
+
+        let finalAlarmISO = null;
+        
+        // Si ingresó ambos (fecha y hora)
+        if (dateInput.value && timeInput.value) {
+            finalAlarmISO = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
+        } 
+        // Si ingresó solo la hora, asumimos el día de hoy
+        else if (!dateInput.value && timeInput.value) {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD local
+            const tempDate = new Date(`${today}T${timeInput.value}`);
+            // Si la hora ya pasó hoy, asume que es para mañana
+            if(tempDate < new Date()) {
+                tempDate.setDate(tempDate.getDate() + 1);
+            }
+            finalAlarmISO = tempDate.toISOString();
+        }
+        // Si ingresó solo fecha, le ponemos una hora por defecto (ej: 09:00 AM)
+        else if (dateInput.value && !timeInput.value) {
+            finalAlarmISO = new Date(`${dateInput.value}T09:00`).toISOString();
+        }
 
         const newTask = {
             id: Date.now().toString(),
@@ -668,13 +699,14 @@
             priority: false,
             createdAt: new Date().toISOString(),
             completedAt: null,
-            alarmAt: alarmInput.value ? new Date(alarmInput.value).toISOString() : null,
+            alarmAt: finalAlarmISO,
             alarmTriggered: false
         };
 
         tasks.push(newTask);
         input.value = '';
-        alarmInput.value = '';
+        dateInput.value = '';
+        timeInput.value = '';
         saveAndRender();
         input.focus();
     }
@@ -721,7 +753,8 @@
 
     function saveEdit(id) {
         const input = document.getElementById('editInput_' + id);
-        const alarmInput = document.getElementById('editAlarm_' + id);
+        const dateInput = document.getElementById('editAlarmDate_' + id);
+        const timeInput = document.getElementById('editAlarmTime_' + id);
         if (!input) return;
 
         const newText = input.value.trim();
@@ -730,9 +763,21 @@
         const task = tasks.find(t => t.id === id);
         if (task) {
             task.text = newText;
-            const newAlarm = alarmInput && alarmInput.value ? new Date(alarmInput.value).toISOString() : null;
-            if (task.alarmAt !== newAlarm) {
-                task.alarmAt = newAlarm;
+            
+            let finalAlarmISO = null;
+            if (dateInput.value && timeInput.value) {
+                finalAlarmISO = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
+            } else if (!dateInput.value && timeInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                const tempDate = new Date(`${today}T${timeInput.value}`);
+                if(tempDate < new Date()) tempDate.setDate(tempDate.getDate() + 1);
+                finalAlarmISO = tempDate.toISOString();
+            } else if (dateInput.value && !timeInput.value) {
+                finalAlarmISO = new Date(`${dateInput.value}T09:00`).toISOString();
+            }
+
+            if (task.alarmAt !== finalAlarmISO) {
+                task.alarmAt = finalAlarmISO;
                 task.alarmTriggered = false; 
             }
         }
@@ -791,13 +836,21 @@
         li.className = `task-item ${task.completed ? 'completed' : ''} ${task.priority && !task.completed ? 'is-priority' : ''}`;
 
         if (editingTaskId === task.id) {
-            const formattedAlarmValue = task.alarmAt ? new Date(task.alarmAt).toISOString().slice(0, 16) : '';
+            let dateVal = "";
+            let timeVal = "";
+            if(task.alarmAt) {
+                const d = new Date(task.alarmAt);
+                dateVal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                timeVal = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            }
+
             li.innerHTML = `
                 <div class="edit-container">
                     <input type="text" id="editInput_${task.id}" class="edit-input" value="${task.text.replace(/"/g, '&quot;')}" onkeydown="handleEditKeyPress(event, '${task.id}')">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:12px; color:#17a2b8;">⏰</span>
-                        <input type="datetime-local" id="editAlarm_${task.id}" class="edit-input" value="${formattedAlarmValue}" style="width: auto;">
+                        <input type="date" id="editAlarmDate_${task.id}" class="edit-input" style="width:130px; padding:6px;" value="${dateVal}">
+                        <input type="time" id="editAlarmTime_${task.id}" class="edit-input" style="width:100px; padding:6px;" value="${timeVal}">
                     </div>
                 </div>
                 <div class="task-actions">

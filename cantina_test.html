@@ -66,6 +66,31 @@
     }
     button:hover { background: #0d47a1; }
 
+    /* Estilos para botones de filtro */
+    .btn-filtro {
+      background: #333;
+      border: 1px solid #555;
+      color: #ccc;
+      width: auto;
+      padding: 8px 14px;
+      font-size: 13px;
+      height: auto;
+      margin: 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-filtro:hover {
+      background: #444;
+      color: #fff;
+    }
+    .btn-filtro.active {
+      background: #1976d2;
+      color: #fff;
+      border-color: #1976d2;
+      font-weight: bold;
+    }
+
     .btn-exportar {
       background: #25d366;
       color: #fff;
@@ -187,14 +212,14 @@
     
     <button onclick="registrarDia()">Registrar</button>
 
-    <!-- Filtro por Estado (Contado / Crédito / Todos) -->
+    <!-- Botones de Filtro por Estado -->
     <div style="margin-top: 15px; background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #444;">
-      <label for="filtroEstado" style="font-size: 13px; color: #aaa; display: block; margin-bottom: 4px;">🔍 Filtrar lista de registros:</label>
-      <select id="filtroEstado" onchange="mostrarRegistros()" style="margin: 0;">
-        <option value="todos">Todos los registros</option>
-        <option value="contado">🟢 Solo Contado</option>
-        <option value="credito">🔴 Solo Crédito</option>
-      </select>
+      <div style="font-size: 13px; color: #aaa; margin-bottom: 8px;">🔍 Filtrar por estado:</div>
+      <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+        <button id="btnFiltroTodos" class="btn-filtro active" onclick="filtrarPor('todos')">Todos</button>
+        <button id="btnFiltroContado" class="btn-filtro" onclick="filtrarPor('contado')">🟢 Contado</button>
+        <button id="btnFiltroCredito" class="btn-filtro" onclick="filtrarPor('credito')">🔴 Crédito</button>
+      </div>
     </div>
 
     <div style="margin-top: 12px; font-size: 13px; color: #aaa;" id="totalGeneral"></div>
@@ -248,13 +273,14 @@
 
   <div class="bloque">
     <h2>ℹ️ ¿Qué es "Registro de Cantina"?</h2>
-    <p>Es una herramienta web diseñada para llevar el control de tus consumos en la cantina. Permite realizar múltiples registros por día indicando fecha, producto o descripción obligatoria, estado de pago al contado, número de ticket opcional, filtrar entre Contado y Crédito, agruparlos por mes, copiar registros mensuales para Excel o descargar archivos anuales formateados, y realizar copias de seguridad.</p>
+    <p>Es una herramienta web diseñada para llevar el control de tus consumos en la cantina. Permite realizar múltiples registros por día indicando fecha, producto o descripción obligatoria, estado de pago al contado, número de ticket opcional, filtrar rápidamente con botones entre Contado y Crédito, agruparlos por mes, copiar registros mensuales para Excel o descargar archivos anuales formateados, y realizar copias de seguridad.</p>
   </div>
 
   <footer id="teamName">Dark Passenger</footer>
 
   <script>
     let registros = JSON.parse(localStorage.getItem("cantinaRegistros")) || [];
+    let filtroActual = "todos"; // Estado inicial del filtro
     
     // Asegurar que todos los registros antiguos tengan un ID único
     registros = registros.map(item => {
@@ -340,20 +366,30 @@
       return nombre.charAt(0).toUpperCase() + nombre.slice(1);
     }
 
+    function filtrarPor(tipo) {
+      filtroActual = tipo;
+
+      // Actualizar la apariencia activa de los botones
+      document.getElementById("btnFiltroTodos").classList.toggle("active", tipo === "todos");
+      document.getElementById("btnFiltroContado").classList.toggle("active", tipo === "contado");
+      document.getElementById("btnFiltroCredito").classList.toggle("active", tipo === "credito");
+
+      mostrarRegistros();
+    }
+
     function mostrarRegistros() {
       const div = document.getElementById("listaRegistros");
       const totalGeneralDiv = document.getElementById("totalGeneral");
-      const filtro = document.getElementById("filtroEstado") ? document.getElementById("filtroEstado").value : "todos";
       
-      // Aplicar filtro de visualización
+      // Aplicar filtro de visualización según el botón seleccionado
       let registrosFiltrados = registros;
-      if (filtro === "contado") {
+      if (filtroActual === "contado") {
         registrosFiltrados = registros.filter(r => r.pagado === true);
-      } else if (filtro === "credito") {
+      } else if (filtroActual === "credito") {
         registrosFiltrados = registros.filter(r => r.pagado === false);
       }
 
-      if (filtro === "todos") {
+      if (filtroActual === "todos") {
         totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
       } else {
         totalGeneralDiv.innerHTML = `Mostrando: <strong>${registrosFiltrados.length}</strong> de <strong>${registros.length}</strong> registros`;

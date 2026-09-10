@@ -173,7 +173,7 @@
     <input type="date" id="fechaCantina" onchange="actualizarDiaPreview()">
     <div id="previewDia" style="font-size: 13px; color: #81c784; margin-bottom: 5px; font-weight: bold;"></div>
     
-    <!-- Campo de producto con autocompletado vinculado al datalist -->
+    <!-- Campo de producto con autocompletado -->
     <input type="text" id="nombreProducto" placeholder="Producto o descripción *" list="listaProductos">
     <datalist id="listaProductos"></datalist>
     
@@ -187,7 +187,17 @@
     
     <button onclick="registrarDia()">Registrar</button>
 
-    <div style="margin-top: 10px; font-size: 14px; color: #aaa;" id="totalGeneral"></div>
+    <!-- Filtro por Estado (Contado / Crédito / Todos) -->
+    <div style="margin-top: 15px; background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #444;">
+      <label for="filtroEstado" style="font-size: 13px; color: #aaa; display: block; margin-bottom: 4px;">🔍 Filtrar lista de registros:</label>
+      <select id="filtroEstado" onchange="mostrarRegistros()" style="margin: 0;">
+        <option value="todos">Todos los registros</option>
+        <option value="contado">🟢 Solo Contado</option>
+        <option value="credito">🔴 Solo Crédito</option>
+      </select>
+    </div>
+
+    <div style="margin-top: 12px; font-size: 13px; color: #aaa;" id="totalGeneral"></div>
 
     <div id="listaRegistros"></div>
 
@@ -238,7 +248,7 @@
 
   <div class="bloque">
     <h2>ℹ️ ¿Qué es "Registro de Cantina"?</h2>
-    <p>Es una herramienta web diseñada para llevar el control de tus consumos en la cantina. Permite realizar múltiples registros por día indicando fecha, producto o descripción obligatoria, estado de pago al contado, número de ticket opcional, agruparlos por mes, copiar registros mensuales para Excel o descargar archivos anuales formateados, y realizar copias de seguridad.</p>
+    <p>Es una herramienta web diseñada para llevar el control de tus consumos en la cantina. Permite realizar múltiples registros por día indicando fecha, producto o descripción obligatoria, estado de pago al contado, número de ticket opcional, filtrar entre Contado y Crédito, agruparlos por mes, copiar registros mensuales para Excel o descargar archivos anuales formateados, y realizar copias de seguridad.</p>
   </div>
 
   <footer id="teamName">Dark Passenger</footer>
@@ -333,8 +343,21 @@
     function mostrarRegistros() {
       const div = document.getElementById("listaRegistros");
       const totalGeneralDiv = document.getElementById("totalGeneral");
+      const filtro = document.getElementById("filtroEstado") ? document.getElementById("filtroEstado").value : "todos";
       
-      totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
+      // Aplicar filtro de visualización
+      let registrosFiltrados = registros;
+      if (filtro === "contado") {
+        registrosFiltrados = registros.filter(r => r.pagado === true);
+      } else if (filtro === "credito") {
+        registrosFiltrados = registros.filter(r => r.pagado === false);
+      }
+
+      if (filtro === "todos") {
+        totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
+      } else {
+        totalGeneralDiv.innerHTML = `Mostrando: <strong>${registrosFiltrados.length}</strong> de <strong>${registros.length}</strong> registros`;
+      }
 
       // Autocompletado dinámico
       const datalist = document.getElementById("listaProductos");
@@ -343,13 +366,13 @@
         datalist.innerHTML = productosUnicos.map(p => `<option value="${p}">`).join("");
       }
 
-      if (registros.length === 0) {
-        div.innerHTML = "<p style='color: #888; margin-top: 15px;'>No hay registros todavía.</p>";
+      if (registrosFiltrados.length === 0) {
+        div.innerHTML = "<p style='color: #888; margin-top: 15px;'>No hay registros para mostrar con este filtro.</p>";
         return;
       }
 
       let agrupados = {};
-      registros.forEach(item => {
+      registrosFiltrados.forEach(item => {
         const mesKey = item.fecha.slice(0, 7);
         if (!agrupados[mesKey]) {
           agrupados[mesKey] = [];

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Cantina</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="ico.png">
+  <!-- Librería SheetJS para generar archivos .xlsx reales -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: "Aptos", Arial, sans-serif;
+      margin: 0; padding: 20px;
+      background: #121212;
+      color: #333;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #262626;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      text-align: center;
+      color: #e0e0e0;
+      box-sizing: border-box;
+    }
+
+    h1 { color: #ff5252; }
+
+    input, select, textarea {
+      font-family: "Aptos", Arial, sans-serif;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #1e1e1e;
+      color: #fff;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    button {
+      background: #1976d2; border: none; cursor: pointer;
+      font-size: 14px; color: white; width: 120px;
+      height: 36px; border-radius: 4px; padding: 0;
+      line-height: 1; display: inline-flex;
+      align-items: center; justify-content: center; margin: 6px;
+      transition: 0.3s;
+    }
+    button:hover { background: #0d47a1; }
+
+    .btn-exportar {
+      background: #25d366;
+      color: #fff;
+      width: auto;
+      padding: 0 15px;
+      font-weight: bold;
+    }
+    .btn-exportar:hover { background: #128c7e; }
+
+    .btn-limpiar {
+      background: #d32f2f;
+    }
+    .btn-limpiar:hover { background: #b71c1c; }
+
+    .mes-grupo {
+      background: #1e1e1e;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      overflow: hidden;
+      text-align: left;
+    }
+    summary {
+      padding: 12px 15px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #81c784;
+      background: #222;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+    }
+    summary:hover {
+      background: #2a2a2a;
+    }
+    .mes-contenido {
+      padding: 10px;
+    }
+
+    table { width: 100%; border-collapse: collapse; color: #e0e0e0; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #444; color: #e0e0e0; font-size: 13px; }
+    td:last-child { text-align: right; }
+
+    .delete-btn {
+      background: #f44336; border: none; cursor: pointer;
+      font-size: 16px; color: white; width: 28px; height: 28px;
+      border-radius: 4px; padding: 0; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .delete-btn:hover { background: #d32f2f; }
+
+    /* Estilos para las secciones retraíbles */
+    .export-section {
+      margin-top: 20px; 
+      background: #1e1e1e; 
+      border-radius: 8px; 
+      text-align: left;
+      overflow: hidden;
+      border: 1px solid #444;
+    }
+    .export-section summary {
+      padding: 12px 15px;
+      font-size: 16px;
+      justify-content: flex-start;
+      gap: 10px;
+    }
+    .export-section-content {
+      padding: 15px;
+      border-top: 1px solid #444;
+    }
+
+    .bloque {
+      max-width: 500px;
+      width: 100%;
+      margin: 15px auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: #262626;
+      box-sizing: border-box;
+      text-align: left;
+      color: #e0e0e0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .bloque h2 {
+      margin-top: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+      color: #ff5252;
+    }
+    .bloque p {
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 8px 0 0;
+      color: #ccc;
+    }
+
+    footer#teamName {
+      text-align: center;
+      margin-top: 30px;
+      font-family: "Courier New", monospace;
+      font-size: 20px;
+      font-weight: bold;
+      color: #6a1b9a;
+      letter-spacing: 2px;
+      text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍽️ Registro de Cantina</h1>
+
+    <input type="date" id="fechaCantina" onchange="actualizarDiaPreview()">
+    <div id="previewDia" style="font-size: 13px; color: #81c784; margin-bottom: 5px; font-weight: bold;"></div>
+    
+    <input type="text" id="nombreProducto" placeholder="Producto o descripción *" list="listaProductos">
+    <datalist id="listaProductos"></datalist>
+    
+    <div style="margin: 8px 0; text-align: center;">
+      <label style="font-size: 13px; color: #ccc; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="pagadoContado" style="width: auto; margin: 0; transform: scale(1.2);"> Pagado al contado
+      </label>
+    </div>
+
+    <input type="number" id="numeroTicket" placeholder="Nro. de Ticket (opcional)">
+    
+    <button onclick="registrarDia()">Registrar</button>
+
+    <div style="margin-top: 10px; font-size: 14px; color: #aaa;" id="totalGeneral"></div>
+
+    <div id="listaRegistros"></div>
+
+    <!-- Sección de Exportar (Retraíble) -->
+    <details class="export-section">
+      <summary>📤 Exportar Registros</summary>
+      <div class="export-section-content">
+        <!-- Copiar por mes -->
+        <div style="margin-bottom: 10px;">
+          <label for="mesFiltro" style="font-size: 13px; display: block; margin-bottom: 4px;">1. Copiar al portapapeles (por Mes):</label>
+          <input type="month" id="mesFiltro">
+        </div>
+        <div style="text-align: center;">
+          <button class="btn-exportar" onclick="exportar('mes')">Copiar Mes 📋</button>
+        </div>
+        
+        <hr style="border-color: #444; margin: 20px 0;">
+
+        <!-- Descargar archivo .xlsx por año -->
+        <div style="margin-bottom: 10px;">
+          <label for="anioFiltro" style="font-size: 13px; display: block; margin-bottom: 4px;">2. Descargar archivo Excel (.xlsx por Año):</label>
+          <input type="number" id="anioFiltro" placeholder="Ej: 2026">
+        </div>
+        <div style="text-align: center;">
+          <button class="btn-exportar" style="background: #107c41;" onclick="descargarExcelAnio()">Descargar Excel 📊</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- Sección de Backup (Retraíble) -->
+    <details class="export-section">
+      <summary>💾 Copia de Seguridad (Backup)</summary>
+      <div class="export-section-content">
+        <p style="font-size: 12px; color: #aaa; margin-top: 0; margin-bottom: 10px;">Guardá un archivo de respaldo en tu PC para no perder datos si el navegador se limpia.</p>
+        <div style="text-align: center; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+          <button class="btn-exportar" onclick="descargarBackup()">📥 Descargar Backup</button>
+          <label class="btn-exportar" style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 15px; border-radius: 4px; margin: 6px;">
+            📤 Cargar Backup <input type="file" id="inputBackup" accept=".json" style="display: none;" onchange="importarBackup(event)">
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <div style="margin-top: 15px;">
+      <button class="btn-limpiar" onclick="borrarTodo()">Borrar Todo</button>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h2>ℹ️ ¿Qué es "Registro de Cantina"?</h2>
+    <p>Es una herramienta web diseñada para llevar el control de tus consumos en la cantina. Permite realizar múltiples registros por día indicando fecha, producto o descripción obligatoria, estado de pago al contado, número de ticket opcional, agruparlos por mes, exportar directamente a Excel mediante portapapeles y realizar copias de seguridad.</p>
+  </div>
+
+  <footer id="teamName">Dark Passenger</footer>
+
+  <script>
+    let registros = JSON.parse(localStorage.getItem("cantinaRegistros")) || [];
+    
+    registros = registros.map(item => {
+      if (!item.id) {
+        item.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+      }
+      return item;
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const hoy = new Date();
+      const hoyISO = hoy.toISOString().split("T")[0];
+      
+      document.getElementById("fechaCantina").value = hoyISO;
+      document.getElementById("mesFiltro").value = hoyISO.slice(0, 7);
+      document.getElementById("anioFiltro").value = hoy.getFullYear();
+      
+      actualizarDiaPreview();
+      mostrarRegistros();
+    });
+
+    function obtenerNombreDia(fechaStr) {
+      const [anio, mes, dia] = fechaStr.split("-");
+      const fecha = new Date(anio, mes - 1, dia);
+      const opciones = { weekday: 'long' };
+      let nombre = fecha.toLocaleDateString('es-ES', opciones);
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function actualizarDiaPreview() {
+      const fechaVal = document.getElementById("fechaCantina").value;
+      if (fechaVal) {
+        const diaSemana = obtenerNombreDia(fechaVal);
+        document.getElementById("previewDia").innerText = `📅 ${diaSemana}`;
+      } else {
+        document.getElementById("previewDia").innerText = "";
+      }
+    }
+
+    function guardarDatos() {
+      localStorage.setItem("cantinaRegistros", JSON.stringify(registros));
+    }
+
+    function registrarDia() {
+      const fecha = document.getElementById("fechaCantina").value;
+      const productoInput = document.getElementById("nombreProducto").value.trim();
+      const pagadoContado = document.getElementById("pagadoContado").checked;
+      const ticketInput = document.getElementById("numeroTicket").value.trim();
+      
+      if (!fecha) return alert("Selecciona una fecha válida");
+      if (!productoInput) return alert("Por favor, ingresa el producto o descripción.");
+
+      if (ticketInput !== "") {
+        const ticketExistente = registros.some(r => r.ticket === ticketInput);
+        if (ticketExistente) {
+          return alert(`⚠️ ¡Atención! El número de ticket #${ticketInput} ya se encuentra registrado.`);
+        }
+      }
+
+      const ticket = ticketInput !== "" ? ticketInput : "No se imprimió";
+      const id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+
+      registros.push({ id, fecha, producto: productoInput, pagado: pagadoContado, ticket });
+      registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+      guardarDatos();
+      mostrarRegistros();
+
+      document.getElementById("mesFiltro").value = fecha.slice(0, 7);
+      document.getElementById("anioFiltro").value = fecha.slice(0, 4);
+      document.getElementById("nombreProducto").value = "";
+      document.getElementById("pagadoContado").checked = false;
+      document.getElementById("numeroTicket").value = "";
+    }
+
+    function eliminarRegistro(idAEliminar) {
+      registros = registros.filter(r => r.id !== idAEliminar);
+      guardarDatos();
+      mostrarRegistros();
+    }
+
+    function obtenerNombreMes(anioMes) {
+      const [anio, mes] = anioMes.split("-");
+      const fecha = new Date(anio, mes - 1, 1);
+      const nombre = fecha.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function generarTextoExcel(tipo) {
+      const mesSeleccionado = document.getElementById("mesFiltro").value;
+      if (!mesSeleccionado) return "";
+      
+      const listaAExportar = registros.filter(r => r.fecha.startsWith(mesSeleccionado));
+      if (listaAExportar.length === 0) return "No hay registros en este período.";
+
+      let texto = "Día\tFecha\tProducto\tPagado al contado\tTicket\n";
+      listaAExportar.forEach(item => {
+        const partes = item.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const diaSemana = obtenerNombreDia(item.fecha);
+        const productoVal = item.producto;
+        const pagadoVal = item.pagado ? "Sí" : "No";
+        const detalleTicket = item.ticket === "No se imprimió" ? "No se imprimió" : item.ticket;
+        texto += `${diaSemana}\t${fechaFormateada}\t${productoVal}\t${pagadoVal}\t${detalleTicket}\n`;
+      });
+      return texto;
+    }
+
+    function exportar(tipo) {
+      const texto = generarTextoExcel(tipo);
+      if (!texto || texto.startsWith("No hay")) {
+        return alert("No hay registros para exportar en el mes seleccionado.");
+      }
+
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("¡Copiado para Excel! Ya podés pegarlo (Ctrl + V) en tu planilla ✅");
+      }).catch(() => {
+        alert("Error al copiar automáticamente.");
+      });
+    }
+
+    // EXPORTACIÓN A EXCEL NATIVO (.xlsx) usando SheetJS
+    function descargarExcelAnio() {
+      if (typeof XLSX === 'undefined') {
+        return alert("Error: No se pudo cargar la librería para generar archivos Excel.");
+      }
+
+      const anioSeleccionado = document.getElementById("anioFiltro").value;
+      if (!anioSeleccionado) return alert("Por favor, ingresa un año válido.");
+
+      const registrosAnio = registros.filter(r => r.fecha.startsWith(anioSeleccionado));
+      if (registrosAnio.length === 0) return alert(`No hay registros para el año ${anioSeleccionado}.`);
+
+      // Ordenar por fecha cronológica (del más antiguo al más reciente)
+      const registrosOrdenados = [...registrosAnio].sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+      // Mapear los datos con los nombres de columna exactos
+      const datosExcel = registrosOrdenados.map(item => {
+        const partes = item.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const diaSemana = obtenerNombreDia(item.fecha);
+        return {
+          "Día": diaSemana,
+          "Fecha": fechaFormateada,
+          "Producto": item.producto,
+          "Pagado al contado": item.pagado ? "Sí" : "No",
+          "Ticket": item.ticket === "No se imprimió" ? "No se imprimió" : item.ticket
+        };
+      });
+
+      // Crear hoja de cálculo
+      const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+
+      // Definir anchos de columna automáticos para que se vea ordenado
+      worksheet['!cols'] = [
+        { wch: 14 }, // Día
+        { wch: 12 }, // Fecha
+        { wch: 30 }, // Producto
+        { wch: 18 }, // Pagado al contado
+        { wch: 20 }  // Ticket
+      ];
+
+      // Crear libro de trabajo e insertar la hoja
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Cantina ${anioSeleccionado}`);
+
+      // Generar y descargar el archivo .xlsx
+      XLSX.writeFile(workbook, `Registros_Cantina_${anioSeleccionado}.xlsx`);
+    }
+
+    function mostrarRegistros() {
+      const div = document.getElementById("listaRegistros");
+      const totalGeneralDiv = document.getElementById("totalGeneral");
+      
+      totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
+
+      const datalist = document.getElementById("listaProductos");
+      if (datalist) {
+        const productosUnicos = [...new Set(registros.map(r => r.producto.trim()))].filter(Boolean);
+        datalist.innerHTML = productosUnicos.map(p => `<option value="${p}">`).join("");
+      }
+
+      if (registros.length === 0) {
+        div.innerHTML = "<p style='color: #888; margin-top: 15px;'>No hay registros todavía.</p>";
+        return;
+      }
+
+      let agrupados = {};
+      registros.forEach(item => {
+        const mesKey = item.fecha.slice(0, 7);
+        if (!agrupados[mesKey]) {
+          agrupados[mesKey] = [];
+        }
+        agrupados[mesKey].push(item);
+      });
+
+      const mesesOrdenados = Object.keys(agrupados).sort().reverse();
+      const mesActualKey = new Date().toISOString().slice(0, 7);
+
+      let html = "";
+      mesesOrdenados.forEach(mesKey => {
+        const diasDelMes = agrupados[mesKey].sort((a, b) => b.fecha.localeCompare(a.fecha));
+        const nombreMes = obtenerNombreMes(mesKey);
+        const isOpen = mesKey === mesActualKey ? "open" : "";
+
+        html += `
+          <details class="mes-grupo" ${isOpen}>
+            <summary>
+              <span>📅 ${nombreMes}</span>
+              <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${diasDelMes.length} registros</span>
+            </summary>
+            <div class="mes-contenido">
+              <table>`;
+        
+        diasDelMes.forEach(item => {
+          const partes = item.fecha.split("-");
+          const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+          const diaSemana = obtenerNombreDia(item.fecha);
+          const textoProducto = item.producto;
+          const textoPagado = item.pagado ? "🟢 Contado" : "🔴 Crédito";
+          const textoTicket = item.ticket === "No se imprimió" ? "Sin ticket" : `Ticket #${item.ticket}`;
+          
+          html += `
+                <tr>
+                  <td>
+                    🔹 <strong>${diaSemana}</strong> ${fechaFormateada}<br>
+                    <span style="color: #81c784; font-size: 11px;">📦 ${textoProducto}</span> | <span style="color: #ccc; font-size: 11px;">💵 ${textoPagado}</span><br>
+                    <span style="color: #aaa; font-size: 11px;">🎫 ${textoTicket}</span>
+                  </td>
+                  <td><button class="delete-btn" onclick="eliminarRegistro('${item.id}')">🗑️</button></td>
+                </tr>`;
+        });
+
+        html += `
+              </table>
+            </div>
+          </details>`;
+      });
+
+      div.innerHTML = html;
+    }
+
+    function descargarBackup() {
+      if (registros.length === 0) {
+        return alert("No hay registros para respaldar.");
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `backup_cantina_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importarBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const datosCargados = JSON.parse(e.target.result);
+          if (Array.isArray(datosCargados)) {
+            if (confirm(`Se encontraron ${datosCargados.length} registros en el archivo. ¿Deseas reemplazar todos tus datos actuales? (Aceptar = Reemplazar, Cancelar = Combinar con los existentes)`)) {
+              registros = datosCargados;
+            } else {
+              datosCargados.forEach(nuevo => {
+                if (!nuevo.id) nuevo.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+                registros.push(nuevo);
+              });
+            }
+            registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+            guardarDatos();
+            mostrarRegistros();
+            alert("¡Copia de seguridad restaurada con éxito! ✅");
+          } else {
+            alert("El archivo no tiene el formato correcto.");
+          }
+        } catch (err) {
+          alert("Error al leer el archivo JSON.");
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    }
+
+    function borrarTodo() {
+      if (confirm("¿Estás seguro de borrar todos los registros?")) {
+        registros = [];
+        localStorage.removeItem("cantinaRegistros");
+        mostrarRegistros();
+      }
+    }
+  </script>
+</body>
+</html>

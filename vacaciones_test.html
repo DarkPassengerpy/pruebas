@@ -342,8 +342,11 @@
         </div>
 
         <label for="fechaIngreso" style="font-size: 12px; color: #aaa; display: block; margin-top: 10px; margin-bottom: 4px; text-align: left;">Fecha de ingreso a la empresa:</label>
-        <input type="date" id="fechaIngreso" onchange="guardarFechaIngreso();">
-        <p style="font-size: 11px; color: #888; margin: 6px 0 0; text-align: left;">El saldo inicial se ingresa una sola vez y queda guardado. La fecha de ingreso suma automáticamente días en cada aniversario. Si necesitás corregir días en el futuro, usá la opción de Ajuste manual.</p>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="date" id="fechaIngreso" style="margin: 0;" disabled>
+          <button id="btnLockFechaIngreso" type="button" onclick="toggleLockFechaIngreso()" style="width: auto; padding: 0 12px; margin: 0; background: #444;">✏️ Editar</button>
+        </div>
+        <p style="font-size: 11px; color: #888; margin: 6px 0 0; text-align: left;">Tanto el saldo inicial como la fecha de ingreso quedan bloqueados al guardarse. La fecha de ingreso suma automáticamente días en cada aniversario. Si necesitás corregir días en el futuro, usá la opción de Ajuste manual.</p>
       </div>
     </details>
 
@@ -361,7 +364,7 @@
     <p><strong>Registrar un día:</strong> elegí el tipo (Vacaciones o Personal Day), la fecha y el turno (Día completo, AM o PM), y presioná "Registrar". Solo se pueden cargar días de lunes a viernes que no sean feriados.</p>
     <p><strong>Registrar varios días juntos:</strong> tildá "Registrar un rango de fechas", elegí desde/hasta y se cargan automáticamente todos los días hábiles del rango como día completo (saltando fines de semana y feriados).</p>
     <p><strong>Nota opcional:</strong> podés agregar un texto corto a cada registro (ej: "viaje", "trámite") para recordar el motivo.</p>
-    <p><strong>Saldo inicial de vacaciones:</strong> cargá acá lo que realmente tenés disponible <strong>hoy</strong> (a la fecha en que lo estás llenando). Al guardarse, queda bloqueado para evitar cambios accidentales. Si además completás la "Fecha de ingreso a la empresa", el sistema suma solo, en cada aniversario laboral, los días que correspondan según la antigüedad (12 días/año del 1° al 5° año, 18 días/año del 6° al 10°, 30 días/año del 11° en adelante).</p>
+    <p><strong>Saldo inicial y Fecha de ingreso:</strong> cargá tus datos de partida. Al guardarse, ambos quedan bloqueados para evitar cambios accidentales. El sistema suma solo, en cada aniversario laboral, los días correspondientes según tu antigüedad (12 días/año del 1° al 5°, 18 días/año del 6° al 10°, 30 días/año del 11° en adelante).</p>
     <p><strong>Ajuste manual de días:</strong> si en el futuro necesitás agregar o restar días específicos (por correcciones de RRHH, permisos especiales o días extra otorgados), usá los botones ➕ Sumar o ➖ Restar. Esto modifica tus días disponibles de forma limpia sin alterar tu saldo inicial ni el cálculo por antigüedad.</p>
     <p><strong>Contadores:</strong></p>
     <ul>
@@ -443,6 +446,25 @@
       }
     }
 
+    function toggleLockFechaIngreso() {
+      const input = document.getElementById("fechaIngreso");
+      const btn = document.getElementById("btnLockFechaIngreso");
+
+      if (input.disabled) {
+        input.disabled = false;
+        btn.innerText = "💾 Guardar";
+        btn.style.background = "#2e7d32";
+        input.focus();
+      } else {
+        input.disabled = true;
+        btn.innerText = "✏️ Editar";
+        btn.style.background = "#444";
+        config.fechaIngreso = input.value || null;
+        guardarConfigCompleta();
+        actualizarContadores();
+      }
+    }
+
     function aplicarAjuste(signo) {
       const input = document.getElementById("cantAjuste");
       const cant = parseFloat(input.value);
@@ -464,12 +486,6 @@
       const signoStr = val > 0 ? "+" : "";
       lbl.innerText = `${signoStr}${val}`;
       lbl.style.color = val < 0 ? "#ff5252" : (val > 0 ? "#81c784" : "#64b5f6");
-    }
-
-    function guardarFechaIngreso() {
-      config.fechaIngreso = document.getElementById("fechaIngreso").value || null;
-      guardarConfigCompleta();
-      actualizarContadores();
     }
 
     function diasPorAniversario(n) {
@@ -1249,7 +1265,12 @@
             document.getElementById("btnLockSaldo").innerText = "✏️ Editar";
             document.getElementById("btnLockSaldo").style.background = "#444";
 
-            document.getElementById("fechaIngreso").value = config.fechaIngreso || "";
+            const inputFecha = document.getElementById("fechaIngreso");
+            inputFecha.value = config.fechaIngreso || "";
+            inputFecha.disabled = true;
+            document.getElementById("btnLockFechaIngreso").innerText = "✏️ Editar";
+            document.getElementById("btnLockFechaIngreso").style.background = "#444";
+
             actualizarInterfazAjustes();
             mostrarRegistros();
             actualizarContadores();
@@ -1280,7 +1301,11 @@
         document.getElementById("btnLockSaldo").innerText = "✏️ Editar";
         document.getElementById("btnLockSaldo").style.background = "#444";
 
-        document.getElementById("fechaIngreso").value = "";
+        const inputFecha = document.getElementById("fechaIngreso");
+        inputFecha.value = "";
+        inputFecha.disabled = true;
+        document.getElementById("btnLockFechaIngreso").innerText = "✏️ Editar";
+        document.getElementById("btnLockFechaIngreso").style.background = "#444";
 
         actualizarInterfazAjustes();
         mostrarRegistros();

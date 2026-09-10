@@ -89,7 +89,6 @@
             min-width: 200px;
         }
 
-        /* Inputs de fecha y hora separados */
         input[type="date"] {
             width: 150px;
             padding: 10px;
@@ -199,7 +198,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Fechas en formato horizontal */
         .task-dates {
             font-size: 0.75em;
             color: #888;
@@ -519,7 +517,6 @@
 <div class="container">
     <h2>Mis Tareas</h2>
 
-    <!-- Formulario en 2 niveles con Fecha y Hora separadas -->
     <div class="task-form">
         <div class="task-input-row">
             <input type="text" id="taskInput" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
@@ -569,7 +566,6 @@
     let tasks = [];
     let editingTaskId = null;
 
-    // Setear la fecha de hoy por defecto al cargar la página
     function setDateToToday() {
         const dateInput = document.getElementById('alarmDateInput');
         const today = new Date();
@@ -579,17 +575,16 @@
         dateInput.value = `${yyyy}-${mm}-${dd}`;
     }
 
-    // --- REPRODUCTOR DE SONIDO (Sonido original - Doble Bip al 50%) ---
     function playAlarmSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const vol = 0.5; // Volumen al 50%
+            const vol = 0.5;
             
             const playBeep = (startTime) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 
-                osc.type = 'sine'; // Sonido original (suave)
+                osc.type = 'sine';
                 osc.frequency.setValueAtTime(587.33, startTime);
                 osc.frequency.setValueAtTime(880, startTime + 0.15);
                 
@@ -604,8 +599,8 @@
             };
 
             const now = ctx.currentTime;
-            playBeep(now);              // Primer Bip
-            playBeep(now + 0.4);        // Segundo Bip
+            playBeep(now);              
+            playBeep(now + 0.4);        
             
         } catch(e) {
             console.warn("Audio Context error:", e);
@@ -682,7 +677,6 @@
 
         let finalAlarmISO = null;
         
-        // Solo guarda alarma si el usuario ingresó la hora (la fecha ya está por defecto)
         if (timeInput.value) {
             if (dateInput.value) {
                 finalAlarmISO = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
@@ -705,8 +699,8 @@
 
         tasks.push(newTask);
         input.value = '';
-        timeInput.value = ''; // Limpiamos solo la hora, dejamos la fecha en "hoy"
-        setDateToToday();     // Por si el usuario había cambiado de día
+        timeInput.value = '';
+        setDateToToday();
         saveAndRender();
         input.focus();
     }
@@ -732,9 +726,15 @@
         }
     }
 
+    // --- FUNCIÓN CON CONFIRMACIÓN DE BORRADO ---
     function deleteTask(id) {
-        tasks = tasks.filter(t => t.id !== id);
-        saveAndRender();
+        const task = tasks.find(t => t.id === id);
+        const taskText = task ? `"${task.text}"` : "esta tarea";
+        
+        if (confirm(`¿Estás seguro de que deseas eliminar ${taskText}?`)) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveAndRender();
+        }
     }
 
     function startEdit(id) {
@@ -861,7 +861,6 @@
             return li;
         }
 
-        // Armar el bloque de fechas unidas por "|"
         const datesList = [];
         datesList.push(`<span>Creada: ${formatDate(task.createdAt || Number(task.id))}</span>`);
         if (task.alarmAt) {

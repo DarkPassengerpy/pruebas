@@ -329,9 +329,16 @@
     }
 
     function eliminarRegistro(fechaAEliminar) {
-      registros = registros.filter(r => r.fecha !== fechaAEliminar);
-      guardarDatos();
-      mostrarRegistros();
+      const partes = fechaAEliminar.split("-");
+      const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      const diaSemana = obtenerNombreDia(fechaAEliminar);
+
+      if (confirm(`¿Estás seguro de que deseas borrar el registro del ${diaSemana} ${fechaFormateada}?`)) {
+        registros = registros.filter(r => r.fecha !== fechaAEliminar);
+        guardarDatos();
+        mostrarRegistros();
+        poblarSelectorAnio();
+      }
     }
 
     function obtenerNombreMes(anioMes) {
@@ -438,15 +445,8 @@
     }
 
     // ============ CALENDARIO ANUAL EN EXCEL REAL (ExcelJS) ============
-    // La semana arranca en Domingo (D L M X J V S), con columna de
-    // número de semana, igual que la plantilla de referencia.
-    // Disposición: 3 meses por fila, 4 filas de bloques (12 meses).
-
     const DIAS_SEMANA_DOM = ["D", "L", "M", "X", "J", "V", "S"];
 
-    // Número de semana continuo dentro del año (semana que contiene el
-    // 1 de enero = semana 1). Una semana partida entre dos meses tiene
-    // el mismo número en ambos meses, igual que en la plantilla.
     function numeroSemanaAnio(fecha, anio) {
       const inicioAnio = new Date(anio, 0, 1);
       const diaSemanaInicio = inicioAnio.getDay(); // 0 = Domingo
@@ -455,8 +455,6 @@
       return Math.floor(diffDias / 7) + 1;
     }
 
-    // Arma las semanas (Domingo a Sábado) que cubren un mes. Cada
-    // semana trae su número y los 7 días (null si el día es de otro mes).
     function generarSemanasMes(anio, mes) {
       const primerDia = new Date(anio, mes - 1, 1);
       const ultimoDia = new Date(anio, mes, 0);
@@ -479,11 +477,9 @@
       return semanas;
     }
 
-    // Columna (1-indexada) donde arranca cada mes de un bloque de 3
-    // (esa columna es la del número de semana; el mes ocupa esa + 7 más).
     const COL_INICIO_MES = [1, 10, 19];
-    const COLUMNAS_TOTALES = 26; // 3 * (1 + 7) + 2 columnas espaciadoras
-    const COL_TABLA_INICIO = COLUMNAS_TOTALES + 2; // deja la columna 27 vacía como separador
+    const COLUMNAS_TOTALES = 26; 
+    const COL_TABLA_INICIO = COLUMNAS_TOTALES + 2; 
 
     function agregarBloqueTresMesesExcel(ws, anio, mesInicio, filaInicio, bordeCompleto) {
       const meses = [mesInicio, mesInicio + 1, mesInicio + 2];
@@ -502,7 +498,6 @@
       const maxSemanas = Math.max(...datosMeses.map(m => m.semanas.length));
       let fila = filaInicio;
 
-      // Fila de título de cada mes
       datosMeses.forEach((m, idx) => {
         const colBase = COL_INICIO_MES[idx];
         ws.mergeCells(fila, colBase + 1, fila, colBase + 7);
@@ -517,7 +512,6 @@
       });
       fila++;
 
-      // Fila de encabezado de días (D L M X J V S)
       datosMeses.forEach((m, idx) => {
         const colBase = COL_INICIO_MES[idx];
         DIAS_SEMANA_DOM.forEach((d, i) => {
@@ -531,13 +525,11 @@
       });
       fila++;
 
-      // Filas de semanas
       for (let i = 0; i < maxSemanas; i++) {
         datosMeses.forEach((m, idx) => {
           const colBase = COL_INICIO_MES[idx];
           const semana = m.semanas[i];
 
-          // Columna de número de semana: sin borde, a propósito
           const celdaSemana = ws.getCell(fila, colBase);
           if (semana) {
             celdaSemana.value = semana.weekNum;
@@ -567,8 +559,6 @@
       return fila;
     }
 
-    // Tabla de Fecha | Hora | Motivo, ubicada al lado del calendario,
-    // arrancando en la misma fila (2) que el primer bloque de meses.
     function agregarTablaRegistrosExcel(ws, anio, colInicio, bordeCompleto) {
       const filaInicio = 2;
       const registrosAnio = registros
@@ -616,7 +606,7 @@
       ws.getColumn(colInicio).width = 12;
       ws.getColumn(colInicio + 1).width = 8;
       ws.getColumn(colInicio + 2).width = 24;
-      ws.getColumn(colInicio - 1).width = 2; // columna separadora sin contenido
+      ws.getColumn(colInicio - 1).width = 2;
 
       return filaInicio + 1 + registrosAnio.length;
     }
@@ -637,7 +627,6 @@
         const bordeFino = { style: "thin", color: { argb: "FF999999" } };
         const bordeCompleto = { top: bordeFino, left: bordeFino, bottom: bordeFino, right: bordeFino };
 
-        // Título del año
         ws.mergeCells(1, 1, 1, COLUMNAS_TOTALES);
         const celdaAnio = ws.getCell(1, 1);
         celdaAnio.value = anio;
@@ -647,13 +636,11 @@
         let fila = 2;
         [1, 4, 7, 10].forEach(mesInicio => {
           fila = agregarBloqueTresMesesExcel(ws, anio, mesInicio, fila, bordeCompleto);
-          fila++; // fila en blanco entre bloques
+          fila++;
         });
 
-        // Tabla de Fecha | Hora | Motivo al lado del calendario, desde la fila 2
         agregarTablaRegistrosExcel(ws, anio, COL_TABLA_INICIO, bordeCompleto);
 
-        // Anchos de columna (más angostas las de semana y las espaciadoras)
         for (let c = 1; c <= COLUMNAS_TOTALES; c++) {
           const esColumnaSemana = COL_INICIO_MES.includes(c);
           const esEspaciador = c === 9 || c === 18;
@@ -678,7 +665,6 @@
       }
     }
 
-    // Funciones para Backup (Exportar / Importar Archivo JSON)
     function descargarBackup() {
       if (registros.length === 0) {
         return alert("No hay registros para respaldar.");

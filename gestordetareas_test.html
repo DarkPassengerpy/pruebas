@@ -35,13 +35,12 @@
             padding-bottom: 10px;
         }
 
-        /* --- Diseño del Formulario (2 Niveles) --- */
         .task-form {
             background: #252525;
             padding: 20px;
             border-radius: 8px;
             border: 1px solid #333;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -74,6 +73,26 @@
             white-space: nowrap;
         }
 
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #252525;
+            color: #ffffff;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #17a2b8;
+        }
+
         input[type="text"], input[type="date"], input[type="time"], select {
             padding: 12px;
             border: 1px solid #444;
@@ -84,22 +103,9 @@
             box-sizing: border-box;
         }
 
-        input[type="text"] {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        input[type="date"] {
-            width: 150px;
-            padding: 10px;
-            font-size: 14px;
-        }
-
-        input[type="time"] {
-            width: 110px;
-            padding: 10px;
-            font-size: 14px;
-        }
+        input[type="text"] { flex: 1; min-width: 200px; }
+        input[type="date"] { width: 150px; padding: 10px; font-size: 14px; }
+        input[type="time"] { width: 110px; padding: 10px; font-size: 14px; }
 
         input[type="date"]::-webkit-calendar-picker-indicator,
         input[type="time"]::-webkit-calendar-picker-indicator {
@@ -131,12 +137,7 @@
 
         .btn-add:hover { background-color: #0056b3; }
 
-        /* --- Lista de Tareas --- */
-        .task-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+        .task-list { list-style: none; padding: 0; margin: 0; }
 
         .task-item {
             background-color: #252525;
@@ -150,16 +151,8 @@
             transition: all 0.3s ease;
         }
 
-        .task-item.is-priority {
-            border-color: #ff4d4d;
-            background-color: #2c1a1a;
-        }
-
-        .task-item.completed {
-            opacity: 0.7;
-            background-color: #1a1a1a;
-            border-color: #333;
-        }
+        .task-item.is-priority { border-color: #ff4d4d; background-color: #2c1a1a; }
+        .task-item.completed { opacity: 0.7; background-color: #1a1a1a; border-color: #333; }
 
         .task-checkbox {
             margin-top: 5px;
@@ -186,10 +179,7 @@
             flex-wrap: wrap;
         }
 
-        .completed .task-text {
-            text-decoration: line-through;
-            color: #888;
-        }
+        .completed .task-text { text-decoration: line-through; color: #888; }
 
         .tag-overdue {
             background-color: #dc3545;
@@ -201,7 +191,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Fechas en formato horizontal */
         .task-dates {
             font-size: 0.75em;
             color: #888;
@@ -216,7 +205,6 @@
         .date-done { color: #28a745; }
         .date-separator { color: #555; user-select: none; }
 
-        /* --- Panel de Snooze (Posponer) --- */
         .snooze-panel {
             background-color: #1e1e1e;
             border: 1px solid #dc3545;
@@ -226,7 +214,7 @@
             align-items: center;
             flex-wrap: nowrap;
             overflow-x: auto;
-            gap: 4px; /* Gap reducido para optimizar espacio */
+            gap: 4px;
             margin-top: 8px;
             animation: fadeIn 0.3s ease;
             -ms-overflow-style: none;
@@ -234,9 +222,7 @@
             box-sizing: border-box;
         }
 
-        .snooze-panel::-webkit-scrollbar {
-            display: none;
-        }
+        .snooze-panel::-webkit-scrollbar { display: none; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -266,11 +252,7 @@
             box-sizing: border-box;
         }
 
-        .btn-snooze:hover {
-            background-color: #dc3545;
-            color: white;
-            border-color: #dc3545;
-        }
+        .btn-snooze:hover { background-color: #dc3545; color: white; border-color: #dc3545; }
 
         .select-snooze {
             padding: 0 6px;
@@ -286,16 +268,9 @@
             outline: none;
         }
 
-        .select-snooze:focus {
-            border-color: #dc3545;
-        }
+        .select-snooze:focus { border-color: #dc3545; }
 
-        /* Botones de acción lateral */
-        .task-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .task-actions { display: flex; align-items: center; gap: 8px; }
 
         .btn-priority {
             background: none; border: none; font-size: 16px; cursor: pointer;
@@ -383,6 +358,11 @@
         </div>
     </div>
 
+    <!-- Buscador Integrado -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar tarea..." oninput="renderTasks()">
+    </div>
+
     <div id="pendingSection">
         <div class="section-title" id="pendingTitle">Pendientes</div>
         <ul id="pendingList" class="task-list"></ul>
@@ -403,13 +383,13 @@
     </div>
 
     <div class="warning-note">
-        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Puedes limpiar el historial y la caché sin problemas, pero borrar <strong>Cookies / Datos de sitios</strong> eliminará tus tareas. Usa la Copia de Seguridad para resguardar tus datos.
+        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Usa la Copia de Seguridad para resguardar tus datos.
     </div>
 </div>
 
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
-    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
+    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
 </div>
 
 <div class="credits">
@@ -803,6 +783,9 @@
         const completedSection = document.getElementById('completedSection');
         const completedSummary = document.getElementById('completedSummary');
         const pendingTitle = document.getElementById('pendingTitle');
+        const searchInput = document.getElementById('searchInput');
+
+        const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
         pendingList.innerHTML = '';
         completedContainer.innerHTML = '';
@@ -815,8 +798,11 @@
         const completedTasks = [];
 
         tasks.forEach(t => {
-            if (t.completed) completedTasks.push(t);
-            else pendingTasks.push(t);
+            const matchesSearch = t.text.toLowerCase().includes(searchTerm);
+            if (matchesSearch) {
+                if (t.completed) completedTasks.push(t);
+                else pendingTasks.push(t);
+            }
         });
 
         pendingTasks.sort((a, b) => {
@@ -852,7 +838,7 @@
 
             const monthDetails = document.createElement('details');
             monthDetails.className = 'month-details';
-            if (index === 0) monthDetails.open = true;
+            if (index === 0 || searchTerm !== '') monthDetails.open = true;
 
             const monthSummary = document.createElement('summary');
             monthSummary.className = 'month-summary';

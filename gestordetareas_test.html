@@ -174,6 +174,7 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
+            min-width: 0; /* Para evitar desbordes */
         }
 
         .task-text {
@@ -220,13 +221,21 @@
             background-color: #1e1e1e;
             border: 1px solid #dc3545;
             border-radius: 6px;
-            padding: 8px 12px;
+            padding: 8px 10px;
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
+            flex-wrap: nowrap; /* Forzamos una sola línea */
+            overflow-x: auto;  /* Si no entra, se puede deslizar a un lado */
+            gap: 5px;
             margin-top: 5px;
             animation: fadeIn 0.3s ease;
+            -ms-overflow-style: none;  /* Ocultar barra de scroll en IE y Edge */
+            scrollbar-width: none;  /* Ocultar barra de scroll en Firefox */
+        }
+
+        /* Ocultar barra de scroll en Chrome, Safari y Opera */
+        .snooze-panel::-webkit-scrollbar {
+            display: none;
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -236,19 +245,21 @@
             color: #dc3545;
             font-weight: bold;
             text-transform: uppercase;
-            margin-right: 4px;
+            margin-right: 2px;
+            flex-shrink: 0; /* Evita que el texto se achique */
         }
 
         .btn-snooze {
             background-color: #2d2d2d;
             border: 1px solid #444;
             color: #ccc;
-            padding: 4px 8px;
+            padding: 4px 6px; /* Padding un poco más ajustado */
             border-radius: 4px;
             font-size: 0.75em;
             cursor: pointer;
             transition: 0.2s;
             font-weight: bold;
+            flex-shrink: 0; /* Evita que el botón se deforme */
         }
 
         .btn-snooze:hover {
@@ -258,7 +269,7 @@
         }
 
         .select-snooze {
-            padding: 3px 6px;
+            padding: 3px 4px;
             font-size: 0.75em;
             height: auto;
             border-radius: 4px;
@@ -266,6 +277,7 @@
             color: #ccc;
             border: 1px solid #444;
             cursor: pointer;
+            flex-shrink: 0; /* Evita que el desplegable se achique */
         }
 
         /* Botones de acción lateral */
@@ -367,17 +379,64 @@
             border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4;
         }
 
-        .bloque { max-width: 650px; width: 100%; margin: 15px auto 0; padding: 20px; border-radius: 10px; background: #262626; box-sizing: border-box; text-align: left; color: #e0e0e0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
-        .bloque h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #444; padding-bottom: 5px; color: #ff5252; text-align: left; }
-        .bloque p { font-size: 14px; line-height: 1.5; margin: 8px 0 0; color: #ccc; }
-        .credits { text-align: center; margin-top: 20px; font-size: 0.85em; }
-        .credits a { color: #007bff; text-decoration: none; transition: color 0.2s; }
-        .credits a:hover { color: #0056b3; text-decoration: underline; }
-        .hidden { display: none !important; }
+        .bloque {
+            max-width: 650px;
+            width: 100%;
+            margin: 15px auto 0;
+            padding: 20px;
+            border-radius: 10px;
+            background: #262626;
+            box-sizing: border-box;
+            text-align: left;
+            color: #e0e0e0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
+        .bloque h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            color: #ff5252;
+            text-align: left;
+        }
+
+        .bloque p {
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 8px 0 0;
+            color: #ccc;
+        }
+
+        .credits {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+
+        .credits a {
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .credits a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none !important;
+        }
 
         @media (max-width: 550px) {
-            .task-input-row, .alarm-input-row { flex-direction: column; align-items: stretch; }
-            .btn-add { width: 100%; }
+            .task-input-row, .alarm-input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-add {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -418,7 +477,7 @@
     </div>
 
     <div class="warning-note">
-        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Usa la Copia de Seguridad para resguardar tus datos.
+        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Puedes limpiar el historial y la caché sin problemas, pero borrar <strong>Cookies / Datos de sitios</strong> eliminará tus tareas. Usa la Copia de Seguridad para resguardar tus datos.
     </div>
 </div>
 

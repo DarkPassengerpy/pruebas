@@ -224,7 +224,7 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             margin-top: 5px;
             animation: fadeIn 0.3s ease;
         }
@@ -236,7 +236,7 @@
             color: #dc3545;
             font-weight: bold;
             text-transform: uppercase;
-            margin-right: 5px;
+            margin-right: 4px;
         }
 
         .btn-snooze {
@@ -605,7 +605,6 @@
         }
     }
 
-    // --- FUNCION SNOOZE (POSPONER) ---
     function snoozeTask(id, minutesToAdd) {
         const task = tasks.find(t => t.id === id);
         if (task) {
@@ -613,7 +612,7 @@
             now.setMinutes(now.getMinutes() + parseInt(minutesToAdd, 10));
             
             task.alarmAt = now.toISOString();
-            task.alarmTriggered = false; // Se resetea para que vuelva a sonar
+            task.alarmTriggered = false; 
             saveAndRender();
         }
     }
@@ -622,7 +621,7 @@
         const val = selectElement.value;
         if(val !== "") {
             snoozeTask(id, val);
-            selectElement.value = ""; // Vuelve al placeholder "Otros..."
+            selectElement.value = ""; 
         }
     }
 
@@ -760,16 +759,17 @@
         }
         const datesHTML = datesList.join(' <span class="date-separator">|</span> ');
 
-        // Panel de Posponer si está vencida
         let snoozeHTML = '';
         if (isOverdue) {
             snoozeHTML = `
                 <div class="snooze-panel">
                     <span class="snooze-label">Posponer:</span>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 5)">+5m</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 10)">+10m</button>
                     <button class="btn-snooze" onclick="snoozeTask('${task.id}', 15)">+15m</button>
                     <button class="btn-snooze" onclick="snoozeTask('${task.id}', 30)">+30m</button>
                     <button class="btn-snooze" onclick="snoozeTask('${task.id}', 60)">+1h</button>
-                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 1440)">+1 día</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 1440)">+1d</button>
                     <select class="select-snooze" onchange="handleSelectSnooze('${task.id}', this)">
                         <option value="">⏱️ Otros...</option>
                         <option value="120">+2 Horas</option>

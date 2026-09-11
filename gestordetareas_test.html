@@ -174,7 +174,7 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            min-width: 0; /* Para evitar desbordes */
+            min-width: 0;
         }
 
         .task-text {
@@ -221,19 +221,18 @@
             background-color: #1e1e1e;
             border: 1px solid #dc3545;
             border-radius: 6px;
-            padding: 8px 10px;
+            padding: 10px 12px; /* Más espacio interno para que no corte nada */
             display: flex;
             align-items: center;
-            flex-wrap: nowrap; /* Forzamos una sola línea */
-            overflow-x: auto;  /* Si no entra, se puede deslizar a un lado */
-            gap: 5px;
-            margin-top: 5px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 6px;
+            margin-top: 8px;
             animation: fadeIn 0.3s ease;
-            -ms-overflow-style: none;  /* Ocultar barra de scroll en IE y Edge */
-            scrollbar-width: none;  /* Ocultar barra de scroll en Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        /* Ocultar barra de scroll en Chrome, Safari y Opera */
         .snooze-panel::-webkit-scrollbar {
             display: none;
         }
@@ -245,21 +244,25 @@
             color: #dc3545;
             font-weight: bold;
             text-transform: uppercase;
-            margin-right: 2px;
-            flex-shrink: 0; /* Evita que el texto se achique */
+            margin-right: 4px;
+            flex-shrink: 0;
         }
 
         .btn-snooze {
             background-color: #2d2d2d;
             border: 1px solid #444;
             color: #ccc;
-            padding: 4px 6px; /* Padding un poco más ajustado */
+            padding: 0 10px;
+            height: 28px; /* Altura fija para que todos sean iguales */
             border-radius: 4px;
             font-size: 0.75em;
             cursor: pointer;
             transition: 0.2s;
             font-weight: bold;
-            flex-shrink: 0; /* Evita que el botón se deforme */
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
         }
 
         .btn-snooze:hover {
@@ -269,15 +272,21 @@
         }
 
         .select-snooze {
-            padding: 3px 4px;
+            padding: 0 8px;
+            height: 28px; /* Misma altura fija que los botones */
             font-size: 0.75em;
-            height: auto;
             border-radius: 4px;
             background-color: #2d2d2d;
             color: #ccc;
             border: 1px solid #444;
             cursor: pointer;
-            flex-shrink: 0; /* Evita que el desplegable se achique */
+            flex-shrink: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .select-snooze:focus {
+            border-color: #dc3545;
         }
 
         /* Botones de acción lateral */
@@ -288,17 +297,10 @@
         }
 
         .btn-priority {
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            opacity: 0.3;
-            transition: opacity 0.2s, transform 0.2s;
+            background: none; border: none; font-size: 16px; cursor: pointer;
+            padding: 0 4px; line-height: 1; opacity: 0.3; transition: opacity 0.2s, transform 0.2s;
             filter: grayscale(100%);
         }
-
         .btn-priority:hover { opacity: 1; transform: scale(1.2); filter: grayscale(0%); }
         .btn-priority.active { opacity: 1; filter: grayscale(0%); }
 
@@ -326,117 +328,40 @@
         }
         .btn-cancel:hover { color: #c82333; transform: scale(1.2); }
 
-        .edit-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .edit-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #007bff;
-            border-radius: 4px;
-            background-color: #2d2d2d;
-            color: #ffffff;
-            font-size: 15px;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-
+        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .edit-input { width: 100%; padding: 8px; border: 1px solid #007bff; border-radius: 4px; background-color: #2d2d2d; color: #ffffff; font-size: 15px; box-sizing: border-box; font-family: inherit; }
         .edit-input:focus { outline: none; border-color: #5cadff; }
 
-        .section-title {
-            font-size: 0.9em; color: #b0b0b0; margin: 20px 0 10px 0;
-            text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-        }
-
+        .section-title { font-size: 0.9em; color: #b0b0b0; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .urgent-tag { color: #ff4d4d; text-transform: none; font-weight: normal; margin-left: 4px; }
 
         details.completed-details { margin-top: 25px; border-top: 1px solid #2a2a2a; padding-top: 10px; }
-        summary.completed-summary {
-            font-size: 0.9em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px;
-            cursor: pointer; user-select: none; font-weight: bold; padding: 5px 0; transition: color 0.2s;
-        }
+        summary.completed-summary { font-size: 0.9em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; user-select: none; font-weight: bold; padding: 5px 0; transition: color 0.2s; }
         summary.completed-summary:hover { color: #ffffff; }
 
         details.month-details { margin: 10px 0 10px 15px; border-left: 2px solid #333; padding-left: 10px; }
         summary.month-summary { font-size: 0.85em; color: #17a2b8; cursor: pointer; user-select: none; font-weight: bold; padding: 4px 0; }
         summary.month-summary:hover { color: #5cdb95; }
 
-        .backup-panel {
-            margin-top: 25px; padding: 15px; background-color: #252525; border: 1px solid #333;
-            border-radius: 6px; display: flex; flex-direction: column; gap: 10px;
-        }
+        .backup-panel { margin-top: 25px; padding: 15px; background-color: #252525; border: 1px solid #333; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
         .backup-title { font-size: 0.85em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
         .backup-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
         .btn-backup:hover { background-color: #444; color: #fff; }
 
-        .warning-note {
-            margin-top: 15px; padding: 10px 12px; background-color: #2a2415; border: 1px solid #66521a;
-            border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4;
-        }
+        .warning-note { margin-top: 15px; padding: 10px 12px; background-color: #2a2415; border: 1px solid #66521a; border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4; }
 
-        .bloque {
-            max-width: 650px;
-            width: 100%;
-            margin: 15px auto 0;
-            padding: 20px;
-            border-radius: 10px;
-            background: #262626;
-            box-sizing: border-box;
-            text-align: left;
-            color: #e0e0e0;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-        }
-
-        .bloque h2 {
-            margin-top: 0;
-            font-size: 18px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 5px;
-            color: #ff5252;
-            text-align: left;
-        }
-
-        .bloque p {
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 8px 0 0;
-            color: #ccc;
-        }
-
-        .credits {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.85em;
-        }
-
-        .credits a {
-            color: #007bff;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .credits a:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        .bloque { max-width: 650px; width: 100%; margin: 15px auto 0; padding: 20px; border-radius: 10px; background: #262626; box-sizing: border-box; text-align: left; color: #e0e0e0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .bloque h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #444; padding-bottom: 5px; color: #ff5252; text-align: left; }
+        .bloque p { font-size: 14px; line-height: 1.5; margin: 8px 0 0; color: #ccc; }
+        .credits { text-align: center; margin-top: 20px; font-size: 0.85em; }
+        .credits a { color: #007bff; text-decoration: none; transition: color 0.2s; }
+        .credits a:hover { color: #0056b3; text-decoration: underline; }
+        .hidden { display: none !important; }
 
         @media (max-width: 550px) {
-            .task-input-row, .alarm-input-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .btn-add {
-                width: 100%;
-            }
+            .task-input-row, .alarm-input-row { flex-direction: column; align-items: stretch; }
+            .btn-add { width: 100%; }
         }
     </style>
 </head>
@@ -830,7 +755,7 @@
                     <button class="btn-snooze" onclick="snoozeTask('${task.id}', 60)">+1h</button>
                     <button class="btn-snooze" onclick="snoozeTask('${task.id}', 1440)">+1d</button>
                     <select class="select-snooze" onchange="handleSelectSnooze('${task.id}', this)">
-                        <option value="">⏱️ Otros...</option>
+                        <option value="">Otros...</option>
                         <option value="120">+2 Horas</option>
                         <option value="180">+3 Horas</option>
                         <option value="240">+4 Horas</option>

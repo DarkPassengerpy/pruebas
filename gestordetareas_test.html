@@ -221,7 +221,7 @@
             background-color: #1e1e1e;
             border: 1px solid #dc3545;
             border-radius: 6px;
-            padding: 10px 12px; /* Más espacio interno para que no corte nada */
+            padding: 8px 10px;
             display: flex;
             align-items: center;
             flex-wrap: nowrap;
@@ -252,8 +252,8 @@
             background-color: #2d2d2d;
             border: 1px solid #444;
             color: #ccc;
-            padding: 0 10px;
-            height: 28px; /* Altura fija para que todos sean iguales */
+            padding: 0 8px;
+            height: 28px;
             border-radius: 4px;
             font-size: 0.75em;
             cursor: pointer;
@@ -272,8 +272,8 @@
         }
 
         .select-snooze {
-            padding: 0 8px;
-            height: 28px; /* Misma altura fija que los botones */
+            padding: 0 6px;
+            height: 28px;
             font-size: 0.75em;
             border-radius: 4px;
             background-color: #2d2d2d;
@@ -281,6 +281,7 @@
             border: 1px solid #444;
             cursor: pointer;
             flex-shrink: 0;
+            min-width: 80px; /* Ancho mínimo garantizado para que no se corte el texto */
             box-sizing: border-box;
             outline: none;
         }

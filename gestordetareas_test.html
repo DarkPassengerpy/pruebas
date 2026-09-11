@@ -221,16 +221,17 @@
             background-color: #1e1e1e;
             border: 1px solid #dc3545;
             border-radius: 6px;
-            padding: 8px 10px;
+            padding: 6px 12px;
             display: flex;
             align-items: center;
             flex-wrap: nowrap;
             overflow-x: auto;
-            gap: 6px;
+            gap: 4px; /* Gap reducido para optimizar espacio */
             margin-top: 8px;
             animation: fadeIn 0.3s ease;
             -ms-overflow-style: none;
             scrollbar-width: none;
+            box-sizing: border-box;
         }
 
         .snooze-panel::-webkit-scrollbar {
@@ -240,7 +241,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .snooze-label {
-            font-size: 0.75em;
+            font-size: 0.72em;
             color: #dc3545;
             font-weight: bold;
             text-transform: uppercase;
@@ -252,10 +253,10 @@
             background-color: #2d2d2d;
             border: 1px solid #444;
             color: #ccc;
-            padding: 0 8px;
-            height: 28px;
+            padding: 0 6px;
+            height: 26px;
             border-radius: 4px;
-            font-size: 0.75em;
+            font-size: 0.72em;
             cursor: pointer;
             transition: 0.2s;
             font-weight: bold;
@@ -273,15 +274,14 @@
 
         .select-snooze {
             padding: 0 6px;
-            height: 28px;
-            font-size: 0.75em;
+            height: 26px;
+            font-size: 0.72em;
             border-radius: 4px;
             background-color: #2d2d2d;
             color: #ccc;
             border: 1px solid #444;
             cursor: pointer;
             flex-shrink: 0;
-            min-width: 80px; /* Ancho mínimo garantizado para que no se corte el texto */
             box-sizing: border-box;
             outline: none;
         }
@@ -756,7 +756,7 @@
                     <button class="btn-snooze" onclick="snoozeTask('${task.id}', 60)">+1h</button>
                     <button class="btn-snooze" onclick="snoozeTask('${task.id}', 1440)">+1d</button>
                     <select class="select-snooze" onchange="handleSelectSnooze('${task.id}', this)">
-                        <option value="">Otros...</option>
+                        <option value="">Otros ▾</option>
                         <option value="120">+2 Horas</option>
                         <option value="180">+3 Horas</option>
                         <option value="240">+4 Horas</option>

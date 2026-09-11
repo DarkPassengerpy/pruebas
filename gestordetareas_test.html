@@ -74,7 +74,7 @@
             white-space: nowrap;
         }
 
-        input[type="text"], input[type="date"], input[type="time"] {
+        input[type="text"], input[type="date"], input[type="time"], select {
             padding: 12px;
             border: 1px solid #444;
             border-radius: 6px;
@@ -107,7 +107,7 @@
             cursor: pointer;
         }
 
-        input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus {
+        input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, select:focus {
             outline: none;
             border-color: #007bff;
         }
@@ -171,11 +171,13 @@
 
         .task-content {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .task-text {
             font-size: 16px;
-            margin-bottom: 5px;
             word-break: break-word;
             display: flex;
             align-items: center;
@@ -198,6 +200,7 @@
             letter-spacing: 0.5px;
         }
 
+        /* Fechas en formato horizontal */
         .task-dates {
             font-size: 0.75em;
             color: #888;
@@ -208,20 +211,64 @@
             gap: 6px;
         }
 
-        .date-alarm {
-            color: #17a2b8;
+        .date-alarm { color: #17a2b8; font-weight: bold; }
+        .date-done { color: #28a745; }
+        .date-separator { color: #555; user-select: none; }
+
+        /* --- Panel de Snooze (Posponer) --- */
+        .snooze-panel {
+            background-color: #1e1e1e;
+            border: 1px solid #dc3545;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .snooze-label {
+            font-size: 0.75em;
+            color: #dc3545;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-right: 5px;
+        }
+
+        .btn-snooze {
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: 0.2s;
             font-weight: bold;
         }
 
-        .date-done {
-            color: #28a745;
+        .btn-snooze:hover {
+            background-color: #dc3545;
+            color: white;
+            border-color: #dc3545;
         }
 
-        .date-separator {
-            color: #555;
-            user-select: none;
+        .select-snooze {
+            padding: 3px 6px;
+            font-size: 0.75em;
+            height: auto;
+            border-radius: 4px;
+            background-color: #2d2d2d;
+            color: #ccc;
+            border: 1px solid #444;
+            cursor: pointer;
         }
 
+        /* Botones de acción lateral */
         .task-actions {
             display: flex;
             align-items: center;
@@ -240,80 +287,32 @@
             filter: grayscale(100%);
         }
 
-        .btn-priority:hover {
-            opacity: 1;
-            transform: scale(1.2);
-            filter: grayscale(0%);
-        }
-
-        .btn-priority.active {
-            opacity: 1;
-            filter: grayscale(0%);
-        }
+        .btn-priority:hover { opacity: 1; transform: scale(1.2); filter: grayscale(0%); }
+        .btn-priority.active { opacity: 1; filter: grayscale(0%); }
 
         .btn-delete {
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            transition: color 0.2s, transform 0.2s;
+            background: none; border: none; color: #dc3545; font-size: 20px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
         }
-
-        .btn-delete:hover {
-            color: #c82333;
-            transform: scale(1.2);
-        }
+        .btn-delete:hover { color: #c82333; transform: scale(1.2); }
 
         .btn-edit {
-            background: none;
-            border: none;
-            color: #ffc107;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            transition: color 0.2s, transform 0.2s;
+            background: none; border: none; color: #ffc107; font-size: 16px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
         }
-
-        .btn-edit:hover {
-            color: #ffda6a;
-            transform: scale(1.2);
-        }
+        .btn-edit:hover { color: #ffda6a; transform: scale(1.2); }
 
         .btn-save {
-            background: none;
-            border: none;
-            color: #28a745;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            transition: color 0.2s, transform 0.2s;
+            background: none; border: none; color: #28a745; font-size: 20px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
         }
-
-        .btn-save:hover {
-            color: #34c759;
-            transform: scale(1.2);
-        }
+        .btn-save:hover { color: #34c759; transform: scale(1.2); }
 
         .btn-cancel {
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0 4px;
-            line-height: 1;
-            transition: color 0.2s, transform 0.2s;
+            background: none; border: none; color: #dc3545; font-size: 18px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
         }
-
-        .btn-cancel:hover {
-            color: #c82333;
-            transform: scale(1.2);
-        }
+        .btn-cancel:hover { color: #c82333; transform: scale(1.2); }
 
         .edit-container {
             display: flex;
@@ -334,181 +333,51 @@
             font-family: inherit;
         }
 
-        .edit-input:focus {
-            outline: none;
-            border-color: #5cadff;
-        }
+        .edit-input:focus { outline: none; border-color: #5cadff; }
 
         .section-title {
-            font-size: 0.9em;
-            color: #b0b0b0;
-            margin: 20px 0 10px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
+            font-size: 0.9em; color: #b0b0b0; margin: 20px 0 10px 0;
+            text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
         }
 
-        .urgent-tag {
-            color: #ff4d4d;
-            text-transform: none;
-            font-weight: normal;
-            margin-left: 4px;
-        }
+        .urgent-tag { color: #ff4d4d; text-transform: none; font-weight: normal; margin-left: 4px; }
 
-        details.completed-details {
-            margin-top: 25px;
-            border-top: 1px solid #2a2a2a;
-            padding-top: 10px;
-        }
-
+        details.completed-details { margin-top: 25px; border-top: 1px solid #2a2a2a; padding-top: 10px; }
         summary.completed-summary {
-            font-size: 0.9em;
-            color: #b0b0b0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            user-select: none;
-            font-weight: bold;
-            padding: 5px 0;
-            transition: color 0.2s;
+            font-size: 0.9em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; user-select: none; font-weight: bold; padding: 5px 0; transition: color 0.2s;
         }
+        summary.completed-summary:hover { color: #ffffff; }
 
-        summary.completed-summary:hover {
-            color: #ffffff;
-        }
-
-        details.month-details {
-            margin: 10px 0 10px 15px;
-            border-left: 2px solid #333;
-            padding-left: 10px;
-        }
-
-        summary.month-summary {
-            font-size: 0.85em;
-            color: #17a2b8;
-            cursor: pointer;
-            user-select: none;
-            font-weight: bold;
-            padding: 4px 0;
-        }
-
-        summary.month-summary:hover {
-            color: #5cdb95;
-        }
+        details.month-details { margin: 10px 0 10px 15px; border-left: 2px solid #333; padding-left: 10px; }
+        summary.month-summary { font-size: 0.85em; color: #17a2b8; cursor: pointer; user-select: none; font-weight: bold; padding: 4px 0; }
+        summary.month-summary:hover { color: #5cdb95; }
 
         .backup-panel {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: #252525;
-            border: 1px solid #333;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            margin-top: 25px; padding: 15px; background-color: #252525; border: 1px solid #333;
+            border-radius: 6px; display: flex; flex-direction: column; gap: 10px;
         }
-
-        .backup-title {
-            font-size: 0.85em;
-            color: #b0b0b0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
-
-        .backup-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-backup {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 0.85em;
-            background-color: #333;
-            color: #e0e0e0;
-            border: 1px solid #444;
-            border-radius: 4px;
-        }
-
-        .btn-backup:hover {
-            background-color: #444;
-            color: #fff;
-        }
+        .backup-title { font-size: 0.85em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .backup-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
+        .btn-backup:hover { background-color: #444; color: #fff; }
 
         .warning-note {
-            margin-top: 15px;
-            padding: 10px 12px;
-            background-color: #2a2415;
-            border: 1px solid #66521a;
-            border-radius: 6px;
-            font-size: 0.8em;
-            color: #d1b06a;
-            text-align: center;
-            line-height: 1.4;
+            margin-top: 15px; padding: 10px 12px; background-color: #2a2415; border: 1px solid #66521a;
+            border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4;
         }
 
-        .bloque {
-            max-width: 650px;
-            width: 100%;
-            margin: 15px auto 0;
-            padding: 20px;
-            border-radius: 10px;
-            background: #262626;
-            box-sizing: border-box;
-            text-align: left;
-            color: #e0e0e0;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-        }
-
-        .bloque h2 {
-            margin-top: 0;
-            font-size: 18px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 5px;
-            color: #ff5252;
-            text-align: left;
-        }
-
-        .bloque p {
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 8px 0 0;
-            color: #ccc;
-        }
-
-        .credits {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.85em;
-        }
-
-        .credits a {
-            color: #007bff;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .credits a:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        .bloque { max-width: 650px; width: 100%; margin: 15px auto 0; padding: 20px; border-radius: 10px; background: #262626; box-sizing: border-box; text-align: left; color: #e0e0e0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .bloque h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #444; padding-bottom: 5px; color: #ff5252; text-align: left; }
+        .bloque p { font-size: 14px; line-height: 1.5; margin: 8px 0 0; color: #ccc; }
+        .credits { text-align: center; margin-top: 20px; font-size: 0.85em; }
+        .credits a { color: #007bff; text-decoration: none; transition: color 0.2s; }
+        .credits a:hover { color: #0056b3; text-decoration: underline; }
+        .hidden { display: none !important; }
 
         @media (max-width: 550px) {
-            .task-input-row, .alarm-input-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .btn-add {
-                width: 100%;
-            }
+            .task-input-row, .alarm-input-row { flex-direction: column; align-items: stretch; }
+            .btn-add { width: 100%; }
         }
     </style>
 </head>
@@ -549,13 +418,13 @@
     </div>
 
     <div class="warning-note">
-        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Puedes limpiar el historial y la caché sin problemas, pero borrar <strong>Cookies / Datos de sitios</strong> eliminará tus tareas. Usa la Copia de Seguridad para resguardar tus datos.
+        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Usa la Copia de Seguridad para resguardar tus datos.
     </div>
 </div>
 
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
-    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar o restaurar tu información mediante copias de seguridad en formato JSON.</p>
+    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
 </div>
 
 <div class="credits">
@@ -578,7 +447,7 @@
     function playAlarmSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const vol = 0.7; // Volumen aumentado al 70% (50% + 20%)
+            const vol = 0.7; 
             
             const playBeep = (startTime) => {
                 const osc = ctx.createOscillator();
@@ -736,6 +605,27 @@
         }
     }
 
+    // --- FUNCION SNOOZE (POSPONER) ---
+    function snoozeTask(id, minutesToAdd) {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + parseInt(minutesToAdd, 10));
+            
+            task.alarmAt = now.toISOString();
+            task.alarmTriggered = false; // Se resetea para que vuelva a sonar
+            saveAndRender();
+        }
+    }
+
+    function handleSelectSnooze(id, selectElement) {
+        const val = selectElement.value;
+        if(val !== "") {
+            snoozeTask(id, val);
+            selectElement.value = ""; // Vuelve al placeholder "Otros..."
+        }
+    }
+
     function startEdit(id) {
         editingTaskId = id;
         renderTasks();
@@ -870,6 +760,28 @@
         }
         const datesHTML = datesList.join(' <span class="date-separator">|</span> ');
 
+        // Panel de Posponer si está vencida
+        let snoozeHTML = '';
+        if (isOverdue) {
+            snoozeHTML = `
+                <div class="snooze-panel">
+                    <span class="snooze-label">Posponer:</span>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 15)">+15m</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 30)">+30m</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 60)">+1h</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 1440)">+1 día</button>
+                    <select class="select-snooze" onchange="handleSelectSnooze('${task.id}', this)">
+                        <option value="">⏱️ Otros...</option>
+                        <option value="120">+2 Horas</option>
+                        <option value="180">+3 Horas</option>
+                        <option value="240">+4 Horas</option>
+                        <option value="360">+6 Horas</option>
+                        <option value="720">+12 Horas</option>
+                    </select>
+                </div>
+            `;
+        }
+
         li.innerHTML = `
             <input type="checkbox" class="task-checkbox" 
                    ${task.completed ? 'checked' : ''} 
@@ -883,6 +795,7 @@
                 <div class="task-dates">
                     ${datesHTML}
                 </div>
+                ${snoozeHTML}
             </div>
 
             <div class="task-actions">

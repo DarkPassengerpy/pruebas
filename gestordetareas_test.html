@@ -137,6 +137,21 @@
 
         .btn-add:hover { background-color: #0056b3; }
 
+        .btn-test-sound {
+            padding: 10px 12px;
+            font-size: 13px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-test-sound:hover {
+            background-color: #138496;
+        }
+
         .task-list { list-style: none; padding: 0; margin: 0; }
 
         .task-item {
@@ -356,6 +371,13 @@
             <span class="alarm-label">⏰ ALARMA:</span>
             <input type="date" id="alarmDateInput" title="Día de la alarma (Por defecto, hoy)">
             <input type="time" id="alarmTimeInput" title="Hora de la alarma">
+            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="padding: 10px; font-size: 14px;">
+                <option value="classic">🔔 Clásico</option>
+                <option value="digital">⏱️ Digital</option>
+                <option value="melodic">🎵 Melódico</option>
+                <option value="urgent">🚨 Urgente</option>
+            </select>
+            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Escuchar el tono seleccionado">🔊 Probar</button>
         </div>
     </div>
 
@@ -408,6 +430,7 @@
 <script>
     let tasks = [];
     let editingTaskId = null;
+    let currentSound = 'classic';
 
     function setDateToToday() {
         const dateInput = document.getElementById('alarmDateInput');
@@ -418,33 +441,94 @@
         dateInput.value = `${yyyy}-${mm}-${dd}`;
     }
 
-    function playAlarmSound() {
+    function loadSettings() {
+        const savedSound = localStorage.getItem('selectedAlarmSound');
+        if (savedSound) {
+            currentSound = savedSound;
+            const select = document.getElementById('alarmSoundSelect');
+            if (select) select.value = savedSound;
+        }
+    }
+
+    function changeAlarmSound() {
+        const select = document.getElementById('alarmSoundSelect');
+        currentSound = select.value;
+        localStorage.setItem('selectedAlarmSound', currentSound);
+    }
+
+    function testSelectedSound() {
+        const select = document.getElementById('alarmSoundSelect');
+        playAlarmSound(select.value);
+    }
+
+    function playAlarmSound(soundType = currentSound) {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const vol = 0.7; 
-            
-            const playBeep = (startTime) => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, startTime);
-                osc.frequency.setValueAtTime(880, startTime + 0.15);
-                
-                gain.gain.setValueAtTime(vol, startTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                osc.start(startTime);
-                osc.stop(startTime + 0.3);
-            };
-
             const now = ctx.currentTime;
-            playBeep(now);             
-            playBeep(now + 0.4);        
-            
+
+            if (soundType === 'digital') {
+                // Tono Digital: 3 pitidos cortos de frecuencia fija
+                [0, 0.12, 0.24].forEach(timeOffset => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1050, now + timeOffset);
+                    gain.gain.setValueAtTime(vol * 0.4, now + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + 0.08);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + timeOffset);
+                    osc.stop(now + timeOffset + 0.08);
+                });
+            } else if (soundType === 'melodic') {
+                // Tono Melódico: Arpegio suave ascendente (Do, Mi, Sol)
+                const notes = [523.25, 659.25, 783.99];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.16);
+                    gain.gain.setValueAtTime(vol * 0.5, now + idx * 0.16);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.16 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.16);
+                    osc.stop(now + idx * 0.16 + 0.3);
+                });
+            } else if (soundType === 'urgent') {
+                // Tono Urgente: Alternancia rápida entre frecuencias agudas
+                [0, 0.18, 0.36, 0.54].forEach((timeOffset, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    const freq = idx % 2 === 0 ? 950 : 650;
+                    osc.frequency.setValueAtTime(freq, now + timeOffset);
+                    gain.gain.setValueAtTime(vol * 0.3, now + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + 0.14);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + timeOffset);
+                    osc.stop(now + timeOffset + 0.14);
+                });
+            } else {
+                // Tono Clásico: Doble beep suave
+                const playBeep = (startTime) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, startTime);
+                    osc.frequency.setValueAtTime(880, startTime + 0.15);
+                    gain.gain.setValueAtTime(vol, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.3);
+                };
+                playBeep(now);             
+                playBeep(now + 0.4);        
+            }
         } catch(e) {
             console.warn("Audio Context error:", e);
         }
@@ -815,7 +899,6 @@
             }
         });
 
-        // Ordenar vencidas por prioridad y fecha
         overdueTasks.sort((a, b) => {
             if (a.priority !== b.priority) return a.priority ? -1 : 1;
             return getTimestamp(a) - getTimestamp(b);
@@ -826,7 +909,6 @@
             overdueCount++;
         });
 
-        // Ordenar pendientes por prioridad y fecha
         pendingTasks.sort((a, b) => {
             if (a.priority !== b.priority) return a.priority ? -1 : 1;
             return getTimestamp(a) - getTimestamp(b);
@@ -838,7 +920,6 @@
             if (task.priority) urgentCount++;
         });
 
-        // Agrupar completadas por mes
         const monthGroups = {};
         completedTasks.forEach(task => {
             completedCount++;
@@ -879,7 +960,6 @@
             completedContainer.appendChild(monthDetails);
         });
 
-        // Actualizar títulos y visibilidad
         overdueTitle.innerText = `⏰ Vencidas (${overdueCount})`;
 
         if (urgentCount > 0) {
@@ -939,9 +1019,10 @@
     // Secuencia de inicialización
     setDateToToday();
     loadTasks();
+    loadSettings();
     renderTasks();
     checkAlarms();
-    setInterval(checkAlarms, 60000); // Revisa las alarmas cada 1 minuto
+    setInterval(checkAlarms, 60000);
 </script>
 
 </body>

@@ -309,6 +309,7 @@
         .edit-input:focus { outline: none; border-color: #5cadff; }
 
         .section-title { font-size: 0.9em; color: #b0b0b0; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .section-title.overdue-title { color: #ff4d4d; }
         .urgent-tag { color: #ff4d4d; text-transform: none; font-weight: normal; margin-left: 4px; }
 
         details.completed-details { margin-top: 25px; border-top: 1px solid #2a2a2a; padding-top: 10px; }
@@ -363,11 +364,19 @@
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar tarea..." oninput="renderTasks()">
     </div>
 
+    <!-- Sección de Tareas Vencidas -->
+    <div id="overdueSection">
+        <div class="section-title overdue-title" id="overdueTitle">Vencidas</div>
+        <ul id="overdueList" class="task-list"></ul>
+    </div>
+
+    <!-- Sección de Tareas Pendientes -->
     <div id="pendingSection">
         <div class="section-title" id="pendingTitle">Pendientes</div>
         <ul id="pendingList" class="task-list"></ul>
     </div>
 
+    <!-- Sección de Tareas Completadas -->
     <details id="completedSection" class="completed-details">
         <summary id="completedSummary" class="completed-summary">Completadas (0)</summary>
         <div id="completedContainer" style="margin-top: 10px;"></div>
@@ -393,7 +402,7 @@
 </div>
 
 <div class="credits">
-    <a href="https://darkpassenger-tools.netlify.app/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+    <a href="https://tools.darkpassenger.workers.dev/" target="_blank">Desarrollado por Dark Passenger Tools</a>
 </div>
 
 <script>
@@ -433,7 +442,7 @@
             };
 
             const now = ctx.currentTime;
-            playBeep(now);              
+            playBeep(now);             
             playBeep(now + 0.4);        
             
         } catch(e) {
@@ -492,7 +501,6 @@
         if (savedTasks) {
             tasks = JSON.parse(savedTasks);
         }
-        checkAlarms();
     }
 
     function saveTasks() {
@@ -512,12 +520,8 @@
         let finalAlarmISO = null;
         
         if (timeInput.value) {
-            if (dateInput.value) {
-                finalAlarmISO = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
-            } else {
-                const today = new Date().toISOString().split('T')[0];
-                finalAlarmISO = new Date(`${today}T${timeInput.value}`).toISOString();
-            }
+            const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
+            finalAlarmISO = new Date(`${selectedDate}T${timeInput.value}`).toISOString();
         }
 
         const newTask = {
@@ -618,15 +622,9 @@
             task.text = newText;
             
             let finalAlarmISO = null;
-            if (dateInput.value && timeInput.value) {
-                finalAlarmISO = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
-            } else if (!dateInput.value && timeInput.value) {
-                const today = new Date().toISOString().split('T')[0];
-                const tempDate = new Date(`${today}T${timeInput.value}`);
-                if(tempDate < new Date()) tempDate.setDate(tempDate.getDate() + 1);
-                finalAlarmISO = tempDate.toISOString();
-            } else if (dateInput.value && !timeInput.value) {
-                finalAlarmISO = new Date(`${dateInput.value}T09:00`).toISOString();
+            if (timeInput.value) {
+                const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
+                finalAlarmISO = new Date(`${selectedDate}T${timeInput.value}`).toISOString();
             }
 
             if (task.alarmAt !== finalAlarmISO) {
@@ -777,34 +775,58 @@
     }
 
     function renderTasks() {
+        const overdueList = document.getElementById('overdueList');
         const pendingList = document.getElementById('pendingList');
         const completedContainer = document.getElementById('completedContainer');
+        const overdueSection = document.getElementById('overdueSection');
         const pendingSection = document.getElementById('pendingSection');
         const completedSection = document.getElementById('completedSection');
-        const completedSummary = document.getElementById('completedSummary');
+        const overdueTitle = document.getElementById('overdueTitle');
         const pendingTitle = document.getElementById('pendingTitle');
+        const completedSummary = document.getElementById('completedSummary');
         const searchInput = document.getElementById('searchInput');
 
         const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
+        overdueList.innerHTML = '';
         pendingList.innerHTML = '';
         completedContainer.innerHTML = '';
 
+        let overdueCount = 0;
         let pendingCount = 0;
         let urgentCount = 0;
         let completedCount = 0;
 
+        const overdueTasks = [];
         const pendingTasks = [];
         const completedTasks = [];
+        const now = new Date();
 
         tasks.forEach(t => {
             const matchesSearch = t.text.toLowerCase().includes(searchTerm);
             if (matchesSearch) {
-                if (t.completed) completedTasks.push(t);
-                else pendingTasks.push(t);
+                if (t.completed) {
+                    completedTasks.push(t);
+                } else if (t.alarmAt && new Date(t.alarmAt) < now) {
+                    overdueTasks.push(t);
+                } else {
+                    pendingTasks.push(t);
+                }
             }
         });
 
+        // Ordenar vencidas por prioridad y fecha
+        overdueTasks.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority ? -1 : 1;
+            return getTimestamp(a) - getTimestamp(b);
+        });
+
+        overdueTasks.forEach(task => {
+            overdueList.appendChild(buildTaskElement(task));
+            overdueCount++;
+        });
+
+        // Ordenar pendientes por prioridad y fecha
         pendingTasks.sort((a, b) => {
             if (a.priority !== b.priority) return a.priority ? -1 : 1;
             return getTimestamp(a) - getTimestamp(b);
@@ -816,8 +838,8 @@
             if (task.priority) urgentCount++;
         });
 
+        // Agrupar completadas por mes
         const monthGroups = {};
-
         completedTasks.forEach(task => {
             completedCount++;
             const dateRef = task.completedAt || task.createdAt;
@@ -857,6 +879,9 @@
             completedContainer.appendChild(monthDetails);
         });
 
+        // Actualizar títulos y visibilidad
+        overdueTitle.innerText = `⏰ Vencidas (${overdueCount})`;
+
         if (urgentCount > 0) {
             pendingTitle.innerHTML = `Pendientes (${pendingCount}) <span class="urgent-tag">• ❗ ${urgentCount} ${urgentCount === 1 ? 'urgente' : 'urgentes'}</span>`;
         } else {
@@ -864,6 +889,8 @@
         }
 
         completedSummary.innerText = `Completadas (${completedCount})`;
+        
+        overdueSection.classList.toggle('hidden', overdueCount === 0);
         pendingSection.classList.toggle('hidden', pendingCount === 0);
         completedSection.classList.toggle('hidden', completedCount === 0);
     }
@@ -909,8 +936,11 @@
         event.target.value = '';
     }
 
+    // Secuencia de inicialización
     setDateToToday();
     loadTasks();
+    renderTasks();
+    checkAlarms();
     setInterval(checkAlarms, 60000); // Revisa las alarmas cada 1 minuto
 </script>
 

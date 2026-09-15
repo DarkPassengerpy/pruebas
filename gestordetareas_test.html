@@ -341,6 +341,29 @@
         .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
         .btn-backup:hover { background-color: #444; color: #fff; }
 
+        /* Estilos del control de volumen */
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1e1e1e;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .volume-range {
+            cursor: pointer;
+            accent-color: #17a2b8;
+            width: 100px;
+        }
+
+        .volume-label {
+            font-size: 0.8em;
+            color: #b0b0b0;
+            min-width: 35px;
+        }
+
         .warning-note { margin-top: 15px; padding: 10px 12px; background-color: #2a2415; border: 1px solid #66521a; border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4; }
 
         .bloque { max-width: 650px; width: 100%; margin: 15px auto 0; padding: 20px; border-radius: 10px; background: #262626; box-sizing: border-box; text-align: left; color: #e0e0e0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
@@ -354,6 +377,8 @@
         @media (max-width: 550px) {
             .task-input-row, .alarm-input-row { flex-direction: column; align-items: stretch; }
             .btn-add { width: 100%; }
+            .volume-container { width: 100%; justify-content: space-between; box-sizing: border-box; }
+            .volume-range { flex: 1; }
         }
     </style>
 </head>
@@ -401,13 +426,20 @@
     <div class="backup-panel" style="margin-top: 25px;">
         <div class="backup-title">⚙️ Configuración de tono</div>
         <div class="backup-buttons">
-            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="flex: 1; min-width: 180px; padding: 10px; font-size: 14px;">
+            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="flex: 1; min-width: 150px; padding: 10px; font-size: 14px;">
                 <option value="classic">🔔 Clásico</option>
                 <option value="digital">⏱️ Digital</option>
                 <option value="melodic">🎵 Melódico</option>
                 <option value="urgent">🚨 Urgente</option>
             </select>
-            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Escuchar el tono seleccionado">🔊 Probar tono</button>
+            
+            <div class="volume-container">
+                <span title="Volumen">🔊</span>
+                <input type="range" id="alarmVolumeRange" class="volume-range" min="0" max="100" value="70" oninput="updateVolume(this.value)">
+                <span id="volumeValueLabel" class="volume-label">70%</span>
+            </div>
+
+            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Escuchar el tono seleccionado">🔊 Probar</button>
         </div>
     </div>
 
@@ -439,6 +471,7 @@
     let tasks = [];
     let editingTaskId = null;
     let currentSound = 'classic';
+    let currentVolume = 70;
 
     function setDateToToday() {
         const dateInput = document.getElementById('alarmDateInput');
@@ -456,12 +489,27 @@
             const select = document.getElementById('alarmSoundSelect');
             if (select) select.value = savedSound;
         }
+
+        const savedVolume = localStorage.getItem('selectedAlarmVolume');
+        if (savedVolume !== null) {
+            currentVolume = parseInt(savedVolume, 10);
+            const range = document.getElementById('alarmVolumeRange');
+            const label = document.getElementById('volumeValueLabel');
+            if (range) range.value = currentVolume;
+            if (label) label.innerText = `${currentVolume}%`;
+        }
     }
 
     function changeAlarmSound() {
         const select = document.getElementById('alarmSoundSelect');
         currentSound = select.value;
         localStorage.setItem('selectedAlarmSound', currentSound);
+    }
+
+    function updateVolume(val) {
+        currentVolume = parseInt(val, 10);
+        document.getElementById('volumeValueLabel').innerText = `${currentVolume}%`;
+        localStorage.setItem('selectedAlarmVolume', currentVolume);
     }
 
     function testSelectedSound() {
@@ -472,8 +520,10 @@
     function playAlarmSound(soundType = currentSound) {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const vol = 0.7; 
+            const vol = (currentVolume / 100) * 0.7; 
             const now = ctx.currentTime;
+
+            if (vol <= 0) return; // Si el volumen está en 0%, no reproduce nada
 
             if (soundType === 'digital') {
                 [0, 0.12, 0.24].forEach(timeOffset => {

@@ -138,8 +138,8 @@
         .btn-add:hover { background-color: #0056b3; }
 
         .btn-test-sound {
-            padding: 10px 12px;
-            font-size: 13px;
+            padding: 10px 16px;
+            font-size: 14px;
             background-color: #17a2b8;
             color: white;
             border: none;
@@ -335,9 +335,9 @@
         summary.month-summary { font-size: 0.85em; color: #17a2b8; cursor: pointer; user-select: none; font-weight: bold; padding: 4px 0; }
         summary.month-summary:hover { color: #5cdb95; }
 
-        .backup-panel { margin-top: 25px; padding: 15px; background-color: #252525; border: 1px solid #333; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
+        .backup-panel { margin-top: 15px; padding: 15px; background-color: #252525; border: 1px solid #333; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
         .backup-title { font-size: 0.85em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-        .backup-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .backup-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
         .btn-backup:hover { background-color: #444; color: #fff; }
 
@@ -371,13 +371,6 @@
             <span class="alarm-label">⏰ ALARMA:</span>
             <input type="date" id="alarmDateInput" title="Día de la alarma (Por defecto, hoy)">
             <input type="time" id="alarmTimeInput" title="Hora de la alarma">
-            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="padding: 10px; font-size: 14px;">
-                <option value="classic">🔔 Clásico</option>
-                <option value="digital">⏱️ Digital</option>
-                <option value="melodic">🎵 Melódico</option>
-                <option value="urgent">🚨 Urgente</option>
-            </select>
-            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Escuchar el tono seleccionado">🔊 Probar</button>
         </div>
     </div>
 
@@ -404,6 +397,21 @@
         <div id="completedContainer" style="margin-top: 10px;"></div>
     </details>
 
+    <!-- Bloque: Configuración de Tono -->
+    <div class="backup-panel" style="margin-top: 25px;">
+        <div class="backup-title">⚙️ Configuración de tono</div>
+        <div class="backup-buttons">
+            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="flex: 1; min-width: 180px; padding: 10px; font-size: 14px;">
+                <option value="classic">🔔 Clásico</option>
+                <option value="digital">⏱️ Digital</option>
+                <option value="melodic">🎵 Melódico</option>
+                <option value="urgent">🚨 Urgente</option>
+            </select>
+            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Escuchar el tono seleccionado">🔊 Probar tono</button>
+        </div>
+    </div>
+
+    <!-- Bloque: Copia de Seguridad -->
     <div class="backup-panel">
         <div class="backup-title">💾 Copia de Seguridad</div>
         <div class="backup-buttons">
@@ -468,7 +476,6 @@
             const now = ctx.currentTime;
 
             if (soundType === 'digital') {
-                // Tono Digital: 3 pitidos cortos de frecuencia fija
                 [0, 0.12, 0.24].forEach(timeOffset => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
@@ -482,7 +489,6 @@
                     osc.stop(now + timeOffset + 0.08);
                 });
             } else if (soundType === 'melodic') {
-                // Tono Melódico: Arpegio suave ascendente (Do, Mi, Sol)
                 const notes = [523.25, 659.25, 783.99];
                 notes.forEach((freq, idx) => {
                     const osc = ctx.createOscillator();
@@ -497,7 +503,6 @@
                     osc.stop(now + idx * 0.16 + 0.3);
                 });
             } else if (soundType === 'urgent') {
-                // Tono Urgente: Alternancia rápida entre frecuencias agudas
                 [0, 0.18, 0.36, 0.54].forEach((timeOffset, idx) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
@@ -512,7 +517,6 @@
                     osc.stop(now + timeOffset + 0.14);
                 });
             } else {
-                // Tono Clásico: Doble beep suave
                 const playBeep = (startTime) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
@@ -1016,7 +1020,7 @@
         event.target.value = '';
     }
 
-    // Secuencia de inicialización
+    // Inicializar aplicación
     setDateToToday();
     loadTasks();
     loadSettings();

@@ -341,7 +341,6 @@
         .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
         .btn-backup:hover { background-color: #444; color: #fff; }
 
-        /* Estilos del control de volumen */
         .volume-container {
             display: flex;
             align-items: center;
@@ -363,6 +362,56 @@
             color: #b0b0b0;
             min-width: 35px;
         }
+
+        /* Estilos del Banner de Alerta Flotante (Toast) */
+        .toast-banner {
+            position: fixed;
+            z-index: 10000;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #17a2b8;
+            border-left: 5px solid #17a2b8;
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 320px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .toast-banner.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Posiciones del Banner */
+        .toast-pos-top-right { top: 20px; right: 20px; transform: translateY(-10px); }
+        .toast-pos-top-right.show { transform: translateY(0); }
+
+        .toast-pos-top-center { top: 20px; left: 50%; transform: translate(-50%, -10px); }
+        .toast-pos-top-center.show { transform: translate(-50%, 0); }
+
+        .toast-pos-top-left { top: 20px; left: 20px; transform: translateY(-10px); }
+        .toast-pos-top-left.show { transform: translateY(0); }
+
+        .toast-pos-center { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); }
+        .toast-pos-center.show { transform: translate(-50%, -50%) scale(1); }
+
+        .toast-pos-bottom-right { bottom: 20px; right: 20px; transform: translateY(10px); }
+        .toast-pos-bottom-right.show { transform: translateY(0); }
+
+        .toast-pos-bottom-center { bottom: 20px; left: 50%; transform: translate(-50%, 10px); }
+        .toast-pos-bottom-center.show { transform: translate(-50%, 0); }
+
+        .toast-pos-bottom-left { bottom: 20px; left: 20px; transform: translateY(10px); }
+        .toast-pos-bottom-left.show { transform: translateY(0); }
 
         .warning-note { margin-top: 15px; padding: 10px 12px; background-color: #2a2415; border: 1px solid #66521a; border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4; }
 
@@ -422,11 +471,11 @@
         <div id="completedContainer" style="margin-top: 10px;"></div>
     </details>
 
-    <!-- Bloque: Configuración de Tono -->
+    <!-- Bloque: Configuración de Tono y Alerta -->
     <div class="backup-panel" style="margin-top: 25px;">
-        <div class="backup-title">⚙️ Configuración de tono</div>
+        <div class="backup-title">⚙️ Configuración de Tono y Alerta</div>
         <div class="backup-buttons">
-            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="flex: 1; min-width: 150px; padding: 10px; font-size: 14px;">
+            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="flex: 1; min-width: 140px; padding: 10px; font-size: 14px;">
                 <option value="classic">🔔 Clásico</option>
                 <option value="digital">⏱️ Digital</option>
                 <option value="melodic">🎵 Melódico</option>
@@ -438,6 +487,16 @@
                 <option value="arpeggio">🎼 Arpegio</option>
                 <option value="fastbeep">⚡ Doble Beep</option>
             </select>
+
+            <select id="alertPositionSelect" title="Ubicación del aviso" onchange="changeAlertPosition()" style="flex: 1; min-width: 150px; padding: 10px; font-size: 14px;">
+                <option value="bottom-right" selected>↘️ Abajo a la derecha</option>
+                <option value="top-right">↗️ Arriba a la derecha</option>
+                <option value="top-center">⬆️ Arriba al centro</option>
+                <option value="top-left">↖️ Arriba a la izquierda</option>
+                <option value="center">🎯 Centro de la pantalla</option>
+                <option value="bottom-center">⬇️ Abajo al centro</option>
+                <option value="bottom-left">↙️ Abajo a la izquierda</option>
+            </select>
             
             <div class="volume-container">
                 <span title="Volumen">🔊</span>
@@ -445,7 +504,7 @@
                 <span id="volumeValueLabel" class="volume-label">70%</span>
             </div>
 
-            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Escuchar el tono seleccionado">🔊 Probar</button>
+            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Probar tono y alerta visual">🔊 Probar</button>
         </div>
     </div>
 
@@ -473,11 +532,18 @@
     <a href="https://tools.darkpassenger.workers.dev/" target="_blank">Desarrollado por Dark Passenger Tools</a>
 </div>
 
+<!-- Elemento del Toast Alert -->
+<div id="toastBanner" class="toast-banner">
+    <span id="toastBannerText">🔔 Prueba de alerta: Así se verá tu notificación</span>
+</div>
+
 <script>
     let tasks = [];
     let editingTaskId = null;
     let currentSound = 'classic';
     let currentVolume = 70;
+    let currentPosition = 'bottom-right';
+    let toastTimeout = null;
 
     function setDateToToday() {
         const dateInput = document.getElementById('alarmDateInput');
@@ -504,6 +570,13 @@
             if (range) range.value = currentVolume;
             if (label) label.innerText = `${currentVolume}%`;
         }
+
+        const savedPos = localStorage.getItem('selectedAlertPosition');
+        if (savedPos) {
+            currentPosition = savedPos;
+            const selectPos = document.getElementById('alertPositionSelect');
+            if (selectPos) selectPos.value = savedPos;
+        }
     }
 
     function changeAlarmSound() {
@@ -512,15 +585,45 @@
         localStorage.setItem('selectedAlarmSound', currentSound);
     }
 
+    function changeAlertPosition() {
+        const select = document.getElementById('alertPositionSelect');
+        currentPosition = select.value;
+        localStorage.setItem('selectedAlertPosition', currentPosition);
+    }
+
     function updateVolume(val) {
         currentVolume = parseInt(val, 10);
         document.getElementById('volumeValueLabel').innerText = `${currentVolume}%`;
         localStorage.setItem('selectedAlarmVolume', currentVolume);
     }
 
+    function showToastAlert(text) {
+        const banner = document.getElementById('toastBanner');
+        const bannerText = document.getElementById('toastBannerText');
+        
+        bannerText.innerText = text;
+        banner.className = `toast-banner toast-pos-${currentPosition}`;
+        
+        // Forzar reflujo de renderizado para animación limpia
+        void banner.offsetWidth;
+        banner.classList.add('show');
+
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            banner.classList.remove('show');
+        }, 4500);
+    }
+
     function testSelectedSound() {
-        const select = document.getElementById('alarmSoundSelect');
-        playAlarmSound(select.value);
+        const soundSelect = document.getElementById('alarmSoundSelect');
+        playAlarmSound(soundSelect.value);
+        
+        const testMessage = "🔔 Prueba de alerta: Así se verá tu notificación";
+        showToastAlert(testMessage);
+
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("⏰ Gestor de Tareas", { body: testMessage });
+        }
     }
 
     function playAlarmSound(soundType = currentSound) {
@@ -892,10 +995,10 @@
                 ? `¡Se venció la tarea: "${lastOverdueTaskText}"!` 
                 : `Se vencieron ${newlyOverdueCount} tareas.`;
 
+            showToastAlert(`⏰ ${message}`);
+
             if ("Notification" in window && Notification.permission === "granted") {
                 new Notification("⏰ Gestor de Tareas", { body: message });
-            } else {
-                alert(`⏰ Recordatorio:\n${message}`);
             }
         }
 

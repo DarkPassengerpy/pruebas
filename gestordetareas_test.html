@@ -335,8 +335,33 @@
         summary.month-summary { font-size: 0.85em; color: #17a2b8; cursor: pointer; user-select: none; font-weight: bold; padding: 4px 0; }
         summary.month-summary:hover { color: #5cdb95; }
 
-        .backup-panel { margin-top: 15px; padding: 15px; background-color: #252525; border: 1px solid #333; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
-        .backup-title { font-size: 0.85em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        /* Paneles de Configuración */
+        .backup-panel { 
+            margin-top: 15px; 
+            padding: 15px; 
+            background-color: #252525; 
+            border: 1px solid #333; 
+            border-radius: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+
+        .backup-title { 
+            font-size: 0.85em; 
+            color: #b0b0b0; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-weight: bold; 
+        }
+
+        .config-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
         .backup-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
         .btn-backup:hover { background-color: #444; color: #fff; }
@@ -344,23 +369,26 @@
         .volume-container {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             background-color: #1e1e1e;
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 6px;
             border: 1px solid #333;
+            box-sizing: border-box;
+            height: 42px;
         }
 
         .volume-range {
             cursor: pointer;
             accent-color: #17a2b8;
-            width: 100px;
+            flex: 1;
         }
 
         .volume-label {
             font-size: 0.8em;
             color: #b0b0b0;
             min-width: 35px;
+            text-align: right;
         }
 
         /* Estilos del Banner de Alerta Flotante (Toast) */
@@ -424,10 +452,9 @@
         .hidden { display: none !important; }
 
         @media (max-width: 550px) {
-            .task-input-row, .alarm-input-row { flex-direction: column; align-items: stretch; }
-            .btn-add { width: 100%; }
-            .volume-container { width: 100%; justify-content: space-between; box-sizing: border-box; }
-            .volume-range { flex: 1; }
+            .task-input-row, .alarm-input-row, .config-row { flex-direction: column; align-items: stretch; }
+            .btn-add, .btn-test-sound { width: 100%; }
+            .volume-container { width: 100%; }
         }
     </style>
 </head>
@@ -474,8 +501,10 @@
     <!-- Bloque: Configuración de Tono y Alerta -->
     <div class="backup-panel" style="margin-top: 25px;">
         <div class="backup-title">⚙️ Configuración de Tono y Alerta</div>
-        <div class="backup-buttons">
-            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="flex: 1; min-width: 140px; padding: 10px; font-size: 14px;">
+        
+        <!-- Fila 1: Menús desplegables -->
+        <div class="config-row">
+            <select id="alarmSoundSelect" title="Tono de alarma" onchange="changeAlarmSound()" style="flex: 1; padding: 10px; font-size: 14px;">
                 <option value="classic">🔔 Clásico</option>
                 <option value="digital">⏱️ Digital</option>
                 <option value="melodic">🎵 Melódico</option>
@@ -488,7 +517,7 @@
                 <option value="fastbeep">⚡ Doble Beep</option>
             </select>
 
-            <select id="alertPositionSelect" title="Ubicación del aviso" onchange="changeAlertPosition()" style="flex: 1; min-width: 150px; padding: 10px; font-size: 14px;">
+            <select id="alertPositionSelect" title="Ubicación del aviso" onchange="changeAlertPosition()" style="flex: 1; padding: 10px; font-size: 14px;">
                 <option value="bottom-right" selected>↘️ Abajo a la derecha</option>
                 <option value="top-right">↗️ Arriba a la derecha</option>
                 <option value="top-center">⬆️ Arriba al centro</option>
@@ -497,8 +526,11 @@
                 <option value="bottom-center">⬇️ Abajo al centro</option>
                 <option value="bottom-left">↙️ Abajo a la izquierda</option>
             </select>
-            
-            <div class="volume-container">
+        </div>
+
+        <!-- Fila 2: Volumen y Botón de prueba -->
+        <div class="config-row">
+            <div class="volume-container" style="flex: 1;">
                 <span title="Volumen">🔊</span>
                 <input type="range" id="alarmVolumeRange" class="volume-range" min="0" max="100" value="70" oninput="updateVolume(this.value)">
                 <span id="volumeValueLabel" class="volume-label">70%</span>
@@ -604,7 +636,6 @@
         bannerText.innerText = text;
         banner.className = `toast-banner toast-pos-${currentPosition}`;
         
-        // Forzar reflujo de renderizado para animación limpia
         void banner.offsetWidth;
         banner.classList.add('show');
 
@@ -1090,7 +1121,7 @@
                 <button class="btn-priority ${task.priority ? 'active' : ''}" 
                         onclick="togglePriority('${task.id}')" 
                         title="${task.priority ? 'Quitar prioridad' : 'Marcar como urgente/prioritaria'}">
-                    ${task.priority ? '❗' : '❕'}
+                    ${task.priority ? '❗' : 'i'}
                 </button>
                 <button class="btn-edit" onclick="startEdit('${task.id}')" title="Editar">&#9998;</button>
                 <button class="btn-delete" onclick="deleteTask('${task.id}')" title="Eliminar">&times;</button>

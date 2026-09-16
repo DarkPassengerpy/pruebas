@@ -486,6 +486,7 @@
                 <option value="marimba">🎹 Marimba</option>
                 <option value="arpeggio">🎼 Arpegio</option>
                 <option value="fastbeep">⚡ Doble Beep</option>
+                <option value="toy_cell_phones">📱 Toy cell phones</option>
             </select>
 
             <div class="volume-container">
@@ -589,12 +590,23 @@
     }
 
     function playAlarmSound(soundType = currentSound) {
+        if (currentVolume <= 0) return;
+
+        if (soundType === 'toy_cell_phones') {
+            try {
+                const audio = new Audio('Song_of_toy_cell_phones.mp3');
+                audio.volume = currentVolume / 100;
+                audio.play().catch(e => console.warn("Error al reproducir el archivo de audio:", e));
+            } catch(e) {
+                console.warn("Audio Context / Audio Error:", e);
+            }
+            return;
+        }
+
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const vol = (currentVolume / 100) * 0.7; 
             const now = ctx.currentTime;
-
-            if (vol <= 0) return;
 
             if (soundType === 'digital') {
                 [0, 0.12, 0.24].forEach(timeOffset => {

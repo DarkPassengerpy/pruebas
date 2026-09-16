@@ -567,13 +567,13 @@
         if ("Notification" in window) {
             if (Notification.permission === "granted") {
                 new Notification("⏰ Gestor de Tareas", { 
-                    body: "🔔 Prueba de notificación nativa del navegador." 
+                    body: "🔔 Prueba de alerta: Así se verá tu notificación." 
                 });
             } else if (Notification.permission !== "denied") {
                 Notification.requestPermission().then(permission => {
                     if (permission === "granted") {
                         new Notification("⏰ Gestor de Tareas", { 
-                            body: "🔔 Prueba de notificación nativa del navegador." 
+                            body: "🔔 Prueba de alerta: Así se verá tu notificación." 
                         });
                     }
                 });

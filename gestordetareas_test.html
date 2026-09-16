@@ -486,6 +486,10 @@
                 <option value="marimba">🎹 Marimba</option>
                 <option value="arpeggio">🎼 Arpegio</option>
                 <option value="fastbeep">⚡ Doble Beep</option>
+                <option value="message_alert">💬 Alerta</option>
+                <option value="tono_largo">🎶 Extendido</option>
+                <option value="tono_suave">🌿 Suave</option>
+                <option value="tono_warning">⚠️ Advertencia</option>
                 <option value="toy_cell_phones">📱 Toy cell phones</option>
             </select>
 
@@ -592,9 +596,18 @@
     function playAlarmSound(soundType = currentSound) {
         if (currentVolume <= 0) return;
 
-        if (soundType === 'toy_cell_phones') {
+        // Mapeo de archivos de audio MP3 locales
+        const audioFiles = {
+            'message_alert': 'message_alert.mp3',
+            'tono_largo': 'tono_largo.mp3',
+            'tono_suave': 'tono_suave.mp3',
+            'tono_warning': 'tono_warning.mp3',
+            'toy_cell_phones': 'Song_of_toy_cell_phones.mp3'
+        };
+
+        if (audioFiles[soundType]) {
             try {
-                const audio = new Audio('Song_of_toy_cell_phones.mp3');
+                const audio = new Audio(audioFiles[soundType]);
                 audio.volume = currentVolume / 100;
                 audio.play().catch(e => console.warn("Error al reproducir el archivo de audio:", e));
             } catch(e) {

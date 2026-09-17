@@ -146,7 +146,7 @@
     .cancel-btn { background: #757575; }
     .cancel-btn:hover { background: #616161; }
 
-    /* Estilos minimalistas para la edición en línea */
+    /* Estilos para la edición en línea */
     .edit-inline-container {
       display: flex;
       flex-direction: column;
@@ -420,6 +420,7 @@
     let config = JSON.parse(localStorage.getItem("configVacaciones")) || { saldoInicial: 0, fechaIngreso: null, fechaSaldoInicial: null, ajustes: 0 };
     let feriados = JSON.parse(localStorage.getItem("feriadosVacaciones")) || [];
     let indiceEdicion = null;
+    let mesAnioEdicionAbierto = null;
 
     if (config.saldoInicial === undefined && config.totalVacaciones !== undefined) {
       config.saldoInicial = config.totalVacaciones;
@@ -766,14 +767,16 @@
       alert(mensaje);
     }
 
-    // Funciones de edición directamente en la fila (Inline)
+    // Funciones de edición directamente en la fila (Inline) con memoria de panel
     function habilitarEdicionInline(index) {
       indiceEdicion = index;
+      mesAnioEdicionAbierto = registros[index].fecha.slice(0, 7);
       mostrarRegistros();
     }
 
     function cancelarEdicionInline() {
       indiceEdicion = null;
+      mesAnioEdicionAbierto = null;
       mostrarRegistros();
     }
 
@@ -798,6 +801,7 @@
       }
 
       indiceEdicion = null;
+      mesAnioEdicionAbierto = null;
       registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
       guardarDatos();
       mostrarRegistros();
@@ -878,17 +882,20 @@
       const mesActualKey = new Date().toISOString().slice(0, 7);
 
       let html = `
-        <details class="mes-grupo">
+        <details class="mes-grupo" open>
           <summary>
             <span>📋 Registros</span>
             <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${registros.length} registros</span>
           </summary>
           <div class="mes-contenido">`;
+
       aniosOrdenados.forEach(anioKey => {
         const mesesDelAnio = agrupadosPorAnio[anioKey];
         const mesesOrdenados = Object.keys(mesesDelAnio).sort().reverse();
         const totalAnio = Object.values(mesesDelAnio).reduce((acc, dias) => acc + dias.length, 0);
-        const isOpenAnio = anioKey === anioActual ? "open" : "";
+
+        const anioEdicion = mesAnioEdicionAbierto ? mesAnioEdicionAbierto.slice(0, 4) : null;
+        const isOpenAnio = (anioKey === anioActual || anioKey === anioEdicion) ? "open" : "";
 
         html += `
           <details class="anio-grupo" ${isOpenAnio}>
@@ -901,7 +908,8 @@
         mesesOrdenados.forEach(mesKey => {
           const diasDelMes = mesesDelAnio[mesKey].sort((a, b) => b.fecha.localeCompare(a.fecha));
           const nombreMes = obtenerNombreMes(mesKey);
-          const isOpenMes = mesKey === mesActualKey ? "open" : "";
+
+          const isOpenMes = (mesKey === mesActualKey || mesKey === mesAnioEdicionAbierto) ? "open" : "";
 
           html += `
             <details class="mes-grupo" ${isOpenMes}>

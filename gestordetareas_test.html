@@ -357,6 +357,58 @@
         summary.month-summary { font-size: 0.85em; color: #17a2b8; cursor: pointer; user-select: none; font-weight: bold; padding: 4px 0; }
         summary.month-summary:hover { color: #5cdb95; }
 
+        /* Banner Flotante Centrado de Alarma */
+        .alarm-banner-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            background-color: #252525;
+            border: 2px solid #17a2b8;
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.85);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            min-width: 290px;
+            max-width: 85%;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .alarm-banner-title {
+            color: #ff4d4d;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alarm-banner-text {
+            color: #ffffff;
+            font-size: 15px;
+            word-break: break-word;
+        }
+
+        .btn-silence {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .btn-silence:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+
         /* Paneles de Configuración */
         .backup-panel { 
             margin-top: 15px; 
@@ -485,7 +537,6 @@
     <div class="backup-panel" style="margin-top: 25px;">
         <div class="backup-title">⚙️ Configuración de Tono</div>
         
-        <!-- Fila Única: Tono, Volumen y Botón de Prueba -->
         <div class="config-row">
             <select id="alarmSoundSelect" class="config-select" title="Tono de alarma" onchange="changeAlarmSound()">
                 <option value="classic">🔔 Clásico</option>
@@ -530,6 +581,13 @@
     </div>
 </div>
 
+<!-- Banner Flotante de Alarma (Centrado) -->
+<div id="alarmBanner" class="alarm-banner-card hidden">
+    <div class="alarm-banner-title">⏰ ¡Alarma Sonando!</div>
+    <div id="alarmBannerText" class="alarm-banner-text">Nombre de la tarea</div>
+    <button class="btn-silence" onclick="stopCurrentSound()">🔇 Silenciar</button>
+</div>
+
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
     <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
@@ -544,6 +602,7 @@
     let editingTaskId = null;
     let currentSound = 'classic';
     let currentVolume = 70;
+    let currentAudio = null; // Control del archivo MP3 activo
 
     function setDateToToday() {
         const dateInput = document.getElementById('alarmDateInput');
@@ -584,9 +643,28 @@
         localStorage.setItem('selectedAlarmVolume', currentVolume);
     }
 
+    function showAlarmBanner(taskText) {
+        const banner = document.getElementById('alarmBanner');
+        const textElem = document.getElementById('alarmBannerText');
+        if (banner && textElem) {
+            textElem.innerText = taskText || "Alarma activada";
+            banner.classList.remove('hidden');
+        }
+    }
+
+    function stopCurrentSound() {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+        }
+        const banner = document.getElementById('alarmBanner');
+        if (banner) banner.classList.add('hidden');
+    }
+
     function testSelectedSound() {
         const soundSelect = document.getElementById('alarmSoundSelect');
-        playAlarmSound(soundSelect.value);
+        playAlarmSound(soundSelect.value, "Prueba de sonido");
 
         if ("Notification" in window) {
             if (Notification.permission === "granted") {
@@ -605,10 +683,11 @@
         }
     }
 
-    function playAlarmSound(soundType = currentSound) {
+    function playAlarmSound(soundType = currentSound, taskText = '') {
+        stopCurrentSound();
+
         if (currentVolume <= 0) return;
 
-        // Mapeo de archivos de audio MP3 locales
         const audioFiles = {
             'message_alert': 'message_alert.mp3',
             'tono_largo': 'tono_largo.mp3',
@@ -619,11 +698,18 @@
 
         if (audioFiles[soundType]) {
             try {
-                const audio = new Audio(audioFiles[soundType]);
-                audio.volume = currentVolume / 100;
-                audio.play().catch(e => console.warn("Error al reproducir el archivo de audio:", e));
+                currentAudio = new Audio(audioFiles[soundType]);
+                currentAudio.volume = currentVolume / 100;
+                
+                showAlarmBanner(taskText);
+
+                currentAudio.onended = () => {
+                    stopCurrentSound();
+                };
+
+                currentAudio.play().catch(e => console.warn("Error al reproducir el archivo de audio:", e));
             } catch(e) {
-                console.warn("Audio Context / Audio Error:", e);
+                console.warn("Audio Error:", e);
             }
             return;
         }
@@ -872,6 +958,7 @@
     }
 
     function toggleTask(id) {
+        stopCurrentSound();
         const task = tasks.find(t => t.id === id);
         if (task) {
             task.completed = !task.completed;
@@ -889,6 +976,7 @@
     }
 
     function deleteTask(id) {
+        stopCurrentSound();
         const task = tasks.find(t => t.id === id);
         const taskText = task ? `"${task.text}"` : "esta tarea";
         
@@ -899,6 +987,7 @@
     }
 
     function snoozeTask(id, minutesToAdd) {
+        stopCurrentSound();
         const task = tasks.find(t => t.id === id);
         if (task) {
             const now = new Date();
@@ -988,14 +1077,18 @@
 
         if (newlyOverdueCount > 0) {
             saveTasks();
-            playAlarmSound();
+            playAlarmSound(currentSound, lastOverdueTaskText);
 
             let message = newlyOverdueCount === 1 
                 ? `¡Se venció la tarea: "${lastOverdueTaskText}"!` 
                 : `Se vencieron ${newlyOverdueCount} tareas.`;
 
             if ("Notification" in window && Notification.permission === "granted") {
-                new Notification("⏰ Gestor de Tareas", { body: message });
+                const notif = new Notification("⏰ Gestor de Tareas", { body: message });
+                notif.onclick = () => {
+                    stopCurrentSound();
+                    window.focus();
+                };
             }
         }
 

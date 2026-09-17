@@ -78,9 +78,6 @@
     .btn-limpiar { background: #d32f2f; }
     .btn-limpiar:hover { background: #b71c1c; }
 
-    .btn-cancelar { background: #757575; }
-    .btn-cancelar:hover { background: #616161; }
-
     .contadores {
       display: flex; gap: 10px; margin-top: 10px;
     }
@@ -135,7 +132,7 @@
     .badge-pd { background: #6a1b9a; color: #fff; }
     .badge-turno { background: #444; color: #ddd; }
 
-    .delete-btn, .edit-btn {
+    .delete-btn, .edit-btn, .save-btn, .cancel-btn {
       background: #f44336; border: none; cursor: pointer;
       font-size: 14px; color: white; width: 28px; height: 28px;
       border-radius: 4px; padding: 0; line-height: 1;
@@ -144,6 +141,32 @@
     .delete-btn:hover { background: #d32f2f; }
     .edit-btn { background: #f57c00; margin-right: 4px; }
     .edit-btn:hover { background: #e65100; }
+    .save-btn { background: #2e7d32; margin-right: 4px; }
+    .save-btn:hover { background: #1b5e20; }
+    .cancel-btn { background: #757575; }
+    .cancel-btn:hover { background: #616161; }
+
+    /* Estilos minimalistas para la edición en línea */
+    .edit-inline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: #181818;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #1976d2;
+    }
+    .edit-inline-row {
+      display: flex;
+      gap: 5px;
+    }
+    .edit-inline-input {
+      padding: 4px 6px !important;
+      margin: 0 !important;
+      font-size: 12px !important;
+      height: 30px !important;
+      text-align: left !important;
+    }
 
     .warning-note {
       margin-top: 15px;
@@ -255,7 +278,6 @@
 
       <div style="display: flex; justify-content: center; align-items: center; gap: 4px;">
         <button onclick="registrarTardia()" id="btnRegistrar">Registrar</button>
-        <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn-cancelar" style="display: none;">Cancelar</button>
       </div>
     </div>
 
@@ -370,7 +392,7 @@
   <details class="bloque">
     <summary>ℹ️ ¿Cómo se usa "Control de Vacaciones"?</summary>
     <p><strong>Registrar un día:</strong> elegí el tipo (Vacaciones o Personal Day), la fecha y el turno (Día completo, AM o PM), y presioná "Registrar". Solo se pueden cargar días de lunes a viernes que no sean feriados.</p>
-    <p><strong>Editar un día:</strong> hacé clic en el botón ✏️ al lado de un registro existente, modifica los datos arriba y presiona "Guardar".</p>
+    <p><strong>Editar un día:</strong> hacé clic en el botón ✏️ al lado de un registro existente para editarlo directamente en la lista en tiempo real.</p>
     <p><strong>Registrar varios días juntos:</strong> tildá "Registrar un rango de fechas", elegí desde/hasta y se cargan automáticamente todos los días hábiles del rango como día completo (saltando fines de semana y feriados).</p>
     <p><strong>Nota opcional:</strong> podés agregar un texto corto a cada registro (ej: "viaje", "trámite") para recordar el motivo.</p>
     <p><strong>Saldo inicial y Fecha de ingreso:</strong> cargá tus datos de partida. Al guardarse, ambos quedan bloqueados para evitar cambios accidentales. El sistema suma solo, en cada aniversario laboral, los días correspondientes según tu antigüedad (12 días/año del 1° al 5°, 18 días/año del 6° al 10°, 30 días/año del 11° en adelante).</p>
@@ -687,7 +709,7 @@
         const turno = document.getElementById("turnoRegistro").value;
         if (!fecha) return alert("Selecciona una fecha válida");
 
-        const resultado = intentarRegistrarUnDia(tipo, fecha, turno, nota, indiceEdicion);
+        const resultado = intentarRegistrarUnDia(tipo, fecha, turno, nota);
         if (!resultado.ok) {
           const mensajes = {
             "fin de semana": "Solo se pueden registrar días de lunes a viernes.",
@@ -697,10 +719,6 @@
             "límite mensual de Personal Day alcanzado": "Ya alcanzaste el límite de Personal Day para ese mes (1 día completo o 2 medios días)."
           };
           return alert(mensajes[resultado.motivo] || (resultado.motivo.startsWith("ya registrado para el turno") ? `Ese día ya tiene un registro para ese turno.` : resultado.motivo));
-        }
-
-        if (indiceEdicion !== null) {
-          cancelarEdicion();
         }
 
         registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
@@ -725,7 +743,7 @@
       while (cursor <= fin) {
         const fechaStr = cursor.toISOString().split("T")[0];
         if (esFinDeSemana(fechaStr)) {
-          // fin de semana, se salta sin avisar
+          // fin de semana
         } else if (esFeriado(fechaStr)) {
           saltados.push(`${fechaStr} (feriado)`);
         } else {
@@ -748,30 +766,42 @@
       alert(mensaje);
     }
 
-    function cargarParaEditar(index) {
-      const item = registros[index];
+    // Funciones de edición directamente en la fila (Inline)
+    function habilitarEdicionInline(index) {
       indiceEdicion = index;
-
-      document.getElementById("tipoRegistro").value = item.tipo;
-      document.getElementById("fechaTardia").value = item.fecha;
-      document.getElementById("turnoRegistro").value = item.turno;
-      document.getElementById("notaRegistro").value = item.nota || "";
-
-      document.getElementById("modoRango").checked = false;
-      toggleModoRango();
-
-      document.getElementById("btnRegistrar").innerText = "💾 Guardar";
-      document.getElementById("btnCancelarEdicion").style.display = "inline-flex";
-
-      actualizarDiaPreview();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      mostrarRegistros();
     }
 
-    function cancelarEdicion() {
+    function cancelarEdicionInline() {
       indiceEdicion = null;
-      document.getElementById("btnRegistrar").innerText = "Registrar";
-      document.getElementById("btnCancelarEdicion").style.display = "none";
-      document.getElementById("notaRegistro").value = "";
+      mostrarRegistros();
+    }
+
+    function guardarEdicionInline(index) {
+      const fecha = document.getElementById(`editFecha_${index}`).value;
+      const tipo = document.getElementById(`editTipo_${index}`).value;
+      const turno = document.getElementById(`editTurno_${index}`).value;
+      const nota = document.getElementById(`editNota_${index}`).value.trim();
+
+      if (!fecha) return alert("Selecciona una fecha válida");
+
+      const resultado = intentarRegistrarUnDia(tipo, fecha, turno, nota, index);
+      if (!resultado.ok) {
+        const mensajes = {
+          "fin de semana": "Solo se pueden registrar días de lunes a viernes.",
+          "feriado": "Ese día es feriado, no se puede registrar.",
+          "ya registrado (día completo)": "Ese día ya está registrado como día completo.",
+          "ya tiene un registro parcial": "Ese día ya tiene un registro parcial. No se puede marcar como completo.",
+          "límite mensual de Personal Day alcanzado": "Ya alcanzaste el límite de Personal Day para ese mes (1 día completo o 2 medios días)."
+        };
+        return alert(mensajes[resultado.motivo] || (resultado.motivo.startsWith("ya registrado para el turno") ? `Ese día ya tiene un registro para ese turno.` : resultado.motivo));
+      }
+
+      indiceEdicion = null;
+      registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+      guardarDatos();
+      mostrarRegistros();
+      actualizarContadores();
     }
 
     function eliminarRegistro(fecha, turno) {
@@ -883,22 +913,52 @@
                 <table>`;
 
           diasDelMes.forEach(item => {
-            const partes = item.fecha.split("-");
-            const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-            const diaSemana = obtenerNombreDia(item.fecha);
-            const badgeTipo = item.tipo === "Vacaciones"
-              ? `<span class="badge badge-vac">VAC</span>`
-              : `<span class="badge badge-pd">PD</span>`;
-            const notaHtml = item.nota ? `<br><span style="color:#aaa; font-size:11px;">📝 ${item.nota}</span>` : "";
+            const idx = item.originalIndex;
+            if (indiceEdicion === idx) {
+              // Vista de edición minimalista integrada en la misma fila
+              html += `
+                <tr>
+                  <td colspan="2" style="padding: 6px 0;">
+                    <div class="edit-inline-container">
+                      <div class="edit-inline-row">
+                        <input type="date" id="editFecha_${idx}" class="edit-inline-input" value="${item.fecha}" style="flex: 1;">
+                        <select id="editTipo_${idx}" class="edit-inline-input" style="flex: 1;">
+                          <option value="Vacaciones" ${item.tipo === 'Vacaciones' ? 'selected' : ''}>Vacaciones</option>
+                          <option value="Personal Day" ${item.tipo === 'Personal Day' ? 'selected' : ''}>Personal Day</option>
+                        </select>
+                      </div>
+                      <div class="edit-inline-row">
+                        <select id="editTurno_${idx}" class="edit-inline-input" style="flex: 1;">
+                          <option value="Completo" ${item.turno === 'Completo' ? 'selected' : ''}>Completo</option>
+                          <option value="AM" ${item.turno === 'AM' ? 'selected' : ''}>AM</option>
+                          <option value="PM" ${item.turno === 'PM' ? 'selected' : ''}>PM</option>
+                        </select>
+                        <input type="text" id="editNota_${idx}" class="edit-inline-input" value="${item.nota || ''}" placeholder="Nota" style="flex: 1.5;" maxlength="60">
+                        <button class="save-btn" onclick="guardarEdicionInline(${idx})" title="Guardar">✔</button>
+                        <button class="cancel-btn" onclick="cancelarEdicionInline()" title="Cancelar">✖</button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>`;
+            } else {
+              // Vista normal
+              const partes = item.fecha.split("-");
+              const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+              const diaSemana = obtenerNombreDia(item.fecha);
+              const badgeTipo = item.tipo === "Vacaciones"
+                ? `<span class="badge badge-vac">VAC</span>`
+                : `<span class="badge badge-pd">PD</span>`;
+              const notaHtml = item.nota ? `<br><span style="color:#aaa; font-size:11px;">📝 ${item.nota}</span>` : "";
 
-            html += `
-                  <tr>
-                    <td>${badgeTipo}<span class="badge badge-turno">${item.turno}</span><br><strong>${diaSemana}</strong> ${fechaFormateada}${notaHtml}</td>
-                    <td>
-                      <button class="edit-btn" onclick="cargarParaEditar(${item.originalIndex})">✏️</button>
-                      <button class="delete-btn" onclick="eliminarRegistro('${item.fecha}','${item.turno}')">🗑️</button>
-                    </td>
-                  </tr>`;
+              html += `
+                <tr>
+                  <td>${badgeTipo}<span class="badge badge-turno">${item.turno}</span><br><strong>${diaSemana}</strong> ${fechaFormateada}${notaHtml}</td>
+                  <td>
+                    <button class="edit-btn" onclick="habilitarEdicionInline(${idx})">✏️</button>
+                    <button class="delete-btn" onclick="eliminarRegistro('${item.fecha}','${item.turno}')">🗑️</button>
+                  </td>
+                </tr>`;
+            }
           });
 
           html += `

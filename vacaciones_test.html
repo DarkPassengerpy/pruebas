@@ -146,7 +146,6 @@
     .cancel-btn { background: #757575; }
     .cancel-btn:hover { background: #616161; }
 
-    /* Estilos para la edición en línea */
     .edit-inline-container {
       display: flex;
       flex-direction: column;
@@ -166,6 +165,23 @@
       font-size: 12px !important;
       height: 30px !important;
       text-align: left !important;
+    }
+
+    /* Estilos para el Buscador por Fecha */
+    .search-container {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 15px;
+      background: #1e1e1e;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+    .search-container input[type="date"] {
+      margin: 0;
+      height: 36px;
+      font-size: 13px;
     }
 
     .warning-note {
@@ -283,6 +299,13 @@
 
     <div style="margin-top: 10px; font-size: 14px; color: #aaa;" id="totalGeneral"></div>
 
+    <!-- BUSCADOR POR FECHA -->
+    <div class="search-container">
+      <input type="date" id="buscarFechaInput" style="flex:1;">
+      <button onclick="buscarPorFecha()" style="width:auto; padding:0 12px; margin:0;">🔍 Buscar</button>
+      <button class="cancel-btn" onclick="limpiarBusqueda()" title="Limpiar búsqueda" style="margin:0;">✖</button>
+    </div>
+
     <div id="listaRegistros"></div>
 
     <details class="mes-grupo">
@@ -391,6 +414,7 @@
 
   <details class="bloque">
     <summary>ℹ️ ¿Cómo se usa "Control de Vacaciones"?</summary>
+    <p><strong>Buscar un registro:</strong> usá el buscador por fecha para filtrar rápidamente un día específico sin navegar entre carpetas de años y meses.</p>
     <p><strong>Registrar un día:</strong> elegí el tipo (Vacaciones o Personal Day), la fecha y el turno (Día completo, AM o PM), y presioná "Registrar". Solo se pueden cargar días de lunes a viernes que no sean feriados.</p>
     <p><strong>Editar un día:</strong> hacé clic en el botón ✏️ al lado de un registro existente para editarlo directamente en la lista en tiempo real.</p>
     <p><strong>Registrar varios días juntos:</strong> tildá "Registrar un rango de fechas", elegí desde/hasta y se cargan automáticamente todos los días hábiles del rango como día completo (saltando fines de semana y feriados).</p>
@@ -421,6 +445,7 @@
     let feriados = JSON.parse(localStorage.getItem("feriadosVacaciones")) || [];
     let indiceEdicion = null;
     let mesAnioEdicionAbierto = null;
+    let fechaFiltroBusqueda = null;
 
     if (config.saldoInicial === undefined && config.totalVacaciones !== undefined) {
       config.saldoInicial = config.totalVacaciones;
@@ -457,6 +482,19 @@
 
     function guardarConfigCompleta() {
       localStorage.setItem("configVacaciones", JSON.stringify(config));
+    }
+
+    function buscarPorFecha() {
+      const fechaVal = document.getElementById("buscarFechaInput").value;
+      if (!fechaVal) return alert("Selecciona una fecha para buscar.");
+      fechaFiltroBusqueda = fechaVal;
+      mostrarRegistros();
+    }
+
+    function limpiarBusqueda() {
+      fechaFiltroBusqueda = null;
+      document.getElementById("buscarFechaInput").value = "";
+      mostrarRegistros();
     }
 
     function toggleLockSaldo() {
@@ -767,7 +805,6 @@
       alert(mensaje);
     }
 
-    // Funciones de edición directamente en la fila (Inline) con memoria de panel
     function habilitarEdicionInline(index) {
       indiceEdicion = index;
       mesAnioEdicionAbierto = registros[index].fecha.slice(0, 7);
@@ -855,6 +892,13 @@
       const div = document.getElementById("listaRegistros");
       const totalGeneralDiv = document.getElementById("totalGeneral");
 
+      let listaVisualizada = registros;
+      
+      // Aplicar filtro si hay búsqueda activa
+      if (fechaFiltroBusqueda) {
+        listaVisualizada = registros.filter(r => r.fecha === fechaFiltroBusqueda);
+      }
+
       totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
 
       if (registros.length === 0) {
@@ -868,13 +912,28 @@
         return;
       }
 
+      if (fechaFiltroBusqueda && listaVisualizada.length === 0) {
+        const partesBuscadas = fechaFiltroBusqueda.split("-");
+        const fechaFormateadaBusqueda = `${partesBuscadas[2]}/${partesBuscadas[1]}/${partesBuscadas[0]}`;
+        div.innerHTML = `
+          <details class="mes-grupo" open>
+            <summary><span>📋 Resultado de Búsqueda</span></summary>
+            <div class="mes-contenido">
+              <p style="color: #ff5252; margin: 0;">🔍 No hay ningún registro guardado para el <strong>${fechaFormateadaBusqueda}</strong>.</p>
+            </div>
+          </details>`;
+        return;
+      }
+
       let agrupadosPorAnio = {};
-      registros.forEach((item, index) => {
+      listaVisualizada.forEach((item, index) => {
+        // Encontrar el índice original en el array global 'registros'
+        const origIndex = registros.findIndex(r => r.fecha === item.fecha && r.turno === item.turno && r.tipo === item.tipo);
         const anioKey = item.fecha.slice(0, 4);
         const mesKey = item.fecha.slice(0, 7);
         if (!agrupadosPorAnio[anioKey]) agrupadosPorAnio[anioKey] = {};
         if (!agrupadosPorAnio[anioKey][mesKey]) agrupadosPorAnio[anioKey][mesKey] = [];
-        agrupadosPorAnio[anioKey][mesKey].push({ ...item, originalIndex: index });
+        agrupadosPorAnio[anioKey][mesKey].push({ ...item, originalIndex: origIndex !== -1 ? origIndex : index });
       });
 
       const aniosOrdenados = Object.keys(agrupadosPorAnio).sort().reverse();
@@ -884,8 +943,8 @@
       let html = `
         <details class="mes-grupo" open>
           <summary>
-            <span>📋 Registros</span>
-            <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${registros.length} registros</span>
+            <span>📋 Registros ${fechaFiltroBusqueda ? '(Filtrado)' : ''}</span>
+            <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 13px;">${listaVisualizada.length} registros</span>
           </summary>
           <div class="mes-contenido">`;
 
@@ -895,7 +954,8 @@
         const totalAnio = Object.values(mesesDelAnio).reduce((acc, dias) => acc + dias.length, 0);
 
         const anioEdicion = mesAnioEdicionAbierto ? mesAnioEdicionAbierto.slice(0, 4) : null;
-        const isOpenAnio = (anioKey === anioActual || anioKey === anioEdicion) ? "open" : "";
+        const anioBuscado = fechaFiltroBusqueda ? fechaFiltroBusqueda.slice(0, 4) : null;
+        const isOpenAnio = (anioKey === anioActual || anioKey === anioEdicion || anioKey === anioBuscado) ? "open" : "";
 
         html += `
           <details class="anio-grupo" ${isOpenAnio}>
@@ -909,7 +969,8 @@
           const diasDelMes = mesesDelAnio[mesKey].sort((a, b) => b.fecha.localeCompare(a.fecha));
           const nombreMes = obtenerNombreMes(mesKey);
 
-          const isOpenMes = (mesKey === mesActualKey || mesKey === mesAnioEdicionAbierto) ? "open" : "";
+          const mesBuscado = fechaFiltroBusqueda ? fechaFiltroBusqueda.slice(0, 7) : null;
+          const isOpenMes = (mesKey === mesActualKey || mesKey === mesAnioEdicionAbierto || mesKey === mesBuscado) ? "open" : "";
 
           html += `
             <details class="mes-grupo" ${isOpenMes}>
@@ -923,7 +984,6 @@
           diasDelMes.forEach(item => {
             const idx = item.originalIndex;
             if (indiceEdicion === idx) {
-              // Vista de edición minimalista integrada en la misma fila
               html += `
                 <tr>
                   <td colspan="2" style="padding: 6px 0;">
@@ -949,7 +1009,6 @@
                   </td>
                 </tr>`;
             } else {
-              // Vista normal
               const partes = item.fecha.split("-");
               const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
               const diaSemana = obtenerNombreDia(item.fecha);

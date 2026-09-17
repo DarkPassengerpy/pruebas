@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Guardias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        form {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #btn-guardar {
+            background-color: #28a745;
+            color: white;
+        }
+        #btn-cancelar {
+            background-color: #dc3545;
+            color: white;
+            margin-left: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-accion {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Control de Registros</h2>
+
+    <!-- Formulario Principal -->
+    <form id="form-registro">
+        <div class="form-group">
+            <label for="fecha">Fecha:</label>
+            <input type="date" id="fecha" required>
+        </div>
+
+        <div class="form-group">
+            <label for="tipo">Tipo de Guardia:</label>
+            <select id="tipo" required>
+                <option value="">Seleccione...</option>
+                <option value="Pasiva">Pasiva</option>
+                <option value="Activa">Activa</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="turno">Turno:</label>
+            <select id="turno" required>
+                <option value="">Seleccione...</option>
+                <option value="Mañana">Mañana</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noche">Noche</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="nota">Nota / Observación:</label>
+            <textarea id="nota" rows="3" placeholder="Opcional..."></textarea>
+        </div>
+
+        <button type="submit" id="btn-guardar">Guardar Registro</button>
+        <button type="button" id="btn-cancelar" style="display: none;">Cancelar</button>
+    </form>
+
+    <!-- Tabla de Registros -->
+    <h3>Registros Guardados</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Turno</th>
+                <th>Nota</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-cuerpo">
+            <!-- Los registros se generan dinámicamente -->
+        </tbody>
+    </table>
+
+    <script>
+        // Array para almacenar los registros
+        let registros = JSON.parse(localStorage.getItem('registros_guardias')) || [];
+        let indiceEdicion = null; // Guarda el índice del registro que se está editando (null si es uno nuevo)
+
+        // Elementos del DOM
+        const form = document.getElementById('form-registro');
+        const inputFecha = document.getElementById('fecha');
+        const selectTipo = document.getElementById('tipo');
+        const selectTurno = document.getElementById('turno');
+        const inputNota = document.getElementById('nota');
+        const btnGuardar = document.getElementById('btn-guardar');
+        const btnCancelar = document.getElementById('btn-cancelar');
+        const tablaCuerpo = document.getElementById('tabla-cuerpo');
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            mostrarRegistros();
+        });
+
+        // Evento de envío del formulario
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const nuevoRegistro = {
+                fecha: inputFecha.value,
+                tipo: selectTipo.value,
+                turno: selectTurno.value,
+                nota: inputNota.value
+            };
+
+            // Validar solapamiento (excluyendo el registro actual si se está editando)
+            const existeSolapamiento = registros.some((reg, index) => {
+                if (indiceEdicion !== null && index === indiceEdicion) return false;
+                return reg.fecha === nuevoRegistro.fecha && reg.turno === nuevoRegistro.turno;
+            });
+
+            if (existeSolapamiento) {
+                alert('Ya existe un registro para esa misma fecha y turno.');
+                return;
+            }
+
+            if (indiceEdicion === null) {
+                // Crear nuevo registro
+                registros.push(nuevoRegistro);
+            } else {
+                // Actualizar registro existente
+                registros[indiceEdicion] = nuevoRegistro;
+                salirModoEdicion();
+            }
+
+            guardarYActualizar();
+            form.reset();
+        });
+
+        // Mostrar lista de registros en la tabla
+        function mostrarRegistros() {
+            tablaCuerpo.innerHTML = '';
+
+            registros.forEach((reg, index) => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>${reg.fecha}</td>
+                    <td>${reg.tipo}</td>
+                    <td>${reg.turno}</td>
+                    <td>${reg.nota || '-'}</td>
+                    <td>
+                        <button onclick="cargarParaEditar(${index})" class="btn-accion" title="Editar">✏️</button>
+                        <button onclick="eliminarRegistro(${index})" class="btn-accion" title="Eliminar">🗑️</button>
+                    </td>
+                `;
+                tablaCuerpo.appendChild(fila);
+            });
+        }
+
+        // Cargar datos en el formulario para editar
+        function cargarParaEditar(index) {
+            const reg = registros[index];
+            
+            inputFecha.value = reg.fecha;
+            selectTipo.value = reg.tipo;
+            selectTurno.value = reg.turno;
+            inputNota.value = reg.nota;
+
+            indiceEdicion = index;
+            btnGuardar.textContent = 'Actualizar Registro';
+            btnCancelar.style.display = 'inline-block';
+            
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Salir del modo edición
+        function salirModoEdicion() {
+            indiceEdicion = null;
+            btnGuardar.textContent = 'Guardar Registro';
+            btnCancelar.style.display = 'none';
+            form.reset();
+        }
+
+        // Evento botón Cancelar
+        btnCancelar.addEventListener('click', salirModoEdicion);
+
+        // Eliminar registro
+        function eliminarRegistro(index) {
+            if (confirm('¿Estás seguro de eliminar este registro?')) {
+                registros.splice(index, 1);
+                if (indiceEdicion === index) salirModoEdicion();
+                guardarYActualizar();
+            }
+        }
+
+        // Guardar en LocalStorage y refrescar
+        function guardarYActualizar() {
+            localStorage.setItem('registros_guardias', JSON.stringify(registros));
+            mostrarRegistros();
+        }
+    </script>
+</body>
+</html>

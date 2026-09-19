@@ -77,7 +77,9 @@
     * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
     body { font-family: "Aptos", Arial, sans-serif; margin: 0; padding: 20px; background: var(--bg-body); color: var(--text-main); }
     .container { max-width: 500px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); text-align: center; color: var(--text-main); box-sizing: border-box; }
-    .header-app { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+    
+    /* Cabecera reorganizada: Título arriba, botones abajo */
+    .header-app { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
     .header-app h1 { color: #ff5252; margin: 0; font-size: 22px; }
 
     .btn-tema { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: "Aptos", Arial, sans-serif; }
@@ -147,10 +149,10 @@
 <body>
   <div class="container">
     
-    <!-- Cabecera adaptativa (Modo Local / Sincronización) -->
+    <!-- Cabecera reorganizada: Título arriba, Botones abajo -->
     <div class="header-app">
       <h1>🍽️ Registro de Cantina</h1>
-      <div style="display: flex; gap: 6px; align-items: center;">
+      <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
         <button id="theme-toggle" class="btn-tema">☀️ Modo Claro</button>
         <button id="btnAuthHeader" onclick="abrirModalAuth()" class="btn-sync">☁️ Sincronizar</button>
       </div>
@@ -319,7 +321,7 @@
        2. VARIABLES Y ESTADO GENERAL (LOCAL-FIRST)
        ========================================================================== */
     let usuarioActual = null;
-    let esModoInvitado = true; // Predeterminado: Abre en Modo Local
+    let esModoInvitado = true;
     let registros = JSON.parse(localStorage.getItem("cantinaRegistros")) || [];
     let filtroActual = "todos";
     let desuscribirFirestore = null;

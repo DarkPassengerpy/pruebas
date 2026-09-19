@@ -15,9 +15,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
-    /* ==========================================================================
-       1. VARIABLES DE TEMA (MODO CLARO Y MODO OSCURO)
-       ========================================================================== */
     :root {
       --bg-body: #f4f6f9;
       --bg-container: #ffffff;
@@ -91,7 +88,6 @@
     input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
 
-    /* Contenedor del campo de contraseña con el botón del ojo */
     .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
     .password-wrapper input { width: 100%; margin: 8px 0; padding-right: 40px; text-align: center; }
     .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
@@ -154,7 +150,6 @@
 <body>
   <div class="container">
     
-    <!-- Cabecera -->
     <div class="header-app">
       <h1>🍽️ Registro de Cantina</h1>
       <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
@@ -197,7 +192,6 @@
 
     <div id="listaRegistros"></div>
 
-    <!-- Sección de Exportación a Excel -->
     <details class="export-section">
       <summary class="export-summary">📤 Exportar Registros (Excel)</summary>
       <div class="export-section-content">
@@ -221,7 +215,6 @@
       </div>
     </details>
 
-    <!-- Sección de Copia de Seguridad (Backup) -->
     <details class="export-section">
       <summary class="export-summary">💾 Copia de Seguridad (Backup)</summary>
       <div class="export-section-content">
@@ -249,7 +242,6 @@
     <a href="https://tools.darkpassenger.workers.dev/" target="_blank" rel="noopener noreferrer">Desarrollado por Dark Passenger Tools</a>
   </footer>
 
-  <!-- MODAL DE AUTENTICACIÓN / SINCRONIZACIÓN CON EL BOTÓN DEL OJO -->
   <div id="modalAuth" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalAuth()">&times;</span>
@@ -258,7 +250,6 @@
       
       <input type="email" id="authEmail" placeholder="Correo electrónico">
       
-      <!-- Contenedor con input de contraseña y botón del ojo -->
       <div class="password-wrapper">
         <input type="password" id="authPassword" placeholder="Contraseña">
         <button type="button" class="btn-toggle-pass" onclick="togglePasswordVisibility()" title="Mostrar/Ocultar contraseña">👁️</button>
@@ -277,7 +268,6 @@
     </div>
   </div>
 
-  <!-- MODAL EDITAR -->
   <div id="modalEditar" class="modal">
     <div class="modal-content">
       <h2>✏️ Editar Registro</h2>
@@ -307,9 +297,6 @@
   </div>
 
   <script>
-    /* ==========================================================================
-       1. CONFIGURACIÓN DE FIREBASE
-       ========================================================================== */
     const firebaseConfig = {
       apiKey: "AIzaSyD3kkMxRygV1gC9GAnpvlHumwXNiixTxro",
       authDomain: "darkpassenger-1316d.firebaseapp.com",
@@ -327,9 +314,6 @@
     db.enablePersistence({ synchronizeTabs: true })
       .catch(err => console.warn("Modo fuera de línea listo."));
 
-    /* ==========================================================================
-       2. VARIABLES Y ESTADO GENERAL (LOCAL-FIRST)
-       ========================================================================== */
     let usuarioActual = null;
     let esModoInvitado = true;
     let registros = JSON.parse(localStorage.getItem("cantinaRegistros")) || [];
@@ -397,9 +381,6 @@
       actualizarEstadoRed();
     }
 
-    /* ==========================================================================
-       3. MODAL DE AUTENTICACIÓN Y VISIBILIDAD DE CONTRASEÑA
-       ========================================================================== */
     function abrirModalAuth() {
       document.getElementById("modalAuth").style.display = "flex";
       document.getElementById("authError").innerText = "";
@@ -409,16 +390,15 @@
       document.getElementById("modalAuth").style.display = "none";
     }
 
-    // Función para alternar la visibilidad de la contraseña con el icono del ojo
     function togglePasswordVisibility() {
       const inputPass = document.getElementById("authPassword");
       const btnToggle = document.querySelector(".btn-toggle-pass");
       if (inputPass.type === "password") {
         inputPass.type = "text";
-        btnToggle.textContent = "🙈"; // Icono de ocultar
+        btnToggle.textContent = "🙈";
       } else {
         inputPass.type = "password";
-        btnToggle.textContent = "👁️"; // Icono de mostrar
+        btnToggle.textContent = "👁️";
       }
     }
 
@@ -477,9 +457,6 @@
       auth.signOut();
     }
 
-    /* ==========================================================================
-       4. MÓDULO DE TEMA Y VISTA PREVIA
-       ========================================================================== */
     document.addEventListener("DOMContentLoaded", () => {
       inicializarTema();
       const hoy = new Date().toISOString().split("T")[0];
@@ -544,9 +521,6 @@
       }
     }
 
-    /* ==========================================================================
-       5. MIGRACIÓN Y CONEXIÓN EN TIEMPO REAL CON FIRESTORE
-       ========================================================================== */
     function cargarRegistrosModoLocal() {
       const datosGuardados = localStorage.getItem(LOCAL_STORAGE_KEY);
       registros = datosGuardados ? JSON.parse(datosGuardados) : [];
@@ -565,23 +539,39 @@
           return;
         }
 
-        const batch = db.batch();
-        registrosLocales.forEach((item) => {
-          const nuevoDocRef = db.collection("usuarios").doc(user.uid).collection("registros").doc();
-          batch.set(nuevoDocRef, {
-            fecha: item.fecha || new Date().toISOString().split("T")[0],
-            producto: item.producto || "Sin descripción",
-            pagado: Boolean(item.pagado),
-            ticket: item.ticket || "No se imprimió"
-          });
-        });
+        const quiereSubirLocales = confirm(
+          `⚠️ Tienes ${registrosLocales.length} registros guardados localmente en este navegador.\n\n` +
+          `¿Deseas SUBIR estos datos locales a tu cuenta en la nube?\n\n` +
+          `• [Aceptar] = Sube tus datos locales y actualiza la nube.\n` +
+          `• [Cancelar] = Descarta los datos locales y usa únicamente lo que ya está en la nube.`
+        );
 
-        batch.commit()
-          .then(() => {
+        if (quiereSubirLocales) {
+          db.collection("usuarios").doc(user.uid).collection("registros").get().then(snapshot => {
+            const batch = db.batch();
+            snapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+            registrosLocales.forEach((item) => {
+              const nuevoDocRef = db.collection("usuarios").doc(user.uid).collection("registros").doc();
+              batch.set(nuevoDocRef, {
+                fecha: item.fecha || new Date().toISOString().split("T")[0],
+                producto: item.producto || "Sin descripción",
+                pagado: Boolean(item.pagado),
+                ticket: item.ticket || "No se imprimió"
+              });
+            });
+
+            return batch.commit();
+          }).then(() => {
             localStorage.removeItem(LOCAL_STORAGE_KEY);
-            alert("¡Tus registros locales han sido sincronizados en tu cuenta de la nube con éxito!");
-          })
-          .catch(error => console.error("Error al migrar datos:", error));
+            alert("¡Datos locales subidos y sincronizados con éxito! ✅");
+          }).catch(error => console.error("Error al sincronizar:", error));
+        } else {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+          alert("Se han descartado los datos locales. Tu aplicación ahora usa los datos de la nube. ☁️");
+          escucharRegistrosFirebase();
+        }
+
       } catch (e) {
         console.error("Error procesando localStorage:", e);
       }
@@ -605,9 +595,6 @@
         });
     }
 
-    /* ==========================================================================
-       6. OPERACIONES DE DATOS HÍBRIDAS
-       ========================================================================== */
     function registrarDia() {
       const fecha = document.getElementById("fechaCantina").value;
       const productoInput = document.getElementById("nombreProducto").value.trim();
@@ -820,9 +807,6 @@
       div.innerHTML = html;
     }
 
-    /* ==========================================================================
-       7. EXPORTACIÓN, BACKUP Y BORRADO
-       ========================================================================== */
     function exportarMes() {
       const mesSeleccionado = document.getElementById("mesFiltro").value;
       if (!mesSeleccionado) return alert("Por favor, selecciona un mes.");

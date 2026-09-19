@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Tareas</title>
     <link rel="icon" type="image/png" href="ico.png">
+
+    <!-- SDKs de Firebase (v10 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -27,17 +33,16 @@
             box-sizing: border-box;
         }
 
-        h2 {
-            margin-top: 0;
-            color: #ffffff;
-            text-align: center;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+        .header-app { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 12px; }
+        .header-app h2 { margin: 0; color: #ffffff; text-align: center; border: none; padding: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        .btn-sync { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-logout { background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+        .net-status { font-size: 11px; padding: 4px 8px; border-radius: 10px; display: inline-block; }
+        .net-online { background: rgba(40, 167, 69, 0.2); color: #28a745; }
+        .net-offline { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+        .net-local { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
 
         .task-form {
             background: #252525;
@@ -97,7 +102,7 @@
             border-color: #17a2b8;
         }
 
-        input[type="text"], input[type="date"], input[type="time"], select {
+        input[type="text"], input[type="date"], input[type="time"], input[type="email"], input[type="password"], select {
             padding: 12px;
             border: 1px solid #444;
             border-radius: 6px;
@@ -483,6 +488,15 @@
         .credits a:hover { color: #0056b3; text-decoration: underline; }
         .hidden { display: none !important; }
 
+        /* Estilos del Modal de Autenticación */
+        .modal { display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
+        .modal-content { background: #1e1e1e; padding: 25px; border-radius: 10px; max-width: 400px; width: 100%; border: 1px solid #444; color: #e0e0e0; text-align: center; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 22px; cursor: pointer; color: #aaa; }
+        .close-modal:hover { color: #fff; }
+        .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; margin: 8px 0; }
+        .password-wrapper input { width: 100%; margin: 0; padding-right: 40px; text-align: center; }
+        .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
+
         @media (max-width: 550px) {
             .task-input-row, .alarm-input-row, .config-row { flex-direction: column; align-items: stretch; }
             .btn-add, .btn-test-sound { width: 100%; }
@@ -493,10 +507,20 @@
 <body>
 
 <div class="container">
-    <h2>
-        <img src="tarea.png" alt="Tarea" width="28" height="28">
-        Mis Tareas
-    </h2>
+    <div class="header-app">
+        <h2>
+            <img src="tarea.png" alt="Tarea" width="28" height="28">
+            Mis Tareas
+        </h2>
+        <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
+            <button id="btnAuthHeader" onclick="abrirModalAuth()" class="btn-sync">☁️ Sincronizar</button>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <span id="userEmailBadge" style="font-size: 12px; color: #aaa;">👤 MODO LOCAL</span>
+        <span id="netStatus" class="net-status net-local">💾 Modo Local</span>
+    </div>
 
     <div class="task-form">
         <div class="task-input-row">
@@ -577,7 +601,7 @@
     </div>
 
     <div class="warning-note">
-        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Puedes limpiar el historial y la caché sin problemas, pero borrar Cookies / Datos de sitios eliminará tus tareas. Usa la Copia de Seguridad para resguardar tus datos.
+        💡 <strong>Nota sobre tus datos:</strong> Si usas la aplicación en <strong>Modo Local</strong>, tus datos se guardan en el navegador. Si inicias sesión para <strong>sincronizar en la nube</strong>, tus tareas se guardan de forma segura y podrás verlas desde cualquier dispositivo.
     </div>
 </div>
 
@@ -588,8 +612,33 @@
     <button class="btn-silence" onclick="stopCurrentSound()">🔇 Silenciar</button>
 </div>
 
+<!-- Modal de Autenticación / Sincronización -->
+<div id="modalAuth" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="cerrarModalAuth()">&times;</span>
+        <h2>☁️ Sincronizar en la Nube</h2>
+        <p style="font-size: 13px; color: #aaa;">Ingresa con tu cuenta para respaldar y sincronizar tus tareas</p>
+        
+        <input type="email" id="authEmail" placeholder="Correo electrónico">
+        
+        <div class="password-wrapper">
+            <input type="password" id="authPassword" placeholder="Contraseña">
+            <button type="button" class="btn-toggle-pass" onclick="togglePasswordVisibility()" title="Mostrar/Ocultar contraseña">👁️</button>
+        </div>
+        
+        <div style="margin-top: 10px;">
+            <button onclick="iniciarSesion()" style="width: 100%; background: #007bff; color: white;">Ingresar</button>
+            <button onclick="registrarUsuario()" style="width: 100%; background: #28a745; color: white; margin-top: 5px;">Crear Cuenta</button>
+            <button onclick="recuperarContrasena()" style="width: 100%; background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 12px; margin-top: 8px; cursor: pointer;">¿Olvidaste tu contraseña?</button>
+        </div>
+        
+        <div id="authError" style="color: #ff5252; font-size: 12px; margin-top: 10px;"></div>
+    </div>
+</div>
+
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
+    <p><strong>Sincronización en la nube:</strong> hacé clic en el botón "☁️ Sincronizar" en la parte superior para iniciar sesión o crear una cuenta. Esto respaldará automáticamente tus tareas en la nube, permitiéndote acceder y mantener sincronizada tu información desde cualquier dispositivo (como tu PC o teléfono).</p>
     <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
 </div>
 
@@ -598,11 +647,175 @@
 </div>
 
 <script>
+    /* ==========================================================================
+       CONFIGURACIÓN DE FIREBASE
+       ========================================================================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyD3kkMxRygV1gC9GAnpvlHumwXNiixTxro",
+      authDomain: "darkpassenger-1316d.firebaseapp.com",
+      projectId: "darkpassenger-1316d",
+      storageBucket: "darkpassenger-1316d.firebasestorage.app",
+      messagingSenderId: "115304417945",
+      appId: "1:115304417945:web:a2b9b1a4d46901ee9d8608",
+      measurementId: "G-Y5MEMT32V3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    db.enablePersistence({ synchronizeTabs: true })
+      .catch(err => console.warn("Modo fuera de línea listo."));
+
+    let usuarioActual = null;
+    let esModoInvitado = true;
+    let desuscribirFirestore = null;
+
+    const NOMBRE_COLECCION_DB = 'tareas_usuarios';
+    const LOCAL_STORAGE_KEY = 'myTasks';
+
     let tasks = [];
     let editingTaskId = null;
     let currentSound = 'classic';
     let currentVolume = 70;
-    let currentAudio = null; // Control del archivo MP3 activo
+    let currentAudio = null;
+
+    window.addEventListener('online', actualizarEstadoRed);
+    window.addEventListener('offline', actualizarEstadoRed);
+
+    function actualizarEstadoRed() {
+        const badge = document.getElementById("netStatus");
+        if (esModoInvitado) {
+            badge.className = "net-status net-local";
+            badge.innerText = "💾 Modo Local";
+        } else if (navigator.onLine) {
+            badge.className = "net-status net-online";
+            badge.innerText = "🌐 En línea";
+        } else {
+            badge.className = "net-status net-offline";
+            badge.innerText = "⚡ Modo fuera de línea";
+        }
+    }
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            usuarioActual = user;
+            esModoInvitado = false;
+            cerrarModalAuth();
+            actualizarInterfazEncabezado();
+            migrarDatosLocalesAFirebase(user);
+            escucharTareasFirebase();
+        } else {
+            usuarioActual = null;
+            esModoInvitado = true;
+            if (desuscribirFirestore) desuscribirFirestore();
+            actualizarInterfazEncabezado();
+            loadTasks();
+            renderTasks();
+            checkAlarms();
+        }
+    });
+
+    function actualizarInterfazEncabezado() {
+        const btnAuthHeader = document.getElementById("btnAuthHeader");
+        const userBadge = document.getElementById("userEmailBadge");
+
+        if (esModoInvitado) {
+            userBadge.innerText = "👤 MODO LOCAL";
+            btnAuthHeader.className = "btn-sync";
+            btnAuthHeader.innerHTML = "☁️ Sincronizar";
+            btnAuthHeader.onclick = abrirModalAuth;
+        } else {
+            userBadge.innerText = `👤 ${usuarioActual.email}`;
+            btnAuthHeader.className = "btn-logout";
+            btnAuthHeader.innerHTML = "Salir";
+            btnAuthHeader.onclick = () => auth.signOut();
+        }
+        actualizarEstadoRed();
+    }
+
+    function abrirModalAuth() {
+        document.getElementById("modalAuth").style.display = "flex";
+        document.getElementById("authError").innerText = "";
+    }
+
+    function cerrarModalAuth() {
+        document.getElementById("modalAuth").style.display = "none";
+    }
+
+    function togglePasswordVisibility() {
+        const inputPass = document.getElementById("authPassword");
+        const btnToggle = document.querySelector(".btn-toggle-pass");
+        if (inputPass.type === "password") {
+            inputPass.type = "text";
+            btnToggle.textContent = "🙈";
+        } else {
+            inputPass.type = "password";
+            btnToggle.textContent = "👁️";
+        }
+    }
+
+    function registrarUsuario() {
+        const email = document.getElementById("authEmail").value.trim();
+        const pass = document.getElementById("authPassword").value.trim();
+        if (!email || !pass) return alert("Ingresa correo y contraseña.");
+        auth.createUserWithEmailAndPassword(email, pass).catch(err => document.getElementById("authError").innerText = err.message);
+    }
+
+    function iniciarSesion() {
+        const email = document.getElementById("authEmail").value.trim();
+        const pass = document.getElementById("authPassword").value.trim();
+        if (!email || !pass) return alert("Ingresa correo y contraseña.");
+        auth.signInWithEmailAndPassword(email, pass).catch(err => document.getElementById("authError").innerText = err.message);
+    }
+
+    function recuperarContrasena() {
+        const email = document.getElementById("authEmail").value.trim();
+        if (!email) return alert("Ingresa tu correo electrónico.");
+        auth.sendPasswordResetEmail(email).then(() => alert("Correo enviado para restablecer contraseña.")).catch(err => alert(err.message));
+    }
+
+    function migrarDatosLocalesAFirebase(user) {
+        const guardados = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (!guardados) return;
+        try {
+            const locales = JSON.parse(guardados);
+            if (!Array.isArray(locales) || locales.length === 0) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                return;
+            }
+
+            if (confirm(`¿Deseas subir tus ${locales.length} tareas locales a tu cuenta en la nube?`)) {
+                db.collection("usuarios").doc(user.uid).collection(NOMBRE_COLECCION_DB).get().then(snapshot => {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                    locales.forEach(item => {
+                        const ref = db.collection("usuarios").doc(user.uid).collection(NOMBRE_COLECCION_DB).doc(item.id || undefined);
+                        const { id, ...dataSinId } = item;
+                        batch.set(ref, dataSinId);
+                    });
+                    return batch.commit();
+                }).then(() => {
+                    localStorage.removeItem(LOCAL_STORAGE_KEY);
+                    alert("¡Tareas sincronizadas con éxito a la nube! ✅");
+                });
+            } else {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function escucharTareasFirebase() {
+        if (!usuarioActual || esModoInvitado) return;
+        desuscribirFirestore = db.collection("usuarios")
+            .doc(usuarioActual.uid)
+            .collection(NOMBRE_COLECCION_DB)
+            .onSnapshot(snapshot => {
+                tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTasks();
+                checkAlarms();
+            });
+    }
 
     function setDateToToday() {
         const dateInput = document.getElementById('alarmDateInput');
@@ -685,7 +898,6 @@
 
     function playAlarmSound(soundType = currentSound, taskText = '') {
         stopCurrentSound();
-
         if (currentVolume <= 0) return;
 
         const audioFiles = {
@@ -700,17 +912,10 @@
             try {
                 currentAudio = new Audio(audioFiles[soundType]);
                 currentAudio.volume = currentVolume / 100;
-                
                 showAlarmBanner(taskText);
-
-                currentAudio.onended = () => {
-                    stopCurrentSound();
-                };
-
-                currentAudio.play().catch(e => console.warn("Error al reproducir el archivo de audio:", e));
-            } catch(e) {
-                console.warn("Audio Error:", e);
-            }
+                currentAudio.onended = () => stopCurrentSound();
+                currentAudio.play().catch(e => console.warn("Error al reproducir audio:", e));
+            } catch(e) { console.warn("Audio Error:", e); }
             return;
         }
 
@@ -732,112 +937,6 @@
                     osc.start(now + timeOffset);
                     osc.stop(now + timeOffset + 0.08);
                 });
-            } else if (soundType === 'melodic') {
-                const notes = [523.25, 659.25, 783.99];
-                notes.forEach((freq, idx) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + idx * 0.16);
-                    gain.gain.setValueAtTime(vol * 0.5, now + idx * 0.16);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.16 + 0.3);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now + idx * 0.16);
-                    osc.stop(now + idx * 0.16 + 0.3);
-                });
-            } else if (soundType === 'urgent') {
-                [0, 0.18, 0.36, 0.54].forEach((timeOffset, idx) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sawtooth';
-                    const freq = idx % 2 === 0 ? 950 : 650;
-                    osc.frequency.setValueAtTime(freq, now + timeOffset);
-                    gain.gain.setValueAtTime(vol * 0.3, now + timeOffset);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + 0.14);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now + timeOffset);
-                    osc.stop(now + timeOffset + 0.14);
-                });
-            } else if (soundType === 'retro') {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
-                gain.gain.setValueAtTime(vol * 0.4, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (soundType === 'zen') {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, now);
-                gain.gain.setValueAtTime(0.001, now);
-                gain.gain.linearRampToValueAtTime(vol * 0.6, now + 0.2);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(now);
-                osc.stop(now + 1.2);
-            } else if (soundType === 'sonar') {
-                [0, 0.4].forEach(timeOffset => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, now + timeOffset);
-                    gain.gain.setValueAtTime(vol * 0.5, now + timeOffset);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + 0.3);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now + timeOffset);
-                    osc.stop(now + timeOffset + 0.3);
-                });
-            } else if (soundType === 'marimba') {
-                const notes = [523.25, 659.25];
-                notes.forEach((freq, idx) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + idx * 0.1);
-                    gain.gain.setValueAtTime(vol * 0.6, now + idx * 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.18);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now + idx * 0.1);
-                    osc.stop(now + idx * 0.1 + 0.18);
-                });
-            } else if (soundType === 'arpeggio') {
-                const notes = [261.63, 329.63, 392.00, 523.25];
-                notes.forEach((freq, idx) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-                    gain.gain.setValueAtTime(vol * 0.5, now + idx * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now + idx * 0.08);
-                    osc.stop(now + idx * 0.08 + 0.2);
-                });
-            } else if (soundType === 'fastbeep') {
-                [0, 0.08].forEach(timeOffset => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(1200, now + timeOffset);
-                    gain.gain.setValueAtTime(vol * 0.5, now + timeOffset);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + 0.05);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now + timeOffset);
-                    osc.stop(now + timeOffset + 0.05);
-                });
             } else {
                 const playBeep = (startTime) => {
                     const osc = ctx.createOscillator();
@@ -855,9 +954,7 @@
                 playBeep(now);             
                 playBeep(now + 0.4);        
             }
-        } catch(e) {
-            console.warn("Audio Context error:", e);
-        }
+        } catch(e) { console.warn("Audio Context error:", e); }
     }
 
     function requestNotificationPermission() {
@@ -907,14 +1004,16 @@
     }
 
     function loadTasks() {
-        const savedTasks = localStorage.getItem('myTasks');
+        const savedTasks = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (savedTasks) {
             tasks = JSON.parse(savedTasks);
         }
     }
 
     function saveTasks() {
-        localStorage.setItem('myTasks', JSON.stringify(tasks));
+        if (esModoInvitado) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tasks));
+        }
     }
 
     function addTask() {
@@ -924,18 +1023,16 @@
         const text = input.value.trim();
 
         if (text === '') return;
-
         requestNotificationPermission();
 
         let finalAlarmISO = null;
-        
         if (timeInput.value) {
             const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
             finalAlarmISO = new Date(`${selectedDate}T${timeInput.value}`).toISOString();
         }
 
+        const taskId = Date.now().toString();
         const newTask = {
-            id: Date.now().toString(),
             text: text,
             completed: false,
             priority: false,
@@ -945,11 +1042,19 @@
             alarmTriggered: false
         };
 
-        tasks.push(newTask);
+        if (esModoInvitado) {
+            newTask.id = taskId;
+            tasks.push(newTask);
+            saveTasks();
+            renderTasks();
+        } else {
+            db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).add(newTask)
+                .catch(err => alert("Error al guardar tarea: " + err.message));
+        }
+
         input.value = '';
         timeInput.value = '';
         setDateToToday();
-        saveAndRender();
         input.focus();
     }
 
@@ -960,18 +1065,38 @@
     function toggleTask(id) {
         stopCurrentSound();
         const task = tasks.find(t => t.id === id);
-        if (task) {
-            task.completed = !task.completed;
-            task.completedAt = task.completed ? new Date().toISOString() : null;
-            saveAndRender();
+        if (!task) return;
+
+        const updatedCompleted = !task.completed;
+        const updatedCompletedAt = updatedCompleted ? new Date().toISOString() : null;
+
+        if (esModoInvitado) {
+            task.completed = updatedCompleted;
+            task.completedAt = updatedCompletedAt;
+            saveTasks();
+            renderTasks();
+        } else {
+            db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).doc(id).update({
+                completed: updatedCompleted,
+                completedAt: updatedCompletedAt
+            }).catch(err => alert("Error al actualizar tarea: " + err.message));
         }
     }
 
     function togglePriority(id) {
         const task = tasks.find(t => t.id === id);
-        if (task) {
-            task.priority = !task.priority;
-            saveAndRender();
+        if (!task) return;
+
+        const updatedPriority = !task.priority;
+
+        if (esModoInvitado) {
+            task.priority = updatedPriority;
+            saveTasks();
+            renderTasks();
+        } else {
+            db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).doc(id).update({
+                priority: updatedPriority
+            }).catch(err => alert("Error al actualizar prioridad: " + err.message));
         }
     }
 
@@ -981,21 +1106,36 @@
         const taskText = task ? `"${task.text}"` : "esta tarea";
         
         if (confirm(`¿Estás seguro de que deseas eliminar ${taskText}?`)) {
-            tasks = tasks.filter(t => t.id !== id);
-            saveAndRender();
+            if (esModoInvitado) {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasks();
+                renderTasks();
+            } else {
+                db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).doc(id).delete()
+                    .catch(err => alert("Error al eliminar tarea: " + err.message));
+            }
         }
     }
 
     function snoozeTask(id, minutesToAdd) {
         stopCurrentSound();
         const task = tasks.find(t => t.id === id);
-        if (task) {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() + parseInt(minutesToAdd, 10));
-            
-            task.alarmAt = now.toISOString();
-            task.alarmTriggered = false; 
-            saveAndRender();
+        if (!task) return;
+
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + parseInt(minutesToAdd, 10));
+        const newAlarmISO = now.toISOString();
+
+        if (esModoInvitado) {
+            task.alarmAt = newAlarmISO;
+            task.alarmTriggered = false;
+            saveTasks();
+            renderTasks();
+        } else {
+            db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).doc(id).update({
+                alarmAt: newAlarmISO,
+                alarmTriggered: false
+            }).catch(err => alert("Error al posponer alarma: " + err.message));
         }
     }
 
@@ -1030,33 +1170,39 @@
         const newText = input.value.trim();
         if (newText === '') return;
 
-        const task = tasks.find(t => t.id === id);
-        if (task) {
-            task.text = newText;
-            
-            let finalAlarmISO = null;
-            if (timeInput.value) {
-                const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
-                finalAlarmISO = new Date(`${selectedDate}T${timeInput.value}`).toISOString();
-            }
-
-            if (task.alarmAt !== finalAlarmISO) {
-                task.alarmAt = finalAlarmISO;
-                task.alarmTriggered = false; 
-            }
+        let finalAlarmISO = null;
+        if (timeInput.value) {
+            const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
+            finalAlarmISO = new Date(`${selectedDate}T${timeInput.value}`).toISOString();
         }
-        editingTaskId = null;
-        saveAndRender();
+
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        const alarmChanged = task.alarmAt !== finalAlarmISO;
+
+        if (esModoInvitado) {
+            task.text = newText;
+            task.alarmAt = finalAlarmISO;
+            if (alarmChanged) task.alarmTriggered = false;
+            editingTaskId = null;
+            saveTasks();
+            renderTasks();
+        } else {
+            db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).doc(id).update({
+                text: newText,
+                alarmAt: finalAlarmISO,
+                alarmTriggered: alarmChanged ? false : task.alarmTriggered
+            }).then(() => {
+                editingTaskId = null;
+                renderTasks();
+            }).catch(err => alert("Error al guardar edición: " + err.message));
+        }
     }
 
     function handleEditKeyPress(e, id) {
         if (e.key === 'Enter') saveEdit(id);
         else if (e.key === 'Escape') cancelEdit();
-    }
-
-    function saveAndRender() {
-        saveTasks();
-        renderTasks();
     }
 
     function checkAlarms() {
@@ -1076,7 +1222,7 @@
         });
 
         if (newlyOverdueCount > 0) {
-            saveTasks();
+            if (esModoInvitado) saveTasks();
             playAlarmSound(currentSound, lastOverdueTaskText);
 
             let message = newlyOverdueCount === 1 
@@ -1091,7 +1237,6 @@
                 };
             }
         }
-
         renderTasks();
     }
 
@@ -1332,8 +1477,22 @@
                 if (Array.isArray(imported)) {
                     if (confirm("¿Deseas restaurar esta copia de seguridad? Se reemplazarán las tareas actuales.")) {
                         tasks = imported;
-                        saveAndRender();
-                        checkAlarms();
+                        if (esModoInvitado) {
+                            saveTasks();
+                            renderTasks();
+                            checkAlarms();
+                        } else {
+                            const batch = db.batch();
+                            db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).get().then(snapshot => {
+                                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                                imported.forEach(item => {
+                                    const ref = db.collection("usuarios").doc(usuarioActual.uid).collection(NOMBRE_COLECCION_DB).doc();
+                                    const { id, ...dataSinId } = item;
+                                    batch.set(ref, dataSinId);
+                                });
+                                return batch.commit();
+                            });
+                        }
                         alert("¡Copia de seguridad restaurada correctamente!");
                     }
                 } else {
@@ -1349,10 +1508,12 @@
 
     // Inicializar aplicación
     setDateToToday();
-    loadTasks();
     loadSettings();
-    renderTasks();
-    checkAlarms();
+    if (esModoInvitado) {
+        loadTasks();
+        renderTasks();
+        checkAlarms();
+    }
     setInterval(checkAlarms, 60000);
 </script>
 

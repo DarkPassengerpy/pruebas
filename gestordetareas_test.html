@@ -518,14 +518,13 @@
         .credits a:hover { color: #0056b3; text-decoration: underline; }
         .hidden { display: none !important; }
 
-        /* Estilos unificados y limpios para el Modal de Autenticación */
+        /* Estilos exactos e idénticos al formato de la cantina para el Modal de Autenticación */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
         .modal-content { background: #262626; padding: 20px; border-radius: 10px; max-width: 400px; width: 100%; border: 1px solid #444444; color: #e0e0e0; text-align: center; position: relative; box-sizing: border-box; }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; color: #aaaaaa; }
         .close-modal:hover { color: #ffffff; }
 
-        .modal-content input[type="email"],
-        .modal-content input[type="password"] {
+        .modal-content input[type="email"] {
             font-family: inherit;
             padding: 10px;
             margin: 8px 0;
@@ -539,7 +538,7 @@
         }
 
         .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
-        .password-wrapper input { width: 100%; margin: 8px 0; padding-right: 40px; text-align: center; box-sizing: border-box; }
+        .password-wrapper input { width: 100%; margin: 8px 0; padding: 10px; padding-right: 40px; border-radius: 6px; border: 1px solid #444444; background: #1e1e1e; color: #e0e0e0; box-sizing: border-box; text-align: center; font-family: inherit; }
         .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
         .btn-toggle-pass:hover { background: transparent; }
 
@@ -685,12 +684,12 @@
     <button class="btn-silence" onclick="stopCurrentSound()">🔇 Silenciar</button>
 </div>
 
-<!-- Modal de Autenticación / Sincronización -->
+<!-- Modal de Autenticación / Sincronización idéntico a la cantina -->
 <div id="modalAuth" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="cerrarModalAuth()">&times;</span>
         <h2>☁️ Sincronizar en la Nube</h2>
-        <p style="font-size: 13px; color: #aaa; margin: 0 0 10px 0;">Ingresa con tu cuenta para respaldar y sincronizar tus datos</p>
+        <p style="font-size: 13px; color: #aaa; margin: 0 0 10px 0;">Ingresa con tu cuenta para respaldar y sincronizar tus datos en Firestore</p>
         
         <input type="email" id="authEmail" placeholder="Correo electrónico">
         
@@ -702,7 +701,10 @@
         <div style="margin-top: 10px;">
             <button onclick="iniciarSesion()">Ingresar</button>
             <button onclick="registrarUsuario()" style="background: #28a745; margin-top: 5px;">Crear Cuenta</button>
-            <button onclick="recuperarContrasena()" style="background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 12px; margin-top: 8px; cursor: pointer; width: auto; height: auto;">¿Olvidaste tu contraseña?</button>
+
+            <button onclick="recuperarContrasena()" style="background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 12px; margin-top: 8px; cursor: pointer; width: auto; height: auto;">
+                ¿Olvidaste tu contraseña?
+            </button>
         </div>
         
         <div id="authError" style="color: #ff5252; font-size: 12px; margin-top: 10px;"></div>

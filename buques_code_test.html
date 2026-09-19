@@ -149,7 +149,6 @@
             const identificador = user.displayName || user.email.split('@')[0];
             document.getElementById('nombreEditor').innerText = `👋 Hola, ${identificador}`;
             
-            // Ejecuta la migración de datos locales a Firebase apenas inicia sesión
             await migrarDatosLocalesAFirebase();
         } else {
             usuarioActual = null;
@@ -164,36 +163,58 @@
         actualizarTablaVisual();
     });
 
-    // Función para rescatar y subir los datos antiguos de localStorage a Firebase
     async function migrarDatosLocalesAFirebase() {
-        const datosLocales = JSON.parse(localStorage.getItem('bd_buques'));
-        
-        if (datosLocales && Array.isArray(datosLocales) && datosLocales.length > 0) {
-            const autorRegistro = usuarioActual.displayName || usuarioActual.email;
-            let contadorMigrados = 0;
+        const datosRaw = localStorage.getItem('bd_buques');
+        if (!datosRaw) return;
 
-            for (const item of datosLocales) {
-                if (item.buque && item.codigo) {
-                    // Revisa que no exista ya para evitar duplicados
-                    const yaExiste = baseDatosBuques.some(b => b.buque === item.buque || b.codigo === item.codigo);
-                    if (!yaExiste) {
-                        await addDoc(collection(db, "buques"), {
-                            buque: item.buque,
-                            codigo: item.codigo,
-                            autor: autorRegistro,
-                            fechaCreacion: serverTimestamp()
-                        });
-                        contadorMigrados++;
-                    }
+        let datosLocales;
+        try {
+            datosLocales = JSON.parse(datosRaw);
+        } catch (e) {
+            console.error("Error al leer la memoria local:", e);
+            return;
+        }
+
+        if (!Array.isArray(datosLocales) || datosLocales.length === 0) return;
+
+        console.log(`Se encontraron ${datosLocales.length} registros en el navegador. Iniciando migración...`);
+
+        const autorRegistro = usuarioActual.displayName || usuarioActual.email;
+        let contadorMigrados = 0;
+
+        for (const item of datosLocales) {
+            const nombreBuque = (item.buque || item.nombre || "").toString().trim().toUpperCase();
+            const codigoOpus = (item.codigo || item.code || "").toString().trim().toUpperCase();
+
+            if (!nombreBuque || !codigoOpus) continue;
+
+            const yaExiste = baseDatosBuques.some(b => 
+                (b.buque && b.buque.toString().toUpperCase() === nombreBuque) || 
+                (b.codigo && b.codigo.toString().toUpperCase() === codigoOpus)
+            );
+
+            if (!yaExiste) {
+                try {
+                    await addDoc(collection(db, "buques"), {
+                        buque: nombreBuque,
+                        codigo: codigoOpus,
+                        autor: autorRegistro,
+                        fechaCreacion: serverTimestamp()
+                    });
+                    contadorMigrados++;
+                    console.log(`Migrado con éxito: ${nombreBuque} (${codigoOpus})`);
+                } catch (err) {
+                    console.error(`Error subiendo ${nombreBuque}:`, err);
                 }
+            } else {
+                console.log(`El registro ${nombreBuque} ya existía en Firebase. Omitido.`);
             }
-            
-            // Una vez transferidos a la nube, borramos la copia local para no repetir el proceso
-            localStorage.removeItem('bd_buques');
-            
-            if (contadorMigrados > 0) {
-                alert(`¡Éxito! Se migraron ${contadorMigrados} registros antiguos desde tu navegador a Firebase.`);
-            }
+        }
+
+        localStorage.removeItem('bd_buques');
+
+        if (contadorMigrados > 0) {
+            alert(`¡Éxito! Se migraron ${contadorMigrados} registros locales a la nube.`);
         }
     }
 
@@ -381,30 +402,55 @@
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     };
 
+    // Función de importación flexible de JSON
     window.importarBackup = async (event) => {
         const file = event.target.files[0];
         if (!file || !usuarioActual) return;
+
         const reader = new FileReader();
         reader.onload = async function(e) {
             try {
                 const datosImportados = JSON.parse(e.target.result);
-                if (Array.isArray(datosImportados)) {
-                    if (confirm(`Se subirán ${datosImportados.length} registros a la base de datos de Firebase. ¿Continuar?`)) {
-                        let autorRegistro = usuarioActual.displayName || usuarioActual.email;
-                        for (let item of datosImportados) {
-                            if (item.buque && item.codigo) {
+
+                if (!Array.isArray(datosImportados)) {
+                    alert("❌ El archivo no contiene una lista válida. Debe ser un arreglo de objetos [ { ... } ].");
+                    return;
+                }
+
+                if (confirm(`Se encontraron ${datosImportados.length} registros en el archivo. ¿Deseas subirlos a Firebase?`)) {
+                    let autorRegistro = usuarioActual.displayName || usuarioActual.email;
+                    let subidosExitosos = 0;
+                    let omitidos = 0;
+
+                    for (let item of datosImportados) {
+                        const nombreBuque = (item.buque || item.BUQUE || item.nombre || item.NOMBRE || "").toString().trim().toUpperCase();
+                        const codigoOpus = (item.codigo || item.CODIGO || item.code || item.CODE || item.codigo_opus || "").toString().trim().toUpperCase();
+
+                        if (nombreBuque && codigoOpus) {
+                            try {
                                 await addDoc(collection(db, "buques"), {
-                                    buque: item.buque,
-                                    codigo: item.codigo,
+                                    buque: nombreBuque,
+                                    codigo: codigoOpus,
                                     autor: autorRegistro,
                                     fechaCreacion: serverTimestamp()
                                 });
+                                subidosExitosos++;
+                            } catch (err) {
+                                console.error(`Error al subir ${nombreBuque}:`, err);
+                                omitidos++;
                             }
+                        } else {
+                            console.warn("Registro omitido por falta de campos válidos:", item);
+                            omitidos++;
                         }
-                        alert("¡Backup subido a Firestore con éxito!");
                     }
+
+                    alert(`¡Proceso finalizado!\n\n✅ Subidos con éxito: ${subidosExitosos}\n⚠️ Omitidos / incompletos: ${omitidos}`);
                 }
-            } catch (err) { alert("Error al leer el archivo de backup."); }
+            } catch (err) {
+                console.error("Error al leer el archivo de backup:", err);
+                alert("Error al leer el archivo JSON. Verifica que el formato del archivo no esté dañado.");
+            }
             event.target.value = '';
         };
         reader.readAsText(file);

@@ -36,10 +36,29 @@
         .header-app { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 12px; }
         .header-app h2 { margin: 0; color: #ffffff; text-align: center; border: none; padding: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        .btn-sync { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-logout { background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: #252525;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
-        .net-status { font-size: 11px; padding: 4px 8px; border-radius: 10px; display: inline-block; }
+        .user-info-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-sync { background: #28a745; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-logout { background: #d32f2f; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+
+        .net-status { font-size: 11px; padding: 4px 8px; border-radius: 10px; display: inline-block; white-space: nowrap; }
         .net-online { background: rgba(40, 167, 69, 0.2); color: #28a745; }
         .net-offline { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
         .net-local { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
@@ -501,6 +520,8 @@
             .task-input-row, .alarm-input-row, .config-row { flex-direction: column; align-items: stretch; }
             .btn-add, .btn-test-sound { width: 100%; }
             .volume-container { width: 100%; }
+            .user-bar { flex-direction: column; align-items: stretch; text-align: center; }
+            .user-info-group { justify-content: center; }
         }
     </style>
 </head>
@@ -512,14 +533,17 @@
             <img src="tarea.png" alt="Tarea" width="28" height="28">
             Mis Tareas
         </h2>
-        <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
-            <button id="btnAuthHeader" onclick="abrirModalAuth()" class="btn-sync">☁️ Sincronizar</button>
-        </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <span id="userEmailBadge" style="font-size: 12px; color: #aaa;">👤 MODO LOCAL</span>
-        <span id="netStatus" class="net-status net-local">💾 Modo Local</span>
+    <!-- Barra Superior de Usuario y Estado de Red -->
+    <div class="user-bar">
+        <div class="user-info-group">
+            <span id="userEmailBadge" style="font-size: 12px; color: #aaa;">👤 MODO LOCAL</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btnAuthHeader" onclick="abrirModalAuth()" class="btn-sync">☁️ Sincronizar</button>
+            <span id="netStatus" class="net-status net-local">💾 Modo Local</span>
+        </div>
     </div>
 
     <div class="task-form">

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Buques - TRANSMAR S.A.C.I.</title>
+    <!-- Librería para exportación de Excel con Estilos (xlsx-js-style) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            max-width: 750px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #ffffff;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .section-box {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #17a2b8;
+            text-transform: uppercase;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #2d2d2d;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            height: 38px;
+        }
+
+        .btn-add:hover { background-color: #218838; }
+
+        .search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-container input {
+            padding: 12px 15px 12px 40px;
+            font-size: 15px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            background-color: #1a1a1a;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            font-size: 16px;
+        }
+
+        .backup-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tool {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-excel { background-color: #1f7244; }
+        .btn-excel:hover { background-color: #155230; }
+
+        .btn-export { background-color: #6f42c1; }
+        .btn-export:hover { background-color: #59339d; }
+
+        .btn-import { background-color: #fd7e14; }
+        .btn-import:hover { background-color: #e86e0c; }
+
+        .toggle-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toggle-btn:hover { background-color: #444; }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .table-container.open {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        th, td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background-color: #1a1a1a;
+            color: #17a2b8;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tr:hover { background-color: #2d2d2d; }
+
+        .btn-delete {
+            background-color: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .btn-delete:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .empty-msg {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Directorio de Buques y Códigos OPUS</h2>
+    
+    <!-- Buscador Unificado -->
+    <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="inputBusqueda" placeholder="Buscar por nombre de buque o código OPUS..." onkeyup="buscarBuque()">
+    </div>
+
+    <!-- Agregar Nuevo Registro -->
+    <div class="section-box">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Buque</label>
+                <input type="text" id="inputBuque" placeholder="Ej: RIO PARANA" onkeypress="handleEnter(event)">
+            </div>
+            <div class="form-group">
+                <label>Código OPUS</label>
+                <input type="text" id="inputCodigo" placeholder="Ej: RPN304" onkeypress="handleEnter(event)">
+            </div>
+            <button class="btn-add" onclick="agregarBuque()">Agregar ➕</button>
+        </div>
+    </div>
+
+    <!-- Barra de Herramientas: Exportar/Importar -->
+    <div class="backup-bar">
+        <button class="btn-tool btn-excel" onclick="exportarExcel()">📊 Exportar a Excel</button>
+        <button class="btn-tool btn-export" onclick="exportarBackup()">💾 Guardar Backup</button>
+        
+        <label class="btn-tool btn-import" style="margin: 0; cursor: pointer;">
+            📂 Cargar Backup
+            <input type="file" id="inputBackup" accept=".json" style="display: none;" onchange="importarBackup(event)">
+        </label>
+    </div>
+
+    <!-- Tabla Desplegable -->
+    <button class="toggle-btn" onclick="toggleTabla()" id="btnToggleTabla">
+        <span>📋 Ver Tabla Completa de Buques (<span id="totalCount">0</span> registros)</span>
+        <span id="flechaToggle">▼</span>
+    </button>
+
+    <div class="table-container" id="contenedorTabla">
+        <table id="tablaBuques">
+            <thead>
+                <tr>
+                    <th>BUQUES</th>
+                    <th>CÓDIGO OPUS</th>
+                    <th style="width: 80px; text-align: center;">ACCIÓN</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let baseDatosBuques = JSON.parse(localStorage.getItem('bd_buques')) || [];
+    
+    window.onload = function() {
+        actualizarTabla();
+    };
+
+    function guardarDatos() {
+        localStorage.setItem('bd_buques', JSON.stringify(baseDatosBuques));
+        actualizarTabla();
+    }
+
+    function agregarBuque() {
+        const buque = document.getElementById('inputBuque').value.trim().toUpperCase();
+        const codigo = document.getElementById('inputCodigo').value.trim().toUpperCase();
+
+        if (buque === "" || codigo === "") {
+            alert("Por favor completá ambos campos (Buque y Código OPUS).");
+            return;
+        }
+
+        const existeBuque = baseDatosBuques.find(b => b.buque === buque);
+        if (existeBuque) {
+            alert(`❌ El buque "${buque}" ya está registrado en la base de datos (Código: ${existeBuque.codigo}).`);
+            return;
+        }
+
+        const existeCodigo = baseDatosBuques.find(b => b.codigo === codigo);
+        if (existeCodigo) {
+            alert(`❌ El código OPUS "${codigo}" ya está asignado al buque "${existeCodigo.buque}". No puede repetirse.`);
+            return;
+        }
+
+        baseDatosBuques.push({ buque: buque, codigo: codigo });
+        baseDatosBuques.sort((a, b) => a.buque.localeCompare(b.buque));
+        
+        guardarDatos();
+        
+        document.getElementById('inputBuque').value = "";
+        document.getElementById('inputCodigo').value = "";
+        document.getElementById('inputBuque').focus();
+    }
+
+    function handleEnter(e) {
+        if (e.key === "Enter") {
+            agregarBuque();
+        }
+    }
+
+    function eliminarBuque(index) {
+        if(confirm("¿Estás seguro de eliminar este registro?")) {
+            baseDatosBuques.splice(index, 1);
+            guardarDatos();
+            buscarBuque();
+        }
+    }
+
+    function actualizarTabla(datosParaMostrar = null) {
+        const cuerpoTabla = document.getElementById('cuerpoTabla');
+        document.getElementById('totalCount').innerText = baseDatosBuques.length;
+        
+        const lista = datosParaMostrar !== null ? datosParaMostrar : baseDatosBuques;
+
+        cuerpoTabla.innerHTML = "";
+
+        if (lista.length === 0) {
+            cuerpoTabla.innerHTML = `<tr><td colspan="3" class="empty-msg">No hay registros para mostrar.</td></tr>`;
+            return;
+        }
+
+        lista.forEach((item) => {
+            const realIndex = baseDatosBuques.findIndex(b => b.buque === item.buque);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${item.buque}</strong></td>
+                <td style="color: #17a2b8; font-family: monospace; font-size: 15px; font-weight: bold;">${item.codigo}</td>
+                <td style="text-align: center;">
+                    <button class="btn-delete" onclick="eliminarBuque(${realIndex})" title="Eliminar">🗑️</button>
+                </td>
+            `;
+            cuerpoTabla.appendChild(tr);
+        });
+    }
+
+    function buscarBuque() {
+        const textoBusqueda = document.getElementById('inputBusqueda').value.toUpperCase().trim();
+        const contenedorTabla = document.getElementById('contenedorTabla');
+        
+        if (textoBusqueda === "") {
+            actualizarTabla();
+            return;
+        }
+
+        if (!contenedorTabla.classList.contains("open")) {
+            abrirTabla();
+        }
+
+        const resultados = baseDatosBuques.filter(item => 
+            item.buque.includes(textoBusqueda) || item.codigo.includes(textoBusqueda)
+        );
+        actualizarTabla(resultados);
+    }
+
+    function toggleTabla() {
+        const contenedorTabla = document.getElementById('contenedorTabla');
+        if (contenedorTabla.classList.contains("open")) {
+            cerrarTabla();
+        } else {
+            abrirTabla();
+            actualizarTabla();
+            document.getElementById('inputBusqueda').value = "";
+        }
+    }
+
+    function abrirTabla() {
+        document.getElementById('contenedorTabla').classList.add("open");
+        document.getElementById('flechaToggle').innerText = "▲";
+    }
+
+    function cerrarTabla() {
+        document.getElementById('contenedorTabla').classList.remove("open");
+        document.getElementById('flechaToggle').innerText = "▼";
+    }
+
+    // --- EXPORTAR A EXCEL CON FORMATO EXACTO (Aptos 10, Azul Tabla, Filtros) ---
+    function exportarExcel() {
+        if (baseDatosBuques.length === 0) {
+            alert("No hay registros para exportar a Excel.");
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+        const headers = ["BUQUES", "CÓDIGO OPUS"];
+        const rows = baseDatosBuques.map(item => [item.buque, item.codigo]);
+        const data = [headers, ...rows];
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const range = XLSX.utils.decode_range(ws['!ref']);
+
+        // Estilo Encabezado (Azul Tabla Excel, Texto Blanco, Negrita, Aptos 10)
+        const styleHeader = {
+            font: { name: "Aptos", sz: 10, bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "41719C" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+                top: { style: "thin", color: { rgb: "2B4C7E" } },
+                bottom: { style: "thin", color: { rgb: "2B4C7E" } },
+                left: { style: "thin", color: { rgb: "2B4C7E" } },
+                right: { style: "thin", color: { rgb: "2B4C7E" } }
+            }
+        };
+
+        // Estilo Datos (Aptos 10, Centrado, Bordes Azul claro)
+        const styleData = {
+            font: { name: "Aptos", sz: 10 },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+                top: { style: "thin", color: { rgb: "B4C6E7" } },
+                bottom: { style: "thin", color: { rgb: "B4C6E7" } },
+                left: { style: "thin", color: { rgb: "B4C6E7" } },
+                right: { style: "thin", color: { rgb: "B4C6E7" } }
+            }
+        };
+
+        // Aplicar estilos celda por celda
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellAddress]) continue;
+                ws[cellAddress].s = (R === 0) ? styleHeader : styleData;
+            }
+        }
+
+        // Agregar filtro desplegable automático en encabezados
+        ws['!autofilter'] = { ref: `A1:B${data.length}` };
+
+        // Ajustar anchos de columnas
+        ws['!cols'] = [{ wch: 25 }, { wch: 18 }];
+
+        XLSX.utils.book_append_sheet(wb, ws, "Buques");
+        XLSX.writeFile(wb, "Base_Buques_OPUS.xlsx");
+    }
+
+    function exportarBackup() {
+        if (baseDatosBuques.length === 0) {
+            alert("No hay registros guardados para hacer backup.");
+            return;
+        }
+
+        const jsonStr = JSON.stringify(baseDatosBuques, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_buques_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function importarBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const datosImportados = JSON.parse(e.target.result);
+                if (Array.isArray(datosImportados)) {
+                    const esValido = datosImportados.every(item => item.hasOwnProperty('buque') && item.hasOwnProperty('codigo'));
+                    
+                    if (esValido) {
+                        if (confirm(`Se encontraron ${datosImportados.length} registros en el backup. ¿Deseas reemplazar tu base actual con este archivo?`)) {
+                            baseDatosBuques = datosImportados;
+                            baseDatosBuques.sort((a, b) => a.buque.localeCompare(b.buque));
+                            guardarDatos();
+                            alert("¡Backup cargado con éxito!");
+                        }
+                    } else {
+                        alert("El archivo de backup no contiene el formato correcto.");
+                    }
+                } else {
+                    alert("El archivo no contiene una lista válida.");
+                }
+            } catch (err) {
+                alert("Error al leer el archivo de backup.");
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+</script>
+
+</body>
+</html>

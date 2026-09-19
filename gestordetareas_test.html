@@ -33,8 +33,20 @@
             box-sizing: border-box;
         }
 
-        .header-app { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 12px; }
+        .header-app { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 12px; }
         .header-app h2 { margin: 0; color: #ffffff; text-align: center; border: none; padding: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* Estilo para la nota aclaratoria de escritorio */
+        .desktop-notice {
+            font-size: 0.8em;
+            color: #999;
+            background-color: #252525;
+            border: 1px dashed #444;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
 
         .user-bar {
             display: flex;
@@ -533,6 +545,9 @@
             <img src="tarea.png" alt="Tarea" width="28" height="28">
             Mis Tareas
         </h2>
+        <div class="desktop-notice">
+            💻 <strong>Aviso de diseño:</strong> Interfaz optimizada para uso en PC/Desktop.
+        </div>
     </div>
 
     <!-- Barra Superior de Usuario y Estado de Red -->
@@ -662,7 +677,6 @@
 
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
-    <p><strong>Sincronización en la nube:</strong> hacé clic en el botón "☁️ Sincronizar" en la parte superior para iniciar sesión o crear una cuenta. Esto respaldará automáticamente tus tareas en la nube, permitiéndote acceder y mantener sincronizada tu información desde cualquier dispositivo (como tu PC o teléfono).</p>
     <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
 </div>
 

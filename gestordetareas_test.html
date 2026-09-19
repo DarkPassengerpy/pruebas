@@ -518,14 +518,15 @@
         .credits a:hover { color: #0056b3; text-decoration: underline; }
         .hidden { display: none !important; }
 
-        /* Estilos exactos idénticos al formato de la cantina para el Modal de Autenticación */
+        /* Estilos del Modal de Autenticación actualizados desde 'cantina' */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
         .modal-content { background: #262626; padding: 20px; border-radius: 10px; max-width: 400px; width: 100%; border: 1px solid #444444; color: #e0e0e0; text-align: center; position: relative; box-sizing: border-box; }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; color: #aaaaaa; }
         .close-modal:hover { color: #ffffff; }
 
-        input[type="email"] {
-            font-family: inherit;
+        .modal-content input[type="email"],
+        .modal-content input[type="password"] {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 10px;
             margin: 8px 0;
             border-radius: 6px;
@@ -537,9 +538,9 @@
             text-align: center;
         }
 
-        .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; margin: 8px 0; }
-        .password-wrapper input { width: 100%; margin: 0; padding: 10px; padding-right: 40px; border-radius: 6px; border: 1px solid #444444; background: #1e1e1e; color: #e0e0e0; box-sizing: border-box; text-align: center; font-family: inherit; }
-        .btn-toggle-pass { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        .password-wrapper input { width: 100%; margin: 8px 0; padding-right: 40px; text-align: center; }
+        .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
         .btn-toggle-pass:hover { background: transparent; }
 
         .modal-content button {
@@ -556,7 +557,7 @@
             align-items: center;
             justify-content: center;
             margin: 6px 0;
-            font-family: inherit;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             box-sizing: border-box;
         }
         .modal-content button:hover { background: #0d47a1; }
@@ -684,12 +685,12 @@
     <button class="btn-silence" onclick="stopCurrentSound()">🔇 Silenciar</button>
 </div>
 
-<!-- Modal de Autenticación / Sincronización idéntico a la cantina -->
+<!-- Modal de Autenticación / Sincronización (Formato Cantina) -->
 <div id="modalAuth" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="cerrarModalAuth()">&times;</span>
         <h2>☁️ Sincronizar en la Nube</h2>
-        <p style="font-size: 13px; color: #aaa; margin: 0 0 10px 0;">Ingresa con tu cuenta para respaldar y sincronizar tus datos en Firestore</p>
+        <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Ingresa con tu cuenta para respaldar y sincronizar tus datos en Firestore</p>
         
         <input type="email" id="authEmail" placeholder="Correo electrónico">
         
@@ -699,10 +700,10 @@
         </div>
         
         <div style="margin-top: 10px;">
-            <button onclick="iniciarSesion()">Ingresar</button>
-            <button onclick="registrarUsuario()" style="background: #28a745; margin-top: 5px;">Crear Cuenta</button>
+            <button onclick="iniciarSesion()" style="width: 100%;">Ingresar</button>
+            <button onclick="registrarUsuario()" style="width: 100%; background: #28a745; margin-top: 5px;">Crear Cuenta</button>
 
-            <button onclick="recuperarContrasena()" style="background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 12px; margin-top: 8px; cursor: pointer; width: auto; height: auto;">
+            <button onclick="recuperarContrasena()" style="width: 100%; background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 12px; margin-top: 8px; cursor: pointer;">
                 ¿Olvidaste tu contraseña?
             </button>
         </div>
@@ -713,7 +714,7 @@
 
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
-    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
+    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
 </div>
 
 <div class="credits">
@@ -832,21 +833,52 @@
     function registrarUsuario() {
         const email = document.getElementById("authEmail").value.trim();
         const pass = document.getElementById("authPassword").value.trim();
-        if (!email || !pass) return alert("Ingresa correo y contraseña.");
-        auth.createUserWithEmailAndPassword(email, pass).catch(err => document.getElementById("authError").innerText = err.message);
+        if (!email || !pass) return alert("Ingresa un correo y contraseña.");
+
+        auth.createUserWithEmailAndPassword(email, pass)
+            .catch(error => {
+                document.getElementById("authError").style.color = "#ff5252";
+                document.getElementById("authError").innerText = "Error: " + error.message;
+            });
     }
 
     function iniciarSesion() {
         const email = document.getElementById("authEmail").value.trim();
         const pass = document.getElementById("authPassword").value.trim();
         if (!email || !pass) return alert("Ingresa correo y contraseña.");
-        auth.signInWithEmailAndPassword(email, pass).catch(err => document.getElementById("authError").innerText = err.message);
+
+        auth.signInWithEmailAndPassword(email, pass)
+            .catch(error => {
+                document.getElementById("authError").style.color = "#ff5252";
+                document.getElementById("authError").innerText = "Error: " + error.message;
+            });
     }
 
     function recuperarContrasena() {
         const email = document.getElementById("authEmail").value.trim();
-        if (!email) return alert("Ingresa tu correo electrónico.");
-        auth.sendPasswordResetEmail(email).then(() => alert("Correo enviado para restablecer contraseña.")).catch(err => alert(err.message));
+        const authErrorDiv = document.getElementById("authError");
+
+        if (!email) {
+            authErrorDiv.style.color = "#ff5252";
+            authErrorDiv.innerText = "Por favor, ingresa tu correo electrónico para enviarte el enlace de recuperación.";
+            return;
+        }
+
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                authErrorDiv.style.color = "#28a745";
+                authErrorDiv.innerText = "¡Correo enviado! Revisa tu bandeja de entrada o SPAM para restablecer tu contraseña.";
+            })
+            .catch((error) => {
+                authErrorDiv.style.color = "#ff5252";
+                if (error.code === "auth/user-not-found") {
+                    authErrorDiv.innerText = "Error: No existe ninguna cuenta registrada con este correo.";
+                } else if (error.code === "auth/invalid-email") {
+                    authErrorDiv.innerText = "Error: El formato del correo electrónico no es válido.";
+                } else {
+                    authErrorDiv.innerText = "Error: " + error.message;
+                }
+            });
     }
 
     function migrarDatosLocalesAFirebase(user) {
@@ -1579,6 +1611,12 @@
         reader.readAsText(file);
         event.target.value = '';
     }
+
+    // Cierre de modal al hacer clic fuera del contenido
+    window.onclick = function(event) {
+        const modalAuth = document.getElementById("modalAuth");
+        if (event.target === modalAuth) cerrarModalAuth();
+    };
 
     // Inicializar aplicación
     setDateToToday();

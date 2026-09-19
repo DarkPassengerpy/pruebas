@@ -114,7 +114,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBr7_yfrfK6teqg9QTgdmCqmxUnrILkFpU",
@@ -177,10 +177,9 @@
 
         if (!Array.isArray(datosLocales) || datosLocales.length === 0) return;
 
-        console.log(`Se encontraron ${datosLocales.length} registros en el navegador. Iniciando migración...`);
-
         const autorRegistro = usuarioActual.displayName || usuarioActual.email;
-        let contadorMigrados = 0;
+        const batch = writeBatch(db);
+        let contadorPreparados = 0;
 
         for (const item of datosLocales) {
             const nombreBuque = (item.buque || item.nombre || "").toString().trim().toUpperCase();
@@ -194,27 +193,23 @@
             );
 
             if (!yaExiste) {
-                try {
-                    await addDoc(collection(db, "buques"), {
-                        buque: nombreBuque,
-                        codigo: codigoOpus,
-                        autor: autorRegistro,
-                        fechaCreacion: serverTimestamp()
-                    });
-                    contadorMigrados++;
-                    console.log(`Migrado con éxito: ${nombreBuque} (${codigoOpus})`);
-                } catch (err) {
-                    console.error(`Error subiendo ${nombreBuque}:`, err);
-                }
-            } else {
-                console.log(`El registro ${nombreBuque} ya existía en Firebase. Omitido.`);
+                const nuevoDocRef = doc(collection(db, "buques"));
+                batch.set(nuevoDocRef, {
+                    buque: nombreBuque,
+                    codigo: codigoOpus,
+                    autor: autorRegistro,
+                    fechaCreacion: serverTimestamp()
+                });
+                contadorPreparados++;
             }
         }
 
-        localStorage.removeItem('bd_buques');
-
-        if (contadorMigrados > 0) {
-            alert(`¡Éxito! Se migraron ${contadorMigrados} registros locales a la nube.`);
+        if (contadorPreparados > 0) {
+            await batch.commit();
+            localStorage.removeItem('bd_buques');
+            alert(`¡Éxito! Se migraron ${contadorPreparados} registros locales a la nube.`);
+        } else {
+            localStorage.removeItem('bd_buques');
         }
     }
 
@@ -402,7 +397,7 @@
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     };
 
-    // Función de importación flexible de JSON
+    // Nueva función de Importación por Lote Atómico (writeBatch)
     window.importarBackup = async (event) => {
         const file = event.target.files[0];
         if (!file || !usuarioActual) return;
@@ -412,44 +407,46 @@
             try {
                 const datosImportados = JSON.parse(e.target.result);
 
-                if (!Array.isArray(datosImportados)) {
-                    alert("❌ El archivo no contiene una lista válida. Debe ser un arreglo de objetos [ { ... } ].");
+                if (!Array.isArray(datosImportados) || datosImportados.length === 0) {
+                    alert("❌ El archivo no contiene una lista válida de registros.");
                     return;
                 }
 
-                if (confirm(`Se encontraron ${datosImportados.length} registros en el archivo. ¿Deseas subirlos a Firebase?`)) {
+                if (confirm(`Se encontraron ${datosImportados.length} buques en el archivo. ¿Deseas subirlos todos a Firebase?`)) {
                     let autorRegistro = usuarioActual.displayName || usuarioActual.email;
-                    let subidosExitosos = 0;
-                    let omitidos = 0;
+                    
+                    // Creamos el paquete por lote (Batch)
+                    const batch = writeBatch(db);
+                    let contadorPreparados = 0;
 
                     for (let item of datosImportados) {
-                        const nombreBuque = (item.buque || item.BUQUE || item.nombre || item.NOMBRE || "").toString().trim().toUpperCase();
-                        const codigoOpus = (item.codigo || item.CODIGO || item.code || item.CODE || item.codigo_opus || "").toString().trim().toUpperCase();
+                        const nombreBuque = (item.buque || item.BUQUE || item.nombre || "").toString().trim().toUpperCase();
+                        const codigoOpus = (item.codigo || item.CODIGO || item.code || "").toString().trim().toUpperCase();
 
                         if (nombreBuque && codigoOpus) {
-                            try {
-                                await addDoc(collection(db, "buques"), {
-                                    buque: nombreBuque,
-                                    codigo: codigoOpus,
-                                    autor: autorRegistro,
-                                    fechaCreacion: serverTimestamp()
-                                });
-                                subidosExitosos++;
-                            } catch (err) {
-                                console.error(`Error al subir ${nombreBuque}:`, err);
-                                omitidos++;
-                            }
-                        } else {
-                            console.warn("Registro omitido por falta de campos válidos:", item);
-                            omitidos++;
+                            // Generamos la referencia con ID automático sin hacer peticiones de red aún
+                            const nuevoDocRef = doc(collection(db, "buques"));
+                            batch.set(nuevoDocRef, {
+                                buque: nombreBuque,
+                                codigo: codigoOpus,
+                                autor: autorRegistro,
+                                fechaCreacion: serverTimestamp()
+                            });
+                            contadorPreparados++;
                         }
                     }
 
-                    alert(`¡Proceso finalizado!\n\n✅ Subidos con éxito: ${subidosExitosos}\n⚠️ Omitidos / incompletos: ${omitidos}`);
+                    if (contadorPreparados > 0) {
+                        // Enviamos los 51 registros juntas en UNA SOLA llamada a la red
+                        await batch.commit();
+                        alert(`¡Éxito! Se subieron los ${contadorPreparados} buques a Firebase en un solo paquete.`);
+                    } else {
+                        alert("⚠️ No se encontraron buques con formato válido en el archivo.");
+                    }
                 }
             } catch (err) {
-                console.error("Error al leer el archivo de backup:", err);
-                alert("Error al leer el archivo JSON. Verifica que el formato del archivo no esté dañado.");
+                console.error("Error al procesar la importación:", err);
+                alert("Error al procesar el archivo JSON. Revisa que el formato sea correcto.");
             }
             event.target.value = '';
         };

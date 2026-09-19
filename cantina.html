@@ -78,7 +78,6 @@
     body { font-family: "Aptos", Arial, sans-serif; margin: 0; padding: 20px; background: var(--bg-body); color: var(--text-main); }
     .container { max-width: 500px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); text-align: center; color: var(--text-main); box-sizing: border-box; }
     
-    /* Cabecera reorganizada: Título arriba, botones abajo */
     .header-app { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
     .header-app h1 { color: #ff5252; margin: 0; font-size: 22px; }
 
@@ -91,6 +90,12 @@
     [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator, [data-theme="dark"] input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+
+    /* Contenedor del campo de contraseña con el botón del ojo */
+    .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+    .password-wrapper input { width: 100%; margin: 8px 0; padding-right: 40px; text-align: center; }
+    .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
+    .btn-toggle-pass:hover { background: transparent; }
 
     button { background: #1976d2; border: none; cursor: pointer; font-size: 14px; color: white; width: 120px; height: 36px; border-radius: 4px; padding: 0; display: inline-flex; align-items: center; justify-content: center; margin: 6px; }
     button:hover { background: #0d47a1; }
@@ -149,7 +154,7 @@
 <body>
   <div class="container">
     
-    <!-- Cabecera reorganizada: Título arriba, Botones abajo -->
+    <!-- Cabecera -->
     <div class="header-app">
       <h1>🍽️ Registro de Cantina</h1>
       <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
@@ -244,7 +249,7 @@
     <a href="https://tools.darkpassenger.workers.dev/" target="_blank" rel="noopener noreferrer">Desarrollado por Dark Passenger Tools</a>
   </footer>
 
-  <!-- MODAL DE AUTENTICACIÓN / SINCRONIZACIÓN -->
+  <!-- MODAL DE AUTENTICACIÓN / SINCRONIZACIÓN CON EL BOTÓN DEL OJO -->
   <div id="modalAuth" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalAuth()">&times;</span>
@@ -252,7 +257,12 @@
       <p style="font-size: 13px; color: var(--text-muted);">Ingresa con tu cuenta para respaldar y sincronizar tus datos en Firestore</p>
       
       <input type="email" id="authEmail" placeholder="Correo electrónico">
-      <input type="password" id="authPassword" placeholder="Contraseña">
+      
+      <!-- Contenedor con input de contraseña y botón del ojo -->
+      <div class="password-wrapper">
+        <input type="password" id="authPassword" placeholder="Contraseña">
+        <button type="button" class="btn-toggle-pass" onclick="togglePasswordVisibility()" title="Mostrar/Ocultar contraseña">👁️</button>
+      </div>
       
       <div style="margin-top: 10px;">
         <button onclick="iniciarSesion()" style="width: 100%;">Ingresar</button>
@@ -388,7 +398,7 @@
     }
 
     /* ==========================================================================
-       3. MODAL DE AUTENTICACIÓN
+       3. MODAL DE AUTENTICACIÓN Y VISIBILIDAD DE CONTRASEÑA
        ========================================================================== */
     function abrirModalAuth() {
       document.getElementById("modalAuth").style.display = "flex";
@@ -397,6 +407,19 @@
 
     function cerrarModalAuth() {
       document.getElementById("modalAuth").style.display = "none";
+    }
+
+    // Función para alternar la visibilidad de la contraseña con el icono del ojo
+    function togglePasswordVisibility() {
+      const inputPass = document.getElementById("authPassword");
+      const btnToggle = document.querySelector(".btn-toggle-pass");
+      if (inputPass.type === "password") {
+        inputPass.type = "text";
+        btnToggle.textContent = "🙈"; // Icono de ocultar
+      } else {
+        inputPass.type = "password";
+        btnToggle.textContent = "👁️"; // Icono de mostrar
+      }
     }
 
     function registrarUsuario() {

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Base de Buques - TRANSMAR S.A.C.I.</title>
+    <!-- Librería para generación y formato de archivos Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; display: flex; justify-content: center; }
@@ -49,6 +50,7 @@
 <body>
 
 <div class="container">
+    <!-- Formulario de Autenticación -->
     <div class="auth-bar" id="authDesconectado">
         <input type="email" id="inputEmail" placeholder="Correo de Editor...">
         <input type="password" id="inputClave" placeholder="Contraseña..." onkeypress="if(event.key === 'Enter') window.iniciarSesion()">
@@ -66,6 +68,7 @@
         <input type="text" id="inputBusqueda" placeholder="Buscar por nombre de buque o código OPUS..." onkeyup="window.buscarBuque()">
     </div>
 
+    <!-- Panel de Edición reservado a usuarios logueados -->
     <div id="panelEdicion" style="display: none;">
         <div class="section-box">
             <div class="form-row">
@@ -111,11 +114,13 @@
     </div>
 </div>
 
+<!-- Lógica del SDK Modular de Firebase (v10) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+    // Configuración activa del proyecto 'oficode-97a1f'
     const firebaseConfig = {
       apiKey: "AIzaSyBr7_yfrfK6teqg9QTgdmCqmxUnrILkFpU",
       authDomain: "oficode-97a1f.firebaseapp.com",
@@ -133,6 +138,7 @@
     let baseDatosBuques = [];
     let usuarioActual = null;
 
+    // Control del estado de la sesión
     onAuthStateChanged(auth, async (user) => {
         const divDesconectado = document.getElementById('authDesconectado');
         const divConectado = document.getElementById('authConectado');
@@ -163,6 +169,7 @@
         actualizarTablaVisual();
     });
 
+    // Migración automática de datos locales antiguos
     async function migrarDatosLocalesAFirebase() {
         const datosRaw = localStorage.getItem('bd_buques');
         if (!datosRaw) return;
@@ -171,7 +178,7 @@
         try {
             datosLocales = JSON.parse(datosRaw);
         } catch (e) {
-            console.error("Error al leer la memoria local:", e);
+            console.error("Error leyendo datos locales:", e);
             return;
         }
 
@@ -213,6 +220,7 @@
         }
     }
 
+    // Funciones de inicio y cierre de sesión
     window.iniciarSesion = async () => {
         const email = document.getElementById('inputEmail').value.trim();
         const clave = document.getElementById('inputClave').value.trim();
@@ -235,6 +243,7 @@
         catch (error) { console.error("Error al salir:", error); }
     };
 
+    // Escucha pública en tiempo real de Firestore
     const q = query(collection(db, "buques"), orderBy("buque"));
     onSnapshot(q, (snapshot) => {
         baseDatosBuques = [];
@@ -244,6 +253,7 @@
         window.buscarBuque();
     });
 
+    // Agregar registro individual
     window.agregarBuque = async () => {
         if (!usuarioActual) return;
         
@@ -282,6 +292,7 @@
         }
     };
 
+    // Eliminar registro
     window.eliminarBuque = async (idFirebase) => {
         if (!usuarioActual) return;
         if(confirm("¿Estás seguro de eliminar este registro?")) {
@@ -294,6 +305,7 @@
         }
     };
 
+    // Renderizado en pantalla
     function actualizarTablaVisual(datosParaMostrar = null) {
         const cuerpoTabla = document.getElementById('cuerpoTabla');
         document.getElementById('totalCount').innerText = baseDatosBuques.length;
@@ -325,6 +337,7 @@
         });
     }
 
+    // Filtro de búsqueda
     window.buscarBuque = () => {
         const textoBusqueda = document.getElementById('inputBusqueda').value.toUpperCase().trim();
         const contenedorTabla = document.getElementById('contenedorTabla');
@@ -363,6 +376,7 @@
         document.getElementById('flechaToggle').innerText = "▼";
     };
 
+    // Exportación a Excel
     window.exportarExcel = () => {
         if (baseDatosBuques.length === 0) { alert("No hay registros para exportar."); return; }
         const wb = XLSX.utils.book_new();
@@ -386,6 +400,7 @@
         XLSX.writeFile(wb, "Base_Buques_OPUS.xlsx");
     };
 
+    // Guardar backup JSON
     window.exportarBackup = () => {
         if (baseDatosBuques.length === 0) { alert("No hay registros."); return; }
         const dataAExportar = baseDatosBuques.map(({buque, codigo}) => ({buque, codigo}));
@@ -397,7 +412,7 @@
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     };
 
-    // Nueva función de Importación por Lote Atómico (writeBatch)
+    // Importación por lote masivo (writeBatch)
     window.importarBackup = async (event) => {
         const file = event.target.files[0];
         if (!file || !usuarioActual) return;
@@ -414,8 +429,6 @@
 
                 if (confirm(`Se encontraron ${datosImportados.length} buques en el archivo. ¿Deseas subirlos todos a Firebase?`)) {
                     let autorRegistro = usuarioActual.displayName || usuarioActual.email;
-                    
-                    // Creamos el paquete por lote (Batch)
                     const batch = writeBatch(db);
                     let contadorPreparados = 0;
 
@@ -424,7 +437,6 @@
                         const codigoOpus = (item.codigo || item.CODIGO || item.code || "").toString().trim().toUpperCase();
 
                         if (nombreBuque && codigoOpus) {
-                            // Generamos la referencia con ID automático sin hacer peticiones de red aún
                             const nuevoDocRef = doc(collection(db, "buques"));
                             batch.set(nuevoDocRef, {
                                 buque: nombreBuque,
@@ -437,11 +449,10 @@
                     }
 
                     if (contadorPreparados > 0) {
-                        // Enviamos los 51 registros juntas en UNA SOLA llamada a la red
                         await batch.commit();
-                        alert(`¡Éxito! Se subieron los ${contadorPreparados} buques a Firebase en un solo paquete.`);
+                        alert(`¡Éxito! Se subieron ${contadorPreparados} buques a Firebase en un solo lote.`);
                     } else {
-                        alert("⚠️ No se encontraron buques con formato válido en el archivo.");
+                        alert("⚠️ No se encontraron buques válidos en el archivo.");
                     }
                 }
             } catch (err) {

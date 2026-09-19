@@ -518,58 +518,49 @@
         .credits a:hover { color: #0056b3; text-decoration: underline; }
         .hidden { display: none !important; }
 
-        /* Estilos unificados del Modal de Autenticación */
-        .modal { display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
-        .modal-content { background: #1e1e1e; padding: 25px; border-radius: 10px; max-width: 350px; width: 100%; border: 1px solid #444; color: #e0e0e0; text-align: center; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
-        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 22px; cursor: pointer; color: #aaa; }
-        .close-modal:hover { color: #fff; }
-
-        .modal-content input[type="email"],
-        .modal-content input[type="password"],
-        .modal-content button {
-            width: 100%;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
+        /* Estilos idénticos al modelo de Cantina para el Modal de Autenticación */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
+        .modal-content { background: #262626; padding: 20px; border-radius: 10px; max-width: 400px; width: 100%; border: 1px solid #444444; color: #e0e0e0; text-align: center; position: relative; box-sizing: border-box; }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; color: #aaaaaa; }
+        .close-modal:hover { color: #ffffff; }
 
         .modal-content input[type="email"],
         .modal-content input[type="password"] {
-            padding: 12px;
-            border: 1px solid #444;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px;
+            margin: 8px 0;
             border-radius: 6px;
-            background-color: #2d2d2d;
-            color: #ffffff;
-            font-size: 15px;
+            border: 1px solid #444444;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            width: 100%;
+            box-sizing: border-box;
             text-align: center;
         }
 
-        .modal-content input[type="email"]:focus,
-        .modal-content input[type="password"]:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-
         .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
-        .password-wrapper input { width: 100%; margin: 0; padding-right: 40px; text-align: center; }
+        .password-wrapper input { width: 100%; margin: 8px 0; padding-right: 40px; text-align: center; }
         .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
+        .btn-toggle-pass:hover { background: transparent; }
 
-        .modal-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
-            margin-top: 5px;
-        }
-
-        .modal-actions button {
-            padding: 12px 20px;
+        .modal-content button {
+            background: #1976d2;
             border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s;
+            font-size: 14px;
+            color: white;
+            width: 100%;
+            height: 36px;
+            border-radius: 4px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 6px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
         }
+        .modal-content button:hover { background: #0d47a1; }
 
         @media (max-width: 550px) {
             .task-input-row, .alarm-input-row, .config-row { flex-direction: column; align-items: stretch; }
@@ -694,12 +685,12 @@
     <button class="btn-silence" onclick="stopCurrentSound()">🔇 Silenciar</button>
 </div>
 
-<!-- Modal de Autenticación / Sincronización -->
+<!-- Modal de Autenticación / Sincronización con estructura idéntica al ejemplo -->
 <div id="modalAuth" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="cerrarModalAuth()">&times;</span>
         <h2>☁️ Sincronizar en la Nube</h2>
-        <p style="font-size: 13px; color: #aaa; margin: 0;">Ingresa con tu cuenta para respaldar y sincronizar tus tareas</p>
+        <p style="font-size: 13px; color: #aaa; margin: 0 0 10px 0;">Ingresa con tu cuenta para respaldar y sincronizar tus datos</p>
         
         <input type="email" id="authEmail" placeholder="Correo electrónico">
         
@@ -708,19 +699,19 @@
             <button type="button" class="btn-toggle-pass" onclick="togglePasswordVisibility()" title="Mostrar/Ocultar contraseña">👁️</button>
         </div>
         
-        <div class="modal-actions">
-            <button onclick="iniciarSesion()" style="background: #007bff; color: white;">Ingresar</button>
-            <button onclick="registrarUsuario()" style="background: #28a745; color: white;">Crear Cuenta</button>
-            <button onclick="recuperarContrasena()" style="background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 12px; cursor: pointer; padding: 6px;">¿Olvidaste tu contraseña?</button>
+        <div style="margin-top: 10px;">
+            <button onclick="iniciarSesion()">Ingresar</button>
+            <button onclick="registrarUsuario()" style="background: #28a745; margin-top: 5px;">Crear Cuenta</button>
+            <button onclick="recuperarContrasena()" style="background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 12px; margin-top: 8px; cursor: pointer; width: auto; height: auto;">¿Olvidaste tu contraseña?</button>
         </div>
         
-        <div id="authError" style="color: #ff5252; font-size: 12px; margin-top: 5px;"></div>
+        <div id="authError" style="color: #ff5252; font-size: 12px; margin-top: 10px;"></div>
     </div>
 </div>
 
 <div class="bloque">
     <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
-    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
+    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificações y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
 </div>
 
 <div class="credits">

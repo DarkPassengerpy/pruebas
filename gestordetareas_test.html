@@ -518,7 +518,7 @@
         .credits a:hover { color: #0056b3; text-decoration: underline; }
         .hidden { display: none !important; }
 
-        /* Estilos del Modal de Autenticación actualizados desde 'cantina' */
+        /* Estilos del Modal de Autenticación exactamente iguales a Cantina */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
         .modal-content { background: #262626; padding: 20px; border-radius: 10px; max-width: 400px; width: 100%; border: 1px solid #444444; color: #e0e0e0; text-align: center; position: relative; box-sizing: border-box; }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; color: #aaaaaa; }
@@ -540,10 +540,25 @@
 
         .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .password-wrapper input { width: 100%; margin: 8px 0; padding-right: 40px; text-align: center; }
-        .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
-        .btn-toggle-pass:hover { background: transparent; }
+        
+        .btn-toggle-pass { 
+            position: absolute; 
+            right: 10px; 
+            background: transparent !important; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 16px; 
+            padding: 0; 
+            width: auto !important; 
+            height: auto !important; 
+            margin: 0 !important; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .btn-toggle-pass:hover { background: transparent !important; }
 
-        .modal-content button {
+        .modal-content button:not(.btn-toggle-pass) {
             background: #1976d2;
             border: none;
             cursor: pointer;
@@ -560,7 +575,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             box-sizing: border-box;
         }
-        .modal-content button:hover { background: #0d47a1; }
+        .modal-content button:not(.btn-toggle-pass):hover { background: #0d47a1; }
 
         @media (max-width: 550px) {
             .task-input-row, .alarm-input-row, .config-row { flex-direction: column; align-items: stretch; }
@@ -1612,7 +1627,7 @@
         event.target.value = '';
     }
 
-    // Cierre de modal al hacer clic fuera del contenido
+    // Cierre del modal al hacer clic fuera
     window.onclick = function(event) {
         const modalAuth = document.getElementById("modalAuth");
         if (event.target === modalAuth) cerrarModalAuth();

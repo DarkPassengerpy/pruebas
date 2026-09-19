@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Cantina (Online & Offline)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="ico.png">
+  
+  <!-- Librería para exportación a Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+  <!-- SDKs de Firebase (v10 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-body: #f4f6f9;
+      --bg-container: #ffffff;
+      --text-main: #2b2b2b;
+      --text-muted: #666666;
+      --border-color: #e0e0e0;
+      --input-bg: #ffffff;
+      --bg-filtro: #f0f0f0;
+      --bg-filtro-hover: #e0e0e0;
+      --text-filtro: #333333;
+      --bg-anio: #f8f9fa;
+      --bg-summary-anio: #e9ecef;
+      --text-summary-anio: #0056b3;
+      --bg-mes: #ffffff;
+      --bg-summary-mes: #f1f3f5;
+      --text-summary-mes: #28a745;
+      --badge-bg: rgba(0, 86, 179, 0.1);
+      --badge-text: #0056b3;
+      --badge-bg-sub: rgba(40, 167, 69, 0.1);
+      --badge-text-sub: #28a745;
+      --modal-overlay: rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #121212;
+      --bg-container: #262626;
+      --text-main: #e0e0e0;
+      --text-muted: #aaaaaa;
+      --border-color: #444444;
+      --input-bg: #1e1e1e;
+      --bg-filtro: #333333;
+      --bg-filtro-hover: #444444;
+      --text-filtro: #cccccc;
+      --bg-anio: #1e1e1e;
+      --bg-summary-anio: #252a34;
+      --text-summary-anio: #64b5f6;
+      --bg-mes: #181818;
+      --bg-summary-mes: #222222;
+      --text-summary-mes: #81c784;
+      --badge-bg: rgba(100, 181, 246, 0.2);
+      --badge-text: #90caf9;
+      --badge-bg-sub: rgba(255, 255, 255, 0.1);
+      --badge-text-sub: #cccccc;
+      --modal-overlay: rgba(0, 0, 0, 0.75);
+    }
+
+    * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+    body { font-family: "Aptos", Arial, sans-serif; margin: 0; padding: 20px; background: var(--bg-body); color: var(--text-main); }
+    .container { max-width: 500px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); text-align: center; box-sizing: border-box; }
+    .header-app { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+    .header-app h1 { color: #ff5252; margin: 0; font-size: 22px; }
+    .btn-tema { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .btn-logout { background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+    input, select { font-family: "Aptos", Arial, sans-serif; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); width: 100%; box-sizing: border-box; text-align: center; }
+    button { background: #1976d2; border: none; cursor: pointer; font-size: 14px; color: white; width: 120px; height: 36px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; margin: 6px; }
+    button:hover { background: #0d47a1; }
+    
+    .btn-filtro { background: var(--bg-filtro); border: 1px solid var(--border-color); color: var(--text-filtro); width: auto; padding: 8px 14px; font-size: 13px; height: auto; margin: 0; border-radius: 6px; }
+    .btn-filtro.active { background: #1976d2; color: #fff; border-color: #1976d2; font-weight: bold; }
+    .btn-exportar { background: #25d366; color: #fff; width: auto; padding: 0 15px; font-weight: bold; }
+    .btn-excel { background: #107c41; color: #fff; width: auto; padding: 0 15px; font-weight: bold; }
+
+    .net-status { font-size: 11px; padding: 4px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
+    .net-online { background: rgba(40, 167, 69, 0.2); color: #28a745; }
+    .net-offline { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+
+    .anio-grupo { background: var(--bg-anio); margin-top: 15px; border-radius: 8px; border: 1px solid #1976d2; overflow: hidden; text-align: left; }
+    .summary-anio { padding: 12px 15px; cursor: pointer; font-weight: bold; color: var(--text-summary-anio); background: var(--bg-summary-anio); display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+    .anio-contenido { padding: 8px 12px 12px; }
+    .mes-grupo, .export-section { background: var(--bg-mes); margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); overflow: hidden; text-align: left; }
+    .summary-mes, summary.export-summary { padding: 10px 14px; cursor: pointer; font-weight: bold; color: var(--text-summary-mes); background: var(--bg-summary-mes); display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .mes-contenido, .export-section-content { padding: 12px; }
+    .badge-count { background: var(--badge-bg); color: var(--badge-text); padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+    .badge-count-sub { background: var(--badge-bg-sub); color: var(--badge-text-sub); padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+    td:last-child { text-align: right; }
+    .edit-btn { background: #ff9800; color: white; border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; }
+    .delete-btn { background: #f44336; color: white; border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; }
+
+    #authContainer { max-width: 400px; margin: 40px auto; }
+    .auth-box { background: var(--bg-container); padding: 25px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); text-align: center; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
+    .modal-content { background: var(--bg-container); padding: 20px; border-radius: 10px; max-width: 450px; width: 100%; border: 1px solid var(--border-color); text-align: center; }
+  </style>
+</head>
+<body>
+
+  <!-- FORMULARIO DE ACCESO -->
+  <div id="authContainer">
+    <div class="auth-box">
+      <h2>🔐 Acceso Cantina</h2>
+      <p style="font-size: 13px; color: var(--text-muted);">Ingresa tus datos para acceder a tu cuenta personal</p>
+      <input type="email" id="authEmail" placeholder="Correo electrónico">
+      <input type="password" id="authPassword" placeholder="Contraseña">
+      <div style="margin-top: 10px;">
+        <button onclick="iniciarSesion()" style="width: 100%;">Ingresar</button>
+        <button onclick="registrarUsuario()" style="width: 100%; background: #28a745; margin-top: 5px;">Crear Cuenta</button>
+      </div>
+      <div id="authError" style="color: #ff5252; font-size: 12px; margin-top: 10px;"></div>
+    </div>
+  </div>
+
+  <!-- APLICACIÓN PRINCIPAL -->
+  <div class="container" id="appContainer" style="display: none;">
+    <div class="header-app">
+      <h1>🍽️ Cantina</h1>
+      <div>
+        <button id="theme-toggle" class="btn-tema">☀️ Modo</button>
+        <button onclick="cerrarSesion()" class="btn-logout">Salir</button>
+      </div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <span id="userEmailBadge" style="font-size: 12px; color: var(--text-muted);"></span>
+      <span id="netStatus" class="net-status net-online">🌐 En línea</span>
+    </div>
+
+    <input type="date" id="fechaCantina" onchange="actualizarDiaPreview()">
+    <div id="previewDia" style="font-size: 13px; color: var(--text-summary-mes); margin-bottom: 5px; font-weight: bold;"></div>
+    
+    <input type="text" id="nombreProducto" placeholder="Producto o descripción *" list="listaProductos">
+    <datalist id="listaProductos"></datalist>
+    
+    <div style="margin: 8px 0; text-align: center;">
+      <label style="font-size: 13px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="pagadoContado" style="width: auto; margin: 0; transform: scale(1.2);"> Pagado al contado
+      </label>
+    </div>
+
+    <input type="number" id="numeroTicket" placeholder="Nro. de Ticket (opcional)">
+    
+    <button onclick="registrarDia()">Registrar</button>
+
+    <div style="margin-top: 15px; background: var(--input-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+      <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">🔍 Filtrar por estado:</div>
+      <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+        <button id="btnFiltroTodos" class="btn-filtro active" onclick="filtrarPor('todos')">Todos</button>
+        <button id="btnFiltroContado" class="btn-filtro" onclick="filtrarPor('contado')">🟢 Contado</button>
+        <button id="btnFiltroCredito" class="btn-filtro" onclick="filtrarPor('credito')">🔴 Crédito</button>
+      </div>
+    </div>
+
+    <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted);" id="totalGeneral">Sincronizando datos...</div>
+
+    <div id="listaRegistros"></div>
+
+    <details class="export-section">
+      <summary class="export-summary">📤 Exportar Registros (Excel)</summary>
+      <div class="export-section-content">
+        <div style="margin-bottom: 12px;">
+          <label for="mesFiltro" style="font-size: 13px; display: block; margin-bottom: 4px;">Copiar mes al portapapeles:</label>
+          <input type="month" id="mesFiltro">
+          <div style="text-align: center; margin-top: 6px;">
+            <button class="btn-exportar" onclick="exportarMes()">Copiar Mes 📋</button>
+          </div>
+        </div>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+        <div>
+          <label for="anioFiltro" style="font-size: 13px; display: block; margin-bottom: 4px;">Descargar archivo Excel por año:</label>
+          <input type="number" id="anioFiltro" min="2000" max="2099" placeholder="Año (Ej: 2026)">
+          <div style="text-align: center; margin-top: 6px;">
+            <button class="btn-excel" onclick="descargarExcelAnio()">Descargar Excel 📊</button>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- MODAL EDITAR -->
+  <div id="modalEditar" class="modal">
+    <div class="modal-content">
+      <h2>✏️ Editar Registro</h2>
+      <input type="hidden" id="editId">
+      <input type="date" id="editFecha" onchange="actualizarEditDiaPreview()">
+      <div id="editPreviewDia" style="font-size: 12px; color: var(--text-summary-mes); margin-bottom: 5px; font-weight: bold; text-align: left;"></div>
+      <input type="text" id="editProducto" placeholder="Producto o descripción *" list="listaProductos">
+      <div style="margin: 12px 0; text-align: center;">
+        <label style="font-size: 13px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="editPagadoContado" style="width: auto; margin: 0; transform: scale(1.2);"> Pagado al contado
+        </label>
+      </div>
+      <input type="number" id="editNumeroTicket" placeholder="Nro. de Ticket (opcional)">
+      <div style="margin-top: 15px; display: flex; justify-content: center; gap: 8px;">
+        <button onclick="guardarEdicion()" style="background: #25d366;">Guardar</button>
+        <button onclick="cerrarModalEditar()" style="background: #666;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. CONFIGURACIÓN DE FIREBASE
+       ========================================================================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyD3kkMxRygV1gC9GAnpvlHumwXNiixTxro",
+      authDomain: "darkpassenger-1316d.firebaseapp.com",
+      projectId: "darkpassenger-1316d",
+      storageBucket: "darkpassenger-1316d.firebasestorage.app",
+      messagingSenderId: "115304417945",
+      appId: "1:115304417945:web:62f1527843153aa79d8608",
+      measurementId: "G-LWQHNXXMKF"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Habilitar persistencia fuera de línea
+    db.enablePersistence({ synchronizeTabs: true })
+      .catch(err => console.warn("Modo fuera de línea habilitado."));
+
+    /* ==========================================================================
+       2. CONTROL DE SESIÓN Y ESTADO DE RED
+       ========================================================================== */
+    let usuarioActual = null;
+    let registros = [];
+    let filtroActual = "todos";
+    let desuscribirFirestore = null;
+    const THEME_KEY = 'cantina_tema';
+
+    window.addEventListener('online', actualizarEstadoRed);
+    window.addEventListener('offline', actualizarEstadoRed);
+
+    function actualizarEstadoRed() {
+      const badge = document.getElementById("netStatus");
+      if (navigator.onLine) {
+        badge.className = "net-status net-online";
+        badge.innerText = "🌐 En línea";
+      } else {
+        badge.className = "net-status net-offline";
+        badge.innerText = "⚡ Modo fuera de línea";
+      }
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        usuarioActual = user;
+        document.getElementById("authContainer").style.display = "none";
+        document.getElementById("appContainer").style.display = "block";
+        document.getElementById("userEmailBadge").innerText = `👤 ${user.email}`;
+        escucharRegistrosFirebase();
+      } else {
+        usuarioActual = null;
+        registros = [];
+        if (desuscribirFirestore) desuscribirFirestore();
+        document.getElementById("authContainer").style.display = "block";
+        document.getElementById("appContainer").style.display = "none";
+      }
+    });
+
+    function registrarUsuario() {
+      const email = document.getElementById("authEmail").value.trim();
+      const pass = document.getElementById("authPassword").value.trim();
+      if (!email || !pass) return alert("Ingresa un correo y contraseña.");
+      
+      auth.createUserWithEmailAndPassword(email, pass)
+        .catch(error => {
+          document.getElementById("authError").innerText = "Error: " + error.message;
+        });
+    }
+
+    function iniciarSesion() {
+      const email = document.getElementById("authEmail").value.trim();
+      const pass = document.getElementById("authPassword").value.trim();
+      if (!email || !pass) return alert("Ingresa correo y contraseña.");
+
+      auth.signInWithEmailAndPassword(email, pass)
+        .catch(error => {
+          document.getElementById("authError").innerText = "Error: " + error.message;
+        });
+    }
+
+    function cerrarSesion() {
+      auth.signOut();
+    }
+
+    /* ==========================================================================
+       3. CONEXIÓN EN TIEMPO REAL CON FIRESTORE
+       ========================================================================== */
+    function escucharRegistrosFirebase() {
+      if (!usuarioActual) return;
+
+      desuscribirFirestore = db.collection("usuarios")
+        .doc(usuarioActual.uid)
+        .collection("registros")
+        .onSnapshot(snapshot => {
+          registros = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+          mostrarRegistros();
+        }, error => {
+          console.error("Error al obtener registros: ", error);
+        });
+    }
+
+    /* ==========================================================================
+       4. OPERACIONES DE DATOS (AGREGAR, EDITAR, ELIMINAR)
+       ========================================================================== */
+    function registrarDia() {
+      const fecha = document.getElementById("fechaCantina").value;
+      const productoInput = document.getElementById("nombreProducto").value.trim();
+      const pagadoContado = document.getElementById("pagadoContado").checked;
+      const ticketInput = document.getElementById("numeroTicket").value.trim();
+      
+      if (!fecha) return alert("Selecciona una fecha válida");
+      if (!productoInput) return alert("Ingresa el producto.");
+
+      if (ticketInput !== "") {
+        const ticketExistente = registros.some(r => r.ticket === ticketInput);
+        if (ticketExistente) return alert(`⚠️ El ticket #${ticketInput} ya fue registrado.`);
+      }
+
+      const ticket = ticketInput !== "" ? ticketInput : "No se imprimió";
+
+      db.collection("usuarios").doc(usuarioActual.uid).collection("registros").add({
+        fecha,
+        producto: productoInput,
+        pagado: pagadoContado,
+        ticket
+      }).then(() => {
+        document.getElementById("nombreProducto").value = "";
+        document.getElementById("pagadoContado").checked = false;
+        document.getElementById("numeroTicket").value = "";
+      }).catch(err => alert("Error al guardar: " + err.message));
+    }
+
+    function guardarEdicion() {
+      const id = document.getElementById("editId").value;
+      const fecha = document.getElementById("editFecha").value;
+      const productoInput = document.getElementById("editProducto").value.trim();
+      const pagadoContado = document.getElementById("editPagadoContado").checked;
+      const ticketInput = document.getElementById("editNumeroTicket").value.trim();
+
+      if (!fecha || !productoInput) return alert("Completa los campos obligatorios.");
+
+      const ticket = ticketInput !== "" ? ticketInput : "No se imprimió";
+
+      db.collection("usuarios").doc(usuarioActual.uid).collection("registros").doc(id).update({
+        fecha,
+        producto: productoInput,
+        pagado: pagadoContado,
+        ticket
+      }).then(() => {
+        cerrarModalEditar();
+      }).catch(err => alert("Error al actualizar: " + err.message));
+    }
+
+    function eliminarRegistro(idAEliminar) {
+      if (confirm("¿Deseas eliminar este registro?")) {
+        db.collection("usuarios").doc(usuarioActual.uid).collection("registros").doc(idAEliminar).delete()
+          .catch(err => alert("Error al eliminar: " + err.message));
+      }
+    }
+
+    /* ==========================================================================
+       5. INTERFAZ Y RENDERIZADO
+       ========================================================================== */
+    document.addEventListener("DOMContentLoaded", () => {
+      inicializarTema();
+      actualizarEstadoRed();
+      const hoy = new Date().toISOString().split("T")[0];
+      document.getElementById("fechaCantina").value = hoy;
+      document.getElementById("mesFiltro").value = hoy.slice(0, 7);
+      document.getElementById("anioFiltro").value = hoy.slice(0, 4);
+      actualizarDiaPreview();
+
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const temaActual = document.documentElement.getAttribute('data-theme');
+        aplicarTema(temaActual === 'dark' ? 'light' : 'dark');
+      });
+    });
+
+    function inicializarTema() {
+      const temaGuardado = localStorage.getItem(THEME_KEY) || 'dark';
+      aplicarTema(temaGuardado);
+    }
+
+    function aplicarTema(tema) {
+      document.documentElement.setAttribute('data-theme', tema);
+      document.getElementById('theme-toggle').textContent = (tema === 'dark') ? '☀️ Modo' : '🌙 Modo';
+      localStorage.setItem(THEME_KEY, tema);
+    }
+
+    function obtenerNombreDia(fechaStr) {
+      const [anio, mes, dia] = fechaStr.split("-");
+      const fecha = new Date(anio, mes - 1, dia);
+      let nombre = fecha.toLocaleDateString('es-ES', { weekday: 'long' });
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function obtenerNombreMesSolo(anioMes) {
+      const [anio, mes] = anioMes.split("-");
+      const fecha = new Date(anio, mes - 1, 1);
+      const nombre = fecha.toLocaleString('es-ES', { month: 'long' });
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function actualizarDiaPreview() {
+      const fechaVal = document.getElementById("fechaCantina").value;
+      document.getElementById("previewDia").innerText = fechaVal ? `📅 ${obtenerNombreDia(fechaVal)}` : "";
+    }
+
+    function actualizarEditDiaPreview() {
+      const fechaVal = document.getElementById("editFecha").value;
+      document.getElementById("editPreviewDia").innerText = fechaVal ? `📅 ${obtenerNombreDia(fechaVal)}` : "";
+    }
+
+    function abrirModalEditar(id) {
+      const reg = registros.find(r => r.id === id);
+      if (!reg) return;
+      document.getElementById("editId").value = reg.id;
+      document.getElementById("editFecha").value = reg.fecha;
+      document.getElementById("editProducto").value = reg.producto;
+      document.getElementById("editPagadoContado").checked = reg.pagado;
+      document.getElementById("editNumeroTicket").value = reg.ticket === "No se imprimió" ? "" : reg.ticket;
+      actualizarEditDiaPreview();
+      document.getElementById("modalEditar").style.display = "flex";
+    }
+
+    function cerrarModalEditar() {
+      document.getElementById("modalEditar").style.display = "none";
+    }
+
+    function filtrarPor(tipo) {
+      filtroActual = tipo;
+      document.getElementById("btnFiltroTodos").classList.toggle("active", tipo === "todos");
+      document.getElementById("btnFiltroContado").classList.toggle("active", tipo === "contado");
+      document.getElementById("btnFiltroCredito").classList.toggle("active", tipo === "credito");
+      mostrarRegistros();
+    }
+
+    function mostrarRegistros() {
+      const div = document.getElementById("listaRegistros");
+      const totalGeneralDiv = document.getElementById("totalGeneral");
+      
+      let registrosFiltrados = registros;
+      if (filtroActual === "contado") registrosFiltrados = registros.filter(r => r.pagado === true);
+      else if (filtroActual === "credito") registrosFiltrados = registros.filter(r => r.pagado === false);
+
+      totalGeneralDiv.innerHTML = (filtroActual === "todos")
+        ? `Total histórico: <strong>${registros.length}</strong> registros`
+        : `Mostrando: <strong>${registrosFiltrados.length}</strong> de <strong>${registros.length}</strong> registros`;
+
+      const datalist = document.getElementById("listaProductos");
+      if (datalist) {
+        const productosUnicos = [...new Set(registros.map(r => r.producto.trim()))].filter(Boolean);
+        datalist.innerHTML = productosUnicos.map(p => `<option value="${p}">`).join("");
+      }
+
+      if (registrosFiltrados.length === 0) {
+        div.innerHTML = "<p style='color: var(--text-muted); margin-top: 15px;'>No hay registros agregados.</p>";
+        return;
+      }
+
+      let agrupados = {};
+      registrosFiltrados.forEach(item => {
+        const anio = item.fecha.slice(0, 4);
+        const mesKey = item.fecha.slice(0, 7);
+        if (!agrupados[anio]) agrupados[anio] = {};
+        if (!agrupados[anio][mesKey]) agrupados[anio][mesKey] = [];
+        agrupados[anio][mesKey].push(item);
+      });
+
+      const aniosOrdenados = Object.keys(agrupados).sort().reverse();
+      const anioActualStr = new Date().toISOString().slice(0, 4);
+      const mesActualKey = new Date().toISOString().slice(0, 7);
+
+      let html = "";
+      aniosOrdenados.forEach(anio => {
+        const mesesEnAnio = agrupados[anio];
+        const mesesOrdenados = Object.keys(mesesEnAnio).sort().reverse();
+        let totalAnio = 0;
+        mesesOrdenados.forEach(m => totalAnio += mesesEnAnio[m].length);
+
+        html += `
+          <details class="anio-grupo" ${anio === anioActualStr ? "open" : ""}>
+            <summary class="summary-anio">
+              <span>📆 Año ${anio}</span>
+              <span class="badge-count">${totalAnio} registros</span>
+            </summary>
+            <div class="anio-contenido">`;
+
+        mesesOrdenados.forEach(mesKey => {
+          const diasDelMes = mesesEnAnio[mesKey].sort((a, b) => b.fecha.localeCompare(a.fecha));
+          html += `
+              <details class="mes-grupo" ${mesKey === mesActualKey ? "open" : ""}>
+                <summary class="summary-mes">
+                  <span>🗓️ ${obtenerNombreMesSolo(mesKey)}</span>
+                  <span class="badge-count-sub">${diasDelMes.length} registros</span>
+                </summary>
+                <div class="mes-contenido">
+                  <table>`;
+
+          diasDelMes.forEach(item => {
+            const partes = item.fecha.split("-");
+            const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            html += `
+                    <tr>
+                      <td>
+                        🔹 <strong>${obtenerNombreDia(item.fecha)}</strong> ${fechaFormateada}<br>
+                        <span style="color: var(--text-summary-mes); font-size: 11px;">📦 ${item.producto}</span> | 
+                        <span style="color: var(--text-muted); font-size: 11px;">💵 ${item.pagado ? "🟢 Contado" : "🔴 Crédito"}</span><br>
+                        <span style="color: var(--text-muted); font-size: 11px;">🎫 ${item.ticket === "No se imprimió" ? "Sin ticket" : `Ticket #${item.ticket}`}</span>
+                      </td>
+                      <td>
+                        <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                          <button class="edit-btn" onclick="abrirModalEditar('${item.id}')">✏️</button>
+                          <button class="delete-btn" onclick="eliminarRegistro('${item.id}')">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>`;
+          });
+
+          html += `</table></div></details>`;
+        });
+
+        html += `</div></details>`;
+      });
+
+      div.innerHTML = html;
+    }
+
+    /* ==========================================================================
+       6. EXPORTACIÓN A EXCEL
+       ========================================================================== */
+    function exportarMes() {
+      const mesSeleccionado = document.getElementById("mesFiltro").value;
+      if (!mesSeleccionado) return alert("Selecciona un mes.");
+      const listaMes = registros.filter(r => r.fecha.startsWith(mesSeleccionado));
+      if (listaMes.length === 0) return alert("No hay registros en el mes seleccionado.");
+
+      let texto = "Día\tFecha\tProducto\tPagado al contado\tTicket\n";
+      listaMes.forEach(item => {
+        const partes = item.fecha.split("-");
+        texto += `${obtenerNombreDia(item.fecha)}\t${partes[2]}/${partes[1]}/${partes[0]}\t${item.producto}\t${item.pagado ? "Sí" : "No"}\t${item.ticket}\n`;
+      });
+
+      navigator.clipboard.writeText(texto).then(() => alert("¡Mes copiado para Excel! ✅"));
+    }
+
+    function descargarExcelAnio() {
+      const anioSeleccionado = document.getElementById("anioFiltro").value;
+      if (!anioSeleccionado) return alert("Ingresa un año.");
+      const listaAnio = registros.filter(r => r.fecha.startsWith(anioSeleccionado));
+      if (listaAnio.length === 0) return alert(`No hay registros para ${anioSeleccionado}.`);
+
+      const data = [["Día", "Fecha", "Producto", "Pagado al contado", "Ticket"]];
+      listaAnio.forEach(item => {
+        const partes = item.fecha.split("-");
+        data.push([obtenerNombreDia(item.fecha), `${partes[2]}/${partes[1]}/${partes[0]}`, item.producto, item.pagado ? "Sí" : "No", item.ticket]);
+      });
+
+      const worksheet = XLSX.utils.aoa_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Cantina ${anioSeleccionado}`);
+      XLSX.writeFile(workbook, `Cantina_${anioSeleccionado}.xlsx`);
+    }
+  </script>
+</body>
+</html>

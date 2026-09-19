@@ -7,44 +7,299 @@
     <!-- Librería para generación y formato de archivos Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background-color: #1e1e1e; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); max-width: 750px; width: 100%; box-sizing: border-box; }
-        h2 { margin-top: 0; color: #ffffff; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .section-box { background: #252525; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
-        .form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px; }
-        label { font-size: 0.85em; font-weight: bold; color: #17a2b8; text-transform: uppercase; }
-        input[type="text"], input[type="password"], input[type="email"] { padding: 10px; border: 1px solid #444; border-radius: 6px; background-color: #2d2d2d; color: #ffffff; font-size: 14px; width: 100%; box-sizing: border-box; }
-        input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus { outline: none; border-color: #007bff; }
-        .btn-add { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; height: 38px; }
-        .btn-add:hover { background-color: #218838; }
-        .search-container { margin-bottom: 20px; position: relative; }
-        .search-container input { padding: 12px 15px 12px 40px; font-size: 15px; border: 2px solid #007bff; border-radius: 8px; background-color: #1a1a1a; }
-        .search-icon { position: absolute; left: 12px; top: 12px; font-size: 16px; }
-        .backup-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-tool { flex: 1; padding: 8px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; min-width: 140px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-excel { background-color: #1f7244; } .btn-excel:hover { background-color: #155230; }
-        .btn-export { background-color: #6f42c1; } .btn-export:hover { background-color: #59339d; }
-        .btn-import { background-color: #fd7e14; } .btn-import:hover { background-color: #e86e0c; }
-        .toggle-btn { background-color: #333; color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .toggle-btn:hover { background-color: #444; }
-        .table-container { max-height: 400px; overflow-y: auto; border: 1px solid #333; border-radius: 6px; display: none; }
-        .table-container.open { display: block; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; color: #e0e0e0; }
-        th, td { padding: 10px 15px; text-align: left; border-bottom: 1px solid #333; }
-        th { background-color: #1a1a1a; color: #17a2b8; position: sticky; top: 0; z-index: 1; }
-        tr:hover { background-color: #2d2d2d; }
-        .btn-delete { background-color: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .btn-delete:hover { background-color: #dc3545; color: white; }
-        .empty-msg { text-align: center; padding: 20px; color: #888; font-style: italic; }
-        
-        .auth-bar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
-        .auth-bar input { width: 160px; padding: 6px 10px; font-size: 12px; }
-        .btn-login { background-color: #007bff; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-login:hover { background-color: #0056b3; }
-        .btn-logout { background-color: #dc3545; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-logout:hover { background-color: #c82333; }
-        .editor-info { font-size: 12px; color: #28a745; font-weight: bold; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            max-width: 750px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #ffffff;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .section-box {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #17a2b8;
+            text-transform: uppercase;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #2d2d2d;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            height: 38px;
+        }
+
+        .btn-add:hover {
+            background-color: #218838;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-container input {
+            padding: 12px 15px 12px 40px;
+            font-size: 15px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            background-color: #1a1a1a;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            font-size: 16px;
+        }
+
+        .backup-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tool {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-excel {
+            background-color: #1f7244;
+        }
+
+        .btn-excel:hover {
+            background-color: #155230;
+        }
+
+        .btn-export {
+            background-color: #6f42c1;
+        }
+
+        .btn-export:hover {
+            background-color: #59339d;
+        }
+
+        .btn-import {
+            background-color: #fd7e14;
+        }
+
+        .btn-import:hover {
+            background-color: #e86e0c;
+        }
+
+        .toggle-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toggle-btn:hover {
+            background-color: #444;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .table-container.open {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        th, td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background-color: #1a1a1a;
+            color: #17a2b8;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tr:hover {
+            background-color: #2d2d2d;
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .btn-delete:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .empty-msg {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-style: italic;
+        }
+
+        /* Barra de Autenticación de Editor */
+        .auth-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .auth-bar input {
+            width: 160px;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .btn-login {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .btn-login:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+
+        .editor-info {
+            font-size: 12px;
+            color: #28a745;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -63,6 +318,7 @@
 
     <h2>Directorio de Buques y Códigos OPUS</h2>
     
+    <!-- Buscador Unificado -->
     <div class="search-container">
         <span class="search-icon">🔍</span>
         <input type="text" id="inputBusqueda" placeholder="Buscar por nombre de buque o código OPUS..." onkeyup="window.buscarBuque()">
@@ -70,6 +326,7 @@
 
     <!-- Panel de Edición reservado a usuarios logueados -->
     <div id="panelEdicion" style="display: none;">
+        <!-- Agregar Nuevo Registro -->
         <div class="section-box">
             <div class="form-row">
                 <div class="form-group">
@@ -84,6 +341,7 @@
             </div>
         </div>
 
+        <!-- Barra de Herramientas: Exportar/Importar -->
         <div class="backup-bar">
             <button class="btn-tool btn-excel" onclick="window.exportarExcel()">📊 Exportar a Excel</button>
             <button class="btn-tool btn-export" onclick="window.exportarBackup()">💾 Guardar Backup</button>
@@ -94,6 +352,7 @@
         </div>
     </div>
 
+    <!-- Tabla Desplegable -->
     <button class="toggle-btn" onclick="window.toggleTabla()" id="btnToggleTabla">
         <span>📋 Ver Tabla Completa de Buques (<span id="totalCount">0</span> registros)</span>
         <span id="flechaToggle">▼</span>

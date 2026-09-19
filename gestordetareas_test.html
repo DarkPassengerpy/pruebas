@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tareas</title>
+    <link rel="icon" type="image/png" href="ico.png">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            max-width: 650px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #ffffff;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .task-form {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .task-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .alarm-input-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            background-color: #1e1e1e;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px dashed #444;
+        }
+
+        .alarm-label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #17a2b8;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #252525;
+            color: #ffffff;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #17a2b8;
+        }
+
+        input[type="text"], input[type="date"], input[type="time"], select {
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #2d2d2d;
+            color: #ffffff;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"] { flex: 1; min-width: 200px; }
+        input[type="date"] { width: 150px; padding: 10px; font-size: 14px; }
+        input[type="time"] { width: 110px; padding: 10px; font-size: 14px; }
+
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus, input[type="time"]:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-add {
+            background-color: #007bff;
+            color: white;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        .btn-add:hover { background-color: #0056b3; }
+
+        .btn-test-sound {
+            flex: 1;
+            height: 42px;
+            padding: 0 16px;
+            font-size: 14px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-test-sound:hover {
+            background-color: #138496;
+        }
+
+        .task-list { list-style: none; padding: 0; margin: 0; }
+
+        .task-item {
+            background-color: #252525;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.is-priority { border-color: #ff4d4d; background-color: #2c1a1a; }
+        .task-item.completed { opacity: 0.7; background-color: #1a1a1a; border-color: #333; }
+
+        .task-checkbox {
+            margin-top: 5px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #28a745;
+        }
+
+        .task-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .task-text {
+            font-size: 16px;
+            word-break: break-word;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .completed .task-text { text-decoration: line-through; color: #888; }
+
+        .tag-overdue {
+            background-color: #dc3545;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .task-dates {
+            font-size: 0.75em;
+            color: #888;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .date-alarm { color: #17a2b8; font-weight: bold; }
+        .date-done { color: #28a745; }
+        .date-separator { color: #555; user-select: none; }
+
+        .snooze-panel {
+            background-color: #1e1e1e;
+            border: 1px solid #dc3545;
+            border-radius: 6px;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 4px;
+            margin-top: 8px;
+            animation: fadeIn 0.3s ease;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            box-sizing: border-box;
+        }
+
+        .snooze-panel::-webkit-scrollbar { display: none; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .snooze-label {
+            font-size: 0.72em;
+            color: #dc3545;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-right: 4px;
+            flex-shrink: 0;
+        }
+
+        .btn-snooze {
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 0 6px;
+            height: 26px;
+            border-radius: 4px;
+            font-size: 0.72em;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .btn-snooze:hover { background-color: #dc3545; color: white; border-color: #dc3545; }
+
+        .select-snooze {
+            padding: 0 6px;
+            height: 26px;
+            font-size: 0.72em;
+            border-radius: 4px;
+            background-color: #2d2d2d;
+            color: #ccc;
+            border: 1px solid #444;
+            cursor: pointer;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .select-snooze:focus { border-color: #dc3545; }
+
+        .task-actions { display: flex; align-items: center; gap: 8px; }
+
+        .btn-priority {
+            background: none; 
+            border: none; 
+            font-size: 16px; 
+            cursor: pointer;
+            padding: 0 4px; 
+            line-height: 1; 
+            color: #f7cc4a;
+            opacity: 0.7; 
+            transition: opacity 0.2s, transform 0.2s, color 0.2s;
+        }
+        .btn-priority:hover { 
+            opacity: 1; 
+            transform: scale(1.2); 
+        }
+        .btn-priority.active { 
+            opacity: 1; 
+            color: inherit;
+        }
+
+        .btn-delete {
+            background: none; border: none; color: #dc3545; font-size: 20px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
+        }
+        .btn-delete:hover { color: #c82333; transform: scale(1.2); }
+
+        .btn-edit {
+            background: none; border: none; color: #ffc107; font-size: 16px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
+        }
+        .btn-edit:hover { color: #ffda6a; transform: scale(1.2); }
+
+        .btn-save {
+            background: none; border: none; color: #28a745; font-size: 20px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
+        }
+        .btn-save:hover { color: #34c759; transform: scale(1.2); }
+
+        .btn-cancel {
+            background: none; border: none; color: #dc3545; font-size: 18px;
+            cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s, transform 0.2s;
+        }
+        .btn-cancel:hover { color: #c82333; transform: scale(1.2); }
+
+        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .edit-input { width: 100%; padding: 8px; border: 1px solid #007bff; border-radius: 4px; background-color: #2d2d2d; color: #ffffff; font-size: 15px; box-sizing: border-box; font-family: inherit; }
+        .edit-input:focus { outline: none; border-color: #5cadff; }
+
+        .section-title { font-size: 0.9em; color: #b0b0b0; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .section-title.overdue-title { color: #ff4d4d; }
+        .urgent-tag { color: #ff4d4d; text-transform: none; font-weight: normal; margin-left: 4px; }
+
+        details.completed-details { margin-top: 25px; border-top: 1px solid #2a2a2a; padding-top: 10px; }
+        summary.completed-summary { font-size: 0.9em; color: #b0b0b0; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; user-select: none; font-weight: bold; padding: 5px 0; transition: color 0.2s; }
+        summary.completed-summary:hover { color: #ffffff; }
+
+        details.month-details { margin: 10px 0 10px 15px; border-left: 2px solid #333; padding-left: 10px; }
+        summary.month-summary { font-size: 0.85em; color: #17a2b8; cursor: pointer; user-select: none; font-weight: bold; padding: 4px 0; }
+        summary.month-summary:hover { color: #5cdb95; }
+
+        /* Banner Flotante Centrado de Alarma */
+        .alarm-banner-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            background-color: #252525;
+            border: 2px solid #17a2b8;
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.85);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            min-width: 290px;
+            max-width: 85%;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .alarm-banner-title {
+            color: #ff4d4d;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alarm-banner-text {
+            color: #ffffff;
+            font-size: 15px;
+            word-break: break-word;
+        }
+
+        .btn-silence {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .btn-silence:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+
+        /* Paneles de Configuración */
+        .backup-panel { 
+            margin-top: 15px; 
+            padding: 15px; 
+            background-color: #252525; 
+            border: 1px solid #333; 
+            border-radius: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+
+        .backup-title { 
+            font-size: 0.85em; 
+            color: #b0b0b0; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-weight: bold; 
+        }
+
+        .config-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .config-select {
+            flex: 1;
+            height: 42px;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+
+        .backup-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn-backup { flex: 1; padding: 8px 12px; font-size: 0.85em; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; }
+        .btn-backup:hover { background-color: #444; color: #fff; }
+
+        .volume-container {
+            flex: 1;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #1e1e1e;
+            padding: 0 14px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            box-sizing: border-box;
+        }
+
+        .volume-range {
+            cursor: pointer;
+            accent-color: #17a2b8;
+            flex: 1;
+        }
+
+        .volume-label {
+            font-size: 0.8em;
+            color: #b0b0b0;
+            min-width: 35px;
+            text-align: right;
+        }
+
+        .warning-note { margin-top: 15px; padding: 10px 12px; background-color: #2a2415; border: 1px solid #66521a; border-radius: 6px; font-size: 0.8em; color: #d1b06a; text-align: center; line-height: 1.4; }
+
+        .bloque { max-width: 650px; width: 100%; margin: 15px auto 0; padding: 20px; border-radius: 10px; background: #262626; box-sizing: border-box; text-align: left; color: #e0e0e0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .bloque h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #444; padding-bottom: 5px; color: #ff5252; text-align: left; display: block; }
+        .bloque p { font-size: 14px; line-height: 1.5; margin: 8px 0 0; color: #ccc; }
+        .credits { text-align: center; margin-top: 20px; font-size: 0.85em; }
+        .credits a { color: #007bff; text-decoration: none; transition: color 0.2s; }
+        .credits a:hover { color: #0056b3; text-decoration: underline; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 550px) {
+            .task-input-row, .alarm-input-row, .config-row { flex-direction: column; align-items: stretch; }
+            .btn-add, .btn-test-sound { width: 100%; }
+            .volume-container { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>
+        <img src="tarea.png" alt="Tarea" width="28" height="28">
+        Mis Tareas
+    </h2>
+
+    <div class="task-form">
+        <div class="task-input-row">
+            <input type="text" id="taskInput" placeholder="Escribe una nueva tarea..." onkeypress="handleKeyPress(event)">
+            <button class="btn-add" onclick="addTask()">Agregar</button>
+        </div>
+        <div class="alarm-input-row">
+            <span class="alarm-label">⏰ ALARMA:</span>
+            <input type="date" id="alarmDateInput" title="Día de la alarma (Por defecto, hoy)">
+            <input type="time" id="alarmTimeInput" title="Hora de la alarma">
+        </div>
+    </div>
+
+    <!-- Buscador Integrado -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar tarea..." oninput="renderTasks()">
+    </div>
+
+    <!-- Sección de Tareas Vencidas -->
+    <div id="overdueSection">
+        <div class="section-title overdue-title" id="overdueTitle">Vencidas</div>
+        <ul id="overdueList" class="task-list"></ul>
+    </div>
+
+    <!-- Sección de Tareas Pendientes -->
+    <div id="pendingSection">
+        <div class="section-title" id="pendingTitle">Pendientes</div>
+        <ul id="pendingList" class="task-list"></ul>
+    </div>
+
+    <!-- Sección de Tareas Completadas -->
+    <details id="completedSection" class="completed-details">
+        <summary id="completedSummary" class="completed-summary">Completadas (0)</summary>
+        <div id="completedContainer" style="margin-top: 10px;"></div>
+    </details>
+
+    <!-- Bloque: Configuración de Tono -->
+    <div class="backup-panel" style="margin-top: 25px;">
+        <div class="backup-title">⚙️ Configuración de Tono</div>
+        
+        <div class="config-row">
+            <select id="alarmSoundSelect" class="config-select" title="Tono de alarma" onchange="changeAlarmSound()">
+                <option value="classic">🔔 Clásico</option>
+                <option value="digital">⏱️ Digital</option>
+                <option value="melodic">🎵 Melódico</option>
+                <option value="urgent">🚨 Urgente</option>
+                <option value="retro">🎮 Retro 8-Bit</option>
+                <option value="zen">🧘 Zen / Chime</option>
+                <option value="sonar">📡 Sonar</option>
+                <option value="marimba">🎹 Marimba</option>
+                <option value="arpeggio">🎼 Arpegio</option>
+                <option value="fastbeep">⚡ Doble Beep</option>
+                <option value="message_alert">💬 Alerta</option>
+                <option value="tono_largo">🎶 Extendido</option>
+                <option value="tono_suave">🌿 Suave</option>
+                <option value="tono_warning">⚠️ Advertencia</option>
+                <option value="toy_cell_phones">📱 Toy cell phones</option>
+            </select>
+
+            <div class="volume-container">
+                <span title="Volumen">🔊</span>
+                <input type="range" id="alarmVolumeRange" class="volume-range" min="0" max="100" value="70" oninput="updateVolume(this.value)">
+                <span id="volumeValueLabel" class="volume-label">70%</span>
+            </div>
+
+            <button type="button" class="btn-test-sound" onclick="testSelectedSound()" title="Probar tono y notificación nativa">🔊 Probar</button>
+        </div>
+    </div>
+
+    <!-- Bloque: Copia de Seguridad -->
+    <div class="backup-panel">
+        <div class="backup-title">💾 Copia de Seguridad</div>
+        <div class="backup-buttons">
+            <button class="btn-backup" onclick="exportBackup()">Exportar Backup</button>
+            <button class="btn-backup" onclick="document.getElementById('importFile').click()">Importar Backup</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importBackup(event)">
+        </div>
+    </div>
+
+    <div class="warning-note">
+        ⚠️ <strong>Nota:</strong> Los datos se guardan en el navegador. Puedes limpiar el historial y la caché sin problemas, pero borrar Cookies / Datos de sitios eliminará tus tareas. Usa la Copia de Seguridad para resguardar tus datos.
+    </div>
+</div>
+
+<!-- Banner Flotante de Alarma (Centrado) -->
+<div id="alarmBanner" class="alarm-banner-card hidden">
+    <div class="alarm-banner-title">⏰ ¡Alarma Sonando!</div>
+    <div id="alarmBannerText" class="alarm-banner-text">Nombre de la tarea</div>
+    <button class="btn-silence" onclick="stopCurrentSound()">🔇 Silenciar</button>
+</div>
+
+<div class="bloque">
+    <h2>ℹ️ ¿Qué es "Gestor de Tareas"?</h2>
+    <p>Es una herramienta web diseñada para organizar tus actividades diarias de forma clara y eficiente. Permite agregar tareas registrando la fecha y hora de creación, establecer alarmas con notificaciones y sonido, posponer avisos, buscar rápidamente entre tus registros, marcar prioridades urgentes (❗), organizar automáticamente las tareas completadas por mes y respaldar tu información mediante JSON.</p>
+</div>
+
+<div class="credits">
+    <a href="https://tools.darkpassenger.workers.dev/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+</div>
+
+<script>
+    let tasks = [];
+    let editingTaskId = null;
+    let currentSound = 'classic';
+    let currentVolume = 70;
+    let currentAudio = null; // Control del archivo MP3 activo
+
+    function setDateToToday() {
+        const dateInput = document.getElementById('alarmDateInput');
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    function loadSettings() {
+        const savedSound = localStorage.getItem('selectedAlarmSound');
+        if (savedSound) {
+            currentSound = savedSound;
+            const select = document.getElementById('alarmSoundSelect');
+            if (select) select.value = savedSound;
+        }
+
+        const savedVolume = localStorage.getItem('selectedAlarmVolume');
+        if (savedVolume !== null) {
+            currentVolume = parseInt(savedVolume, 10);
+            const range = document.getElementById('alarmVolumeRange');
+            const label = document.getElementById('volumeValueLabel');
+            if (range) range.value = currentVolume;
+            if (label) label.innerText = `${currentVolume}%`;
+        }
+    }
+
+    function changeAlarmSound() {
+        const select = document.getElementById('alarmSoundSelect');
+        currentSound = select.value;
+        localStorage.setItem('selectedAlarmSound', currentSound);
+    }
+
+    function updateVolume(val) {
+        currentVolume = parseInt(val, 10);
+        document.getElementById('volumeValueLabel').innerText = `${currentVolume}%`;
+        localStorage.setItem('selectedAlarmVolume', currentVolume);
+    }
+
+    function showAlarmBanner(taskText) {
+        const banner = document.getElementById('alarmBanner');
+        const textElem = document.getElementById('alarmBannerText');
+        if (banner && textElem) {
+            textElem.innerText = taskText || "Alarma activada";
+            banner.classList.remove('hidden');
+        }
+    }
+
+    function stopCurrentSound() {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+        }
+        const banner = document.getElementById('alarmBanner');
+        if (banner) banner.classList.add('hidden');
+    }
+
+    function testSelectedSound() {
+        const soundSelect = document.getElementById('alarmSoundSelect');
+        playAlarmSound(soundSelect.value, "Prueba de sonido");
+
+        if ("Notification" in window) {
+            if (Notification.permission === "granted") {
+                new Notification("⏰ Gestor de Tareas", { 
+                    body: "🔔 Prueba de alerta: Así se verá tu notificación." 
+                });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification("⏰ Gestor de Tareas", { 
+                            body: "🔔 Prueba de alerta: Así se verá tu notificación." 
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    function playAlarmSound(soundType = currentSound, taskText = '') {
+        stopCurrentSound();
+
+        if (currentVolume <= 0) return;
+
+        const audioFiles = {
+            'message_alert': 'message_alert.mp3',
+            'tono_largo': 'tono_largo.mp3',
+            'tono_suave': 'tono_suave.mp3',
+            'tono_warning': 'tono_warning.mp3',
+            'toy_cell_phones': 'Song_of_toy_cell_phones.mp3'
+        };
+
+        if (audioFiles[soundType]) {
+            try {
+                currentAudio = new Audio(audioFiles[soundType]);
+                currentAudio.volume = currentVolume / 100;
+                
+                showAlarmBanner(taskText);
+
+                currentAudio.onended = () => {
+                    stopCurrentSound();
+                };
+
+                currentAudio.play().catch(e => console.warn("Error al reproducir el archivo de audio:", e));
+            } catch(e) {
+                console.warn("Audio Error:", e);
+            }
+            return;
+        }
+
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const vol = (currentVolume / 100) * 0.7; 
+            const now = ctx.currentTime;
+
+            if (soundType === 'digital') {
+                [0, 0.12, 0.24].forEach(timeOffset => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1050, now + timeOffset);
+                    gain.gain.setValueAtTime(vol * 0.4, now + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + 0.08);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + timeOffset);
+                    osc.stop(now + timeOffset + 0.08);
+                });
+            } else if (soundType === 'melodic') {
+                const notes = [523.25, 659.25, 783.99];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.16);
+                    gain.gain.setValueAtTime(vol * 0.5, now + idx * 0.16);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.16 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.16);
+                    osc.stop(now + idx * 0.16 + 0.3);
+                });
+            } else if (soundType === 'urgent') {
+                [0, 0.18, 0.36, 0.54].forEach((timeOffset, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    const freq = idx % 2 === 0 ? 950 : 650;
+                    osc.frequency.setValueAtTime(freq, now + timeOffset);
+                    gain.gain.setValueAtTime(vol * 0.3, now + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + 0.14);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + timeOffset);
+                    osc.stop(now + timeOffset + 0.14);
+                });
+            } else if (soundType === 'retro') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+                gain.gain.setValueAtTime(vol * 0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (soundType === 'zen') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(vol * 0.6, now + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 1.2);
+            } else if (soundType === 'sonar') {
+                [0, 0.4].forEach(timeOffset => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now + timeOffset);
+                    gain.gain.setValueAtTime(vol * 0.5, now + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + timeOffset);
+                    osc.stop(now + timeOffset + 0.3);
+                });
+            } else if (soundType === 'marimba') {
+                const notes = [523.25, 659.25];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                    gain.gain.setValueAtTime(vol * 0.6, now + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.18);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.1);
+                    osc.stop(now + idx * 0.1 + 0.18);
+                });
+            } else if (soundType === 'arpeggio') {
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(vol * 0.5, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            } else if (soundType === 'fastbeep') {
+                [0, 0.08].forEach(timeOffset => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, now + timeOffset);
+                    gain.gain.setValueAtTime(vol * 0.5, now + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + 0.05);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + timeOffset);
+                    osc.stop(now + timeOffset + 0.05);
+                });
+            } else {
+                const playBeep = (startTime) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, startTime);
+                    osc.frequency.setValueAtTime(880, startTime + 0.15);
+                    gain.gain.setValueAtTime(vol, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.3);
+                };
+                playBeep(now);             
+                playBeep(now + 0.4);        
+            }
+        } catch(e) {
+            console.warn("Audio Context error:", e);
+        }
+    }
+
+    function requestNotificationPermission() {
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return "Fecha desconocida";
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "Fecha desconocida";
+        return date.toLocaleString('es-ES', { 
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    }
+
+    function getMonthYearLabel(dateString) {
+        if (!dateString) return "Sin Fecha";
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "Sin Fecha";
+        const str = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function getMonthYearKey(dateString) {
+        if (!dateString) return "0000-00";
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "0000-00";
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        return `${yyyy}-${mm}`;
+    }
+
+    function getTimestamp(task) {
+        if (task.completed && task.completedAt) {
+            const t = new Date(task.completedAt).getTime();
+            if (!isNaN(t)) return t;
+        }
+        if (task.createdAt) {
+            const t = new Date(task.createdAt).getTime();
+            if (!isNaN(t)) return t;
+        }
+        const idNum = Number(task.id);
+        return !isNaN(idNum) ? idNum : 0;
+    }
+
+    function loadTasks() {
+        const savedTasks = localStorage.getItem('myTasks');
+        if (savedTasks) {
+            tasks = JSON.parse(savedTasks);
+        }
+    }
+
+    function saveTasks() {
+        localStorage.setItem('myTasks', JSON.stringify(tasks));
+    }
+
+    function addTask() {
+        const input = document.getElementById('taskInput');
+        const dateInput = document.getElementById('alarmDateInput');
+        const timeInput = document.getElementById('alarmTimeInput');
+        const text = input.value.trim();
+
+        if (text === '') return;
+
+        requestNotificationPermission();
+
+        let finalAlarmISO = null;
+        
+        if (timeInput.value) {
+            const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
+            finalAlarmISO = new Date(`${selectedDate}T${timeInput.value}`).toISOString();
+        }
+
+        const newTask = {
+            id: Date.now().toString(),
+            text: text,
+            completed: false,
+            priority: false,
+            createdAt: new Date().toISOString(),
+            completedAt: null,
+            alarmAt: finalAlarmISO,
+            alarmTriggered: false
+        };
+
+        tasks.push(newTask);
+        input.value = '';
+        timeInput.value = '';
+        setDateToToday();
+        saveAndRender();
+        input.focus();
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') addTask();
+    }
+
+    function toggleTask(id) {
+        stopCurrentSound();
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            task.completed = !task.completed;
+            task.completedAt = task.completed ? new Date().toISOString() : null;
+            saveAndRender();
+        }
+    }
+
+    function togglePriority(id) {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            task.priority = !task.priority;
+            saveAndRender();
+        }
+    }
+
+    function deleteTask(id) {
+        stopCurrentSound();
+        const task = tasks.find(t => t.id === id);
+        const taskText = task ? `"${task.text}"` : "esta tarea";
+        
+        if (confirm(`¿Estás seguro de que deseas eliminar ${taskText}?`)) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveAndRender();
+        }
+    }
+
+    function snoozeTask(id, minutesToAdd) {
+        stopCurrentSound();
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + parseInt(minutesToAdd, 10));
+            
+            task.alarmAt = now.toISOString();
+            task.alarmTriggered = false; 
+            saveAndRender();
+        }
+    }
+
+    function handleSelectSnooze(id, selectElement) {
+        const val = selectElement.value;
+        if(val !== "") {
+            snoozeTask(id, val);
+            selectElement.value = ""; 
+        }
+    }
+
+    function startEdit(id) {
+        editingTaskId = id;
+        renderTasks();
+        setTimeout(() => {
+            const input = document.getElementById('editInput_' + id);
+            if (input) { input.focus(); input.select(); }
+        }, 0);
+    }
+
+    function cancelEdit() {
+        editingTaskId = null;
+        renderTasks();
+    }
+
+    function saveEdit(id) {
+        const input = document.getElementById('editInput_' + id);
+        const dateInput = document.getElementById('editAlarmDate_' + id);
+        const timeInput = document.getElementById('editAlarmTime_' + id);
+        if (!input) return;
+
+        const newText = input.value.trim();
+        if (newText === '') return;
+
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            task.text = newText;
+            
+            let finalAlarmISO = null;
+            if (timeInput.value) {
+                const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
+                finalAlarmISO = new Date(`${selectedDate}T${timeInput.value}`).toISOString();
+            }
+
+            if (task.alarmAt !== finalAlarmISO) {
+                task.alarmAt = finalAlarmISO;
+                task.alarmTriggered = false; 
+            }
+        }
+        editingTaskId = null;
+        saveAndRender();
+    }
+
+    function handleEditKeyPress(e, id) {
+        if (e.key === 'Enter') saveEdit(id);
+        else if (e.key === 'Escape') cancelEdit();
+    }
+
+    function saveAndRender() {
+        saveTasks();
+        renderTasks();
+    }
+
+    function checkAlarms() {
+        const now = new Date();
+        let newlyOverdueCount = 0;
+        let lastOverdueTaskText = "";
+
+        tasks.forEach(task => {
+            if (!task.completed && task.alarmAt) {
+                const alarmDate = new Date(task.alarmAt);
+                if (alarmDate <= now && !task.alarmTriggered) {
+                    task.alarmTriggered = true;
+                    newlyOverdueCount++;
+                    lastOverdueTaskText = task.text;
+                }
+            }
+        });
+
+        if (newlyOverdueCount > 0) {
+            saveTasks();
+            playAlarmSound(currentSound, lastOverdueTaskText);
+
+            let message = newlyOverdueCount === 1 
+                ? `¡Se venció la tarea: "${lastOverdueTaskText}"!` 
+                : `Se vencieron ${newlyOverdueCount} tareas.`;
+
+            if ("Notification" in window && Notification.permission === "granted") {
+                const notif = new Notification("⏰ Gestor de Tareas", { body: message });
+                notif.onclick = () => {
+                    stopCurrentSound();
+                    window.focus();
+                };
+            }
+        }
+
+        renderTasks();
+    }
+
+    function buildTaskElement(task) {
+        const li = document.createElement('li');
+        const isOverdue = !task.completed && task.alarmAt && new Date(task.alarmAt) < new Date();
+
+        li.className = `task-item ${task.completed ? 'completed' : ''} ${task.priority && !task.completed ? 'is-priority' : ''}`;
+
+        if (editingTaskId === task.id) {
+            let dateVal = "";
+            let timeVal = "";
+            if(task.alarmAt) {
+                const d = new Date(task.alarmAt);
+                dateVal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                timeVal = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            }
+
+            li.innerHTML = `
+                <div class="edit-container">
+                    <input type="text" id="editInput_${task.id}" class="edit-input" value="${task.text.replace(/"/g, '&quot;')}" onkeydown="handleEditKeyPress(event, '${task.id}')">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:12px; color:#17a2b8;">⏰</span>
+                        <input type="date" id="editAlarmDate_${task.id}" class="edit-input" style="width:130px; padding:6px;" value="${dateVal}">
+                        <input type="time" id="editAlarmTime_${task.id}" class="edit-input" style="width:100px; padding:6px;" value="${timeVal}">
+                    </div>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-save" onclick="saveEdit('${task.id}')" title="Guardar">&#10003;</button>
+                    <button class="btn-cancel" onclick="cancelEdit()" title="Cancelar">&times;</button>
+                </div>
+            `;
+            return li;
+        }
+
+        const datesList = [];
+        datesList.push(`<span>Creada: ${formatDate(task.createdAt || Number(task.id))}</span>`);
+        if (task.alarmAt) {
+            datesList.push(`<span class="date-alarm">🔔 Alarma: ${formatDate(task.alarmAt)}</span>`);
+        }
+        if (task.completed) {
+            datesList.push(`<span class="date-done">Completada: ${formatDate(task.completedAt)}</span>`);
+        }
+        const datesHTML = datesList.join(' <span class="date-separator">|</span> ');
+
+        let snoozeHTML = '';
+        if (isOverdue) {
+            snoozeHTML = `
+                <div class="snooze-panel">
+                    <span class="snooze-label">Posponer:</span>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 5)">+5m</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 10)">+10m</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 15)">+15m</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 30)">+30m</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 60)">+1h</button>
+                    <button class="btn-snooze" onclick="snoozeTask('${task.id}', 1440)">+1d</button>
+                    <select class="select-snooze" onchange="handleSelectSnooze('${task.id}', this)">
+                        <option value="">Otros</option>
+                        <option value="120">+2 Horas</option>
+                        <option value="180">+3 Horas</option>
+                        <option value="240">+4 Horas</option>
+                        <option value="360">+6 Horas</option>
+                        <option value="720">+12 Horas</option>
+                    </select>
+                </div>
+            `;
+        }
+
+        li.innerHTML = `
+            <input type="checkbox" class="task-checkbox" 
+                   ${task.completed ? 'checked' : ''} 
+                   onchange="toggleTask('${task.id}')">
+            
+            <div class="task-content">
+                <div class="task-text">
+                    ${task.text}
+                    ${isOverdue ? `<span class="tag-overdue">⏰ VENCIDA</span>` : ''}
+                </div>
+                <div class="task-dates">
+                    ${datesHTML}
+                </div>
+                ${snoozeHTML}
+            </div>
+
+            <div class="task-actions">
+                <button class="btn-priority ${task.priority ? 'active' : ''}" 
+                        onclick="togglePriority('${task.id}')" 
+                        title="${task.priority ? 'Quitar prioridad' : 'Marcar como urgente/prioritaria'}">
+                    ${task.priority ? '❗' : 'i'}
+                </button>
+                <button class="btn-edit" onclick="startEdit('${task.id}')" title="Editar">&#9998;</button>
+                <button class="btn-delete" onclick="deleteTask('${task.id}')" title="Eliminar">&times;</button>
+            </div>
+        `;
+        return li;
+    }
+
+    function renderTasks() {
+        const overdueList = document.getElementById('overdueList');
+        const pendingList = document.getElementById('pendingList');
+        const completedContainer = document.getElementById('completedContainer');
+        const overdueSection = document.getElementById('overdueSection');
+        const pendingSection = document.getElementById('pendingSection');
+        const completedSection = document.getElementById('completedSection');
+        const overdueTitle = document.getElementById('overdueTitle');
+        const pendingTitle = document.getElementById('pendingTitle');
+        const completedSummary = document.getElementById('completedSummary');
+        const searchInput = document.getElementById('searchInput');
+
+        const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        overdueList.innerHTML = '';
+        pendingList.innerHTML = '';
+        completedContainer.innerHTML = '';
+
+        let overdueCount = 0;
+        let pendingCount = 0;
+        let urgentCount = 0;
+        let completedCount = 0;
+
+        const overdueTasks = [];
+        const pendingTasks = [];
+        const completedTasks = [];
+        const now = new Date();
+
+        tasks.forEach(t => {
+            const matchesSearch = t.text.toLowerCase().includes(searchTerm);
+            if (matchesSearch) {
+                if (t.completed) {
+                    completedTasks.push(t);
+                } else if (t.alarmAt && new Date(t.alarmAt) < now) {
+                    overdueTasks.push(t);
+                } else {
+                    pendingTasks.push(t);
+                }
+            }
+        });
+
+        overdueTasks.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority ? -1 : 1;
+            return getTimestamp(a) - getTimestamp(b);
+        });
+
+        overdueTasks.forEach(task => {
+            overdueList.appendChild(buildTaskElement(task));
+            overdueCount++;
+        });
+
+        pendingTasks.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority ? -1 : 1;
+            return getTimestamp(a) - getTimestamp(b);
+        });
+
+        pendingTasks.forEach(task => {
+            pendingList.appendChild(buildTaskElement(task));
+            pendingCount++;
+            if (task.priority) urgentCount++;
+        });
+
+        const monthGroups = {};
+        completedTasks.forEach(task => {
+            completedCount++;
+            const dateRef = task.completedAt || task.createdAt;
+            const key = getMonthYearKey(dateRef);
+            const label = getMonthYearLabel(dateRef);
+
+            if (!monthGroups[key]) {
+                monthGroups[key] = { label: label, items: [] };
+            }
+            monthGroups[key].items.push(task);
+        });
+
+        const sortedMonthKeys = Object.keys(monthGroups).sort().reverse();
+
+        sortedMonthKeys.forEach((key, index) => {
+            const group = monthGroups[key];
+            group.items.sort((a, b) => getTimestamp(a) - getTimestamp(b));
+
+            const monthDetails = document.createElement('details');
+            monthDetails.className = 'month-details';
+            if (index === 0 || searchTerm !== '') monthDetails.open = true;
+
+            const monthSummary = document.createElement('summary');
+            monthSummary.className = 'month-summary';
+            monthSummary.innerText = `${group.label} (${group.items.length})`;
+
+            const ul = document.createElement('ul');
+            ul.className = 'task-list';
+            ul.style.marginTop = '10px';
+
+            group.items.forEach(task => {
+                ul.appendChild(buildTaskElement(task));
+            });
+
+            monthDetails.appendChild(monthSummary);
+            monthDetails.appendChild(ul);
+            completedContainer.appendChild(monthDetails);
+        });
+
+        overdueTitle.innerText = `⏰ Vencidas (${overdueCount})`;
+
+        if (urgentCount > 0) {
+            pendingTitle.innerHTML = `Pendientes (${pendingCount}) <span class="urgent-tag">• ❗ ${urgentCount} ${urgentCount === 1 ? 'urgente' : 'urgentes'}</span>`;
+        } else {
+            pendingTitle.innerText = `Pendientes (${pendingCount})`;
+        }
+
+        completedSummary.innerText = `Completadas (${completedCount})`;
+        
+        overdueSection.classList.toggle('hidden', overdueCount === 0);
+        pendingSection.classList.toggle('hidden', pendingCount === 0);
+        completedSection.classList.toggle('hidden', completedCount === 0);
+    }
+
+    function exportBackup() {
+        if (tasks.length === 0) {
+            alert("No hay tareas registradas para exportar.");
+            return;
+        }
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
+        const downloadAnchor = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0,10);
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `backup_tareas_${dateStr}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (Array.isArray(imported)) {
+                    if (confirm("¿Deseas restaurar esta copia de seguridad? Se reemplazarán las tareas actuales.")) {
+                        tasks = imported;
+                        saveAndRender();
+                        checkAlarms();
+                        alert("¡Copia de seguridad restaurada correctamente!");
+                    }
+                } else {
+                    alert("El archivo no contiene un formato de backup de tareas válido.");
+                }
+            } catch (err) {
+                alert("Error al procesar el archivo JSON.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // Inicializar aplicación
+    setDateToToday();
+    loadTasks();
+    loadSettings();
+    renderTasks();
+    checkAlarms();
+    setInterval(checkAlarms, 60000);
+</script>
+
+</body>
+</html>

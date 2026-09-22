@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Llegadas (Online & Offline)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="ico.png">
+  
+  <!-- SDKs de Firebase (v10 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Librería ExcelJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+
+  <style>
+    :root {
+      --bg-body: #f4f6f9;
+      --bg-container: #ffffff;
+      --text-main: #2b2b2b;
+      --text-muted: #666666;
+      --border-color: #e0e0e0;
+      --input-bg: #ffffff;
+      
+      --bg-anio: #f8f9fa;
+      --bg-summary-anio: #e9ecef;
+      --text-summary-anio: #0056b3;
+      
+      --bg-mes: #ffffff;
+      --bg-summary-mes: #f1f3f5;
+      --text-summary-mes: #28a745;
+      
+      --badge-bg: rgba(0, 86, 179, 0.1);
+      --badge-text: #0056b3;
+      --badge-bg-sub: rgba(40, 167, 69, 0.1);
+      --badge-text-sub: #28a745;
+
+      --modal-overlay: rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #121212;
+      --bg-container: #262626;
+      --text-main: #e0e0e0;
+      --text-muted: #aaaaaa;
+      --border-color: #444444;
+      --input-bg: #1e1e1e;
+      
+      --bg-anio: #1e1e1e;
+      --bg-summary-anio: #252a34;
+      --text-summary-anio: #ff5252;
+      
+      --bg-mes: #181818;
+      --bg-summary-mes: #222222;
+      --text-summary-mes: #81c784;
+      
+      --badge-bg: rgba(255, 82, 82, 0.2);
+      --badge-text: #ff8a80;
+      --badge-bg-sub: rgba(255, 255, 255, 0.1);
+      --badge-text-sub: #cccccc;
+
+      --modal-overlay: rgba(0, 0, 0, 0.75);
+    }
+
+    * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+    body { font-family: "Aptos", Arial, sans-serif; margin: 0; padding: 20px; background: var(--bg-body); color: var(--text-main); }
+    .container { max-width: 500px; margin: auto; background: var(--bg-container); padding: 20px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); text-align: center; color: var(--text-main); box-sizing: border-box; }
+    
+    .header-app { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    .header-app h1 { color: #ff5252; margin: 0; font-size: 22px; }
+
+    .btn-tema { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: "Aptos", Arial, sans-serif; }
+    .btn-tema:hover { background-color: var(--border-color); }
+    .btn-sync { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+    .btn-logout { background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+    input, select {
+      font-family: "Aptos", Arial, sans-serif;
+      height: 40px;
+      padding: 0 10px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--input-bg);
+      color: var(--text-main);
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator, 
+    [data-theme="dark"] input[type="month"]::-webkit-calendar-picker-indicator { 
+      filter: invert(1); 
+    }
+
+    .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+    .password-wrapper input { width: 100%; margin: 8px 0; padding-right: 40px; text-align: center; }
+    .btn-toggle-pass { position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 0; width: auto; height: auto; margin: 0; display: flex; align-items: center; justify-content: center; }
+
+    button {
+      background: #1976d2; border: none; cursor: pointer;
+      font-size: 14px; color: white; width: 120px;
+      height: 38px; border-radius: 4px; padding: 0 10px;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin: 6px; transition: 0.3s; font-weight: bold;
+    }
+    button:hover { background: #0d47a1; }
+
+    .btn-exportar { background: #25d366; color: #fff; width: auto; padding: 0 15px; font-weight: bold; }
+    .btn-exportar:hover { background: #128c7e; }
+
+    .btn-calendario { background: #f57c00; color: #fff; width: auto; padding: 0 15px; font-weight: bold; }
+    .btn-calendario:hover { background: #e65100; }
+    .btn-calendario:disabled { background: #6d4c1f; cursor: not-allowed; }
+
+    .btn-limpiar { background: #d32f2f; width: auto; padding: 0 15px; }
+    .btn-limpiar:hover { background: #b71c1c; }
+
+    .net-status { font-size: 11px; padding: 4px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
+    .net-online { background: rgba(40, 167, 69, 0.2); color: #28a745; }
+    .net-offline { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+    .net-local { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+
+    .warning-note {
+      margin-top: 15px;
+      padding: 10px 12px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.8em;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* Acordeones */
+    .anio-grupo { background: var(--bg-anio); margin-top: 15px; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; text-align: left; }
+    .summary-anio { padding: 12px 15px; cursor: pointer; font-weight: bold; color: var(--text-summary-anio); background: var(--bg-summary-anio); user-select: none; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+    .summary-anio:hover { filter: brightness(0.95); }
+    .anio-contenido { padding: 8px; }
+
+    .mes-grupo { background: var(--bg-mes); margin: 8px; border-radius: 6px; border: 1px solid var(--border-color); overflow: hidden; }
+    .summary-mes { padding: 10px 12px; cursor: pointer; font-weight: bold; color: var(--text-summary-mes); background: var(--bg-summary-mes); user-select: none; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .summary-mes:hover { filter: brightness(0.95); }
+    .mes-contenido { padding: 8px; }
+
+    .badge-count { background: var(--badge-bg); color: var(--badge-text); padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+    .badge-count-sub { background: var(--badge-bg-sub); color: var(--badge-text-sub); padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; color: var(--text-main); }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+    td:last-child { text-align: right; white-space: nowrap; }
+
+    .action-btn {
+      border: none; cursor: pointer;
+      font-size: 14px; color: white; width: 28px; height: 28px;
+      border-radius: 4px; padding: 0; display: inline-flex;
+      align-items: center; justify-content: center; margin-left: 3px;
+    }
+    .btn-edit { background: #ff9800; }
+    .btn-edit:hover { background: #e65100; }
+    .btn-delete { background: #f44336; }
+    .btn-delete:hover { background: #d32f2f; }
+
+    .export-section {
+      margin-top: 20px; padding: 12px 15px;
+      background: var(--input-bg); border-radius: 8px; text-align: left;
+      border: 1px solid var(--border-color);
+    }
+    .export-summary {
+      font-size: 15px; font-weight: bold; color: var(--text-summary-mes);
+      cursor: pointer; user-select: none;
+    }
+
+    .bloque {
+      max-width: 500px; width: 100%; margin: 15px auto;
+      padding: 20px; border-radius: 10px; background: var(--bg-container);
+      box-sizing: border-box; text-align: left; color: var(--text-main);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .bloque h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color: #ff5252; }
+    .bloque p { font-size: 14px; line-height: 1.5; margin: 8px 0 0; color: var(--text-muted); }
+
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
+    .modal-content { background: var(--bg-container); padding: 20px; border-radius: 10px; max-width: 400px; width: 100%; border: 1px solid var(--border-color); color: var(--text-main); text-align: center; position: relative; }
+    .close-modal { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+
+    footer#teamName { text-align: center; margin-top: 30px; font-size: 14px; color: var(--text-muted); }
+    footer#teamName a { color: #81c784; text-decoration: none; }
+    footer#teamName a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <div class="header-app">
+      <h1>⏱️ Registro de Llegadas</h1>
+      <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
+        <button id="theme-toggle" class="btn-tema">☀️ Modo Claro</button>
+        <button id="btnAuthHeader" onclick="abrirModalAuth()" class="btn-sync">☁️ Sincronizar</button>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <span id="userEmailBadge" style="font-size: 12px; color: var(--text-muted);">👤 MODO LOCAL</span>
+      <span id="netStatus" class="net-status net-local">💾 Modo Local</span>
+    </div>
+
+    <!-- Formulario Principal -->
+    <input type="date" id="fechaTardia" onchange="actualizarDiaPreview()">
+    <div id="previewDia" style="font-size: 13px; color: var(--text-summary-mes); margin-bottom: 5px; font-weight: bold;"></div>
+    
+    <input type="text" id="horaTardia" placeholder="Ej: 07:45" maxlength="5" oninput="aplicarMascaraInput(this)">
+    <input type="text" id="motivoTardia" placeholder="Motivo (opcional)">
+    
+    <button onclick="registrarTardia()">Registrar</button>
+
+    <div style="margin-top: 10px; font-size: 14px; color: var(--text-muted);" id="totalGeneral"></div>
+
+    <!-- Lista de Registros Anidados (Año -> Mes) -->
+    <div id="listaRegistros" style="margin-top: 15px;"></div>
+
+    <!-- Sección de Exportar Registros para Excel -->
+    <details class="export-section">
+      <summary class="export-summary">📤 Exportar Registros (Excel)</summary>
+      <div style="padding-top: 10px;">
+        <div style="margin-bottom: 10px;">
+          <label for="mesFiltro" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Filtrar por mes:</label>
+          <input type="month" id="mesFiltro">
+        </div>
+        <div style="text-align: center;">
+          <button class="btn-exportar" onclick="exportar('mes')">Copiar Mes 📋</button>
+          <button class="btn-exportar" onclick="exportar('todo')">Copiar Todo 📋</button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+
+        <div style="margin-bottom: 10px;">
+          <label for="anioExportar" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Año del calendario:</label>
+          <select id="anioExportar"></select>
+        </div>
+        <div style="text-align: center;">
+          <button class="btn-calendario" id="btnExportarAnual" onclick="exportarCalendarioAnioExcel()">📅 Calendario Anual (Excel)</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- Sección de Copia de Seguridad (Backup) -->
+    <details class="export-section">
+      <summary class="export-summary">💾 Copia de Seguridad (Backup)</summary>
+      <div style="padding-top: 10px;">
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 10px;">Guardá un archivo de respaldo en tu PC para no perder datos.</p>
+        <div style="text-align: center; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+          <button class="btn-exportar" onclick="descargarBackup()">📥 Descargar Backup</button>
+          <label class="btn-exportar" style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 38px; padding: 0 15px; border-radius: 4px; margin: 6px; font-weight: bold;">
+            📤 Cargar Backup <input type="file" id="inputBackup" accept=".json" style="display: none;" onchange="importarBackup(event)">
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <div style="margin-top: 15px;">
+      <button class="btn-limpiar" onclick="borrarTodo()">Borrar Todo</button>
+    </div>
+
+    <div class="warning-note">
+      💡 <strong>Nota sobre tus datos:</strong> Si usas la aplicación en <strong>Modo Local</strong>, tus datos se guardan en el navegador. Si inicias sesión para <strong>sincronizar en la nube</strong>, tus registros se guardan de forma segura en Cloud Firestore y podrás consultarlos desde cualquier dispositivo.
+    </div>
+  </div>
+
+  <div class="bloque">
+    <h2>ℹ️ ¿Qué es "⏱️ Registro de Llegadas"?</h2>
+    <p>Es una herramienta web diseñada para llevar el control diario de tus llegadas tarde digitando la hora libremente con formateo automático. Permite registrar fechas, visualizar los registros agrupados por año y mes, exportar directamente a Excel y realizar copias de seguridad.</p>
+  </div>
+
+  <footer id="teamName">
+    <a href="https://tools.darkpassenger.workers.dev/" target="_blank">Desarrollado por Dark Passenger Tools</a>
+  </footer>
+
+  <!-- Modal Autenticación -->
+  <div id="modalAuth" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="cerrarModalAuth()">&times;</span>
+      <h2>☁️ Sincronizar en la Nube</h2>
+      <p style="font-size: 13px; color: var(--text-muted);">Ingresa con tu cuenta para respaldar y sincronizar tus llegadas tarde en Firestore</p>
+      
+      <input type="email" id="authEmail" placeholder="Correo electrónico">
+      
+      <div class="password-wrapper">
+        <input type="password" id="authPassword" placeholder="Contraseña">
+        <button type="button" class="btn-toggle-pass" onclick="togglePasswordVisibility()" title="Mostrar/Ocultar contraseña">👁️</button>
+      </div>
+      
+      <div style="margin-top: 10px;">
+        <button onclick="iniciarSesion()" style="width: 100%;">Ingresar</button>
+        <button onclick="registrarUsuario()" style="width: 100%; background: #28a745; margin-top: 5px;">Crear Cuenta</button>
+
+        <button onclick="recuperarContrasena()" style="width: 100%; background: transparent; color: var(--text-muted); border: none; text-decoration: underline; font-size: 12px; margin-top: 8px; cursor: pointer;">
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+      
+      <div id="authError" style="color: #ff5252; font-size: 12px; margin-top: 10px;"></div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxU5ijSn8AAgVh7HpYLqkc1n5A7ZFLFhM",
+      authDomain: "darkpassenger-1316d.firebaseapp.com",
+      projectId: "darkpassenger-1316d",
+      storageBucket: "darkpassenger-1316d.firebasestorage.app",
+      messagingSenderId: "115304417945",
+      appId: "1:115304417945:web:4768035e680380cf9d8608",
+      measurementId: "G-VQN13DJF7B"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    db.enablePersistence({ synchronizeTabs: true })
+      .catch(err => console.warn("Modo fuera de línea listo."));
+
+    let usuarioActual = null;
+    let esModoInvitado = true;
+    let registros = JSON.parse(localStorage.getItem("registrosTardias")) || [];
+    let editandoId = null;
+    let desuscribirFirestore = null;
+
+    const THEME_KEY = 'llegada_tema';
+    const LOCAL_STORAGE_KEY = 'registrosTardias';
+
+    // Asignar IDs únicos a registros locales antiguos
+    registros = registros.map(item => {
+      if (!item.id) {
+        item.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+      }
+      return item;
+    });
+
+    window.addEventListener('online', actualizarEstadoRed);
+    window.addEventListener('offline', actualizarEstadoRed);
+
+    function actualizarEstadoRed() {
+      const badge = document.getElementById("netStatus");
+      if (esModoInvitado) {
+        badge.className = "net-status net-local";
+        badge.innerText = "💾 Modo Local";
+      } else if (navigator.onLine) {
+        badge.className = "net-status net-online";
+        badge.innerText = "🌐 En línea";
+      } else {
+        badge.className = "net-status net-offline";
+        badge.innerText = "⚡ Modo fuera de línea";
+      }
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        usuarioActual = user;
+        esModoInvitado = false;
+        cerrarModalAuth();
+        actualizarInterfazEncabezado();
+        migrarDatosLocalesAFirebase(user);
+        escucharRegistrosFirebase();
+      } else {
+        usuarioActual = null;
+        esModoInvitado = true;
+        if (desuscribirFirestore) desuscribirFirestore();
+        actualizarInterfazEncabezado();
+        cargarRegistrosModoLocal();
+      }
+    });
+
+    function actualizarInterfazEncabezado() {
+      const btnAuthHeader = document.getElementById("btnAuthHeader");
+      const userBadge = document.getElementById("userEmailBadge");
+
+      if (esModoInvitado) {
+        userBadge.innerText = "👤 MODO LOCAL";
+        btnAuthHeader.className = "btn-sync";
+        btnAuthHeader.innerHTML = "☁️ Sincronizar";
+        btnAuthHeader.onclick = abrirModalAuth;
+      } else {
+        userBadge.innerText = `👤 ${usuarioActual.email}`;
+        btnAuthHeader.className = "btn-logout";
+        btnAuthHeader.innerHTML = "Salir";
+        btnAuthHeader.onclick = cerrarSesion;
+      }
+      actualizarEstadoRed();
+    }
+
+    function abrirModalAuth() {
+      document.getElementById("modalAuth").style.display = "flex";
+      document.getElementById("authError").innerText = "";
+    }
+
+    function cerrarModalAuth() {
+      document.getElementById("modalAuth").style.display = "none";
+    }
+
+    function togglePasswordVisibility() {
+      const inputPass = document.getElementById("authPassword");
+      const btnToggle = document.querySelector(".btn-toggle-pass");
+      if (inputPass.type === "password") {
+        inputPass.type = "text";
+        btnToggle.textContent = "🙈";
+      } else {
+        inputPass.type = "password";
+        btnToggle.textContent = "👁️";
+      }
+    }
+
+    function registrarUsuario() {
+      const email = document.getElementById("authEmail").value.trim();
+      const pass = document.getElementById("authPassword").value.trim();
+      if (!email || !pass) return alert("Ingresa un correo y contraseña.");
+      
+      auth.createUserWithEmailAndPassword(email, pass)
+        .catch(error => {
+          document.getElementById("authError").style.color = "#ff5252";
+          document.getElementById("authError").innerText = "Error: " + error.message;
+        });
+    }
+
+    function iniciarSesion() {
+      const email = document.getElementById("authEmail").value.trim();
+      const pass = document.getElementById("authPassword").value.trim();
+      if (!email || !pass) return alert("Ingresa correo y contraseña.");
+
+      auth.signInWithEmailAndPassword(email, pass)
+        .catch(error => {
+          document.getElementById("authError").style.color = "#ff5252";
+          document.getElementById("authError").innerText = "Error: " + error.message;
+        });
+    }
+
+    function recuperarContrasena() {
+      const email = document.getElementById("authEmail").value.trim();
+      const authErrorDiv = document.getElementById("authError");
+
+      if (!email) {
+        authErrorDiv.style.color = "#ff5252";
+        authErrorDiv.innerText = "Por favor, ingresa tu correo electrónico para enviarte el enlace de recuperación.";
+        return;
+      }
+
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          authErrorDiv.style.color = "#28a745";
+          authErrorDiv.innerText = "¡Correo enviado! Revisa tu bandeja de entrada o SPAM para restablecer tu contraseña.";
+        })
+        .catch((error) => {
+          authErrorDiv.style.color = "#ff5252";
+          authErrorDiv.innerText = "Error: " + error.message;
+        });
+    }
+
+    function cerrarSesion() {
+      auth.signOut();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      inicializarTema();
+      const hoy = new Date().toISOString().split("T")[0];
+      const horaActual = new Date().toTimeString().slice(0, 5);
+      
+      document.getElementById("fechaTardia").value = hoy;
+      document.getElementById("horaTardia").value = horaActual;
+      document.getElementById("mesFiltro").value = hoy.slice(0, 7);
+
+      poblarSelectorAnio();
+      actualizarDiaPreview();
+      mostrarRegistros();
+
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const temaActual = document.documentElement.getAttribute('data-theme');
+        aplicarTema(temaActual === 'dark' ? 'light' : 'dark');
+      });
+    });
+
+    function inicializarTema() {
+      const temaGuardado = localStorage.getItem(THEME_KEY) || 'dark';
+      aplicarTema(temaGuardado);
+    }
+
+    function aplicarTema(tema) {
+      document.documentElement.setAttribute('data-theme', tema);
+      const btnTema = document.getElementById('theme-toggle');
+      btnTema.textContent = (tema === 'dark') ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+      localStorage.setItem(THEME_KEY, tema);
+    }
+
+    window.onclick = function(event) {
+      const modalAuth = document.getElementById("modalAuth");
+      if (event.target === modalAuth) cerrarModalAuth();
+    }
+
+    function aplicarMascaraInput(input) {
+      let valor = input.value.replace(/\D/g, "");
+      if (valor.length > 4) valor = valor.slice(0, 4);
+      if (valor.length >= 3) {
+        input.value = valor.slice(0, 2) + ":" + valor.slice(2);
+      } else {
+        input.value = valor;
+      }
+    }
+
+    function poblarSelectorAnio() {
+      const anioActual = new Date().getFullYear();
+      let anios = new Set();
+      for (let a = anioActual - 3; a <= anioActual + 2; a++) anios.add(a);
+      registros.forEach(r => anios.add(Number(r.fecha.slice(0, 4))));
+
+      const select = document.getElementById("anioExportar");
+      select.innerHTML = "";
+      [...anios].sort((a, b) => a - b).forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a;
+        opt.textContent = a;
+        if (a === anioActual) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function obtenerNombreDia(fechaStr) {
+      const [anio, mes, dia] = fechaStr.split("-");
+      const fecha = new Date(anio, mes - 1, dia);
+      let nombre = fecha.toLocaleDateString('es-ES', { weekday: 'long' });
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function obtenerNombreMes(mesNum) {
+      const fecha = new Date(2026, mesNum - 1, 1);
+      let nombre = fecha.toLocaleString('es-ES', { month: 'long' });
+      return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    }
+
+    function actualizarDiaPreview() {
+      const fechaVal = document.getElementById("fechaTardia").value;
+      if (fechaVal) {
+        document.getElementById("previewDia").innerText = `📅 ${obtenerNombreDia(fechaVal)}`;
+      } else {
+        document.getElementById("previewDia").innerText = "";
+      }
+    }
+
+    function guardarDatosLocales() {
+      if (esModoInvitado) {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(registros));
+      }
+    }
+
+    function cargarRegistrosModoLocal() {
+      const datosGuardados = localStorage.getItem(LOCAL_STORAGE_KEY);
+      registros = datosGuardados ? JSON.parse(datosGuardados) : [];
+      registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+      mostrarRegistros();
+      poblarSelectorAnio();
+    }
+
+    function migrarDatosLocalesAFirebase(user) {
+      const datosLocalesGuardados = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!datosLocalesGuardados) return;
+
+      try {
+        const registrosLocales = JSON.parse(datosLocalesGuardados);
+        if (!Array.isArray(registrosLocales) || registrosLocales.length === 0) {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+          return;
+        }
+
+        const quiereSubirLocales = confirm(
+          `⚠️ Tienes ${registrosLocales.length} registros guardados localmente en este navegador.\n\n` +
+          `¿Deseas SUBIR estos datos locales a tu cuenta en la nube?\n\n` +
+          `• [Aceptar] = Sube tus datos locales a la nube.\n` +
+          `• [Cancelar] = Descarta los datos locales y usa únicamente lo que ya esté en la nube.`
+        );
+
+        if (quiereSubirLocales) {
+          db.collection("usuarios").doc(user.uid).collection("llegadas").get().then(snapshot => {
+            const batch = db.batch();
+            registrosLocales.forEach((item) => {
+              const nuevoDocRef = db.collection("usuarios").doc(user.uid).collection("llegadas").doc();
+              batch.set(nuevoDocRef, {
+                fecha: item.fecha,
+                hora: item.hora || "No especificada",
+                motivo: item.motivo || ""
+              });
+            });
+
+            return batch.commit();
+          }).then(() => {
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            alert("¡Datos locales subidos y sincronizados con éxito! ✅");
+          }).catch(error => console.error("Error al sincronizar:", error));
+        } else {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+          alert("Se han descartado los datos locales. Tu aplicación ahora usa los datos de la nube. ☁️");
+          escucharRegistrosFirebase();
+        }
+
+      } catch (e) {
+        console.error("Error procesando localStorage:", e);
+      }
+    }
+
+    function escucharRegistrosFirebase() {
+      if (!usuarioActual || esModoInvitado) return;
+
+      desuscribirFirestore = db.collection("usuarios")
+        .doc(usuarioActual.uid)
+        .collection("llegadas")
+        .onSnapshot(snapshot => {
+          registros = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+          mostrarRegistros();
+          poblarSelectorAnio();
+        }, error => {
+          console.error("Error al obtener registros: ", error);
+        });
+    }
+
+    function registrarTardia() {
+      const fecha = document.getElementById("fechaTardia").value;
+      const horaInput = document.getElementById("horaTardia").value.trim();
+      const motivoInput = document.getElementById("motivoTardia").value.trim();
+      
+      if (!fecha) return alert("Selecciona una fecha válida");
+
+      if (registros.some(r => r.fecha === fecha)) {
+        return alert("¡Ese día ya está registrado!");
+      }
+
+      const hora = horaInput !== "" ? horaInput : "No especificada";
+      const motivo = motivoInput !== "" ? motivoInput : "";
+
+      if (esModoInvitado) {
+        const id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+        registros.push({ id, fecha, hora, motivo });
+        registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+        guardarDatosLocales();
+        mostrarRegistros();
+        poblarSelectorAnio();
+
+        document.getElementById("mesFiltro").value = fecha.slice(0, 7);
+        document.getElementById("motivoTardia").value = "";
+      } else {
+        db.collection("usuarios").doc(usuarioActual.uid).collection("llegadas").add({
+          fecha, hora, motivo
+        }).then(() => {
+          document.getElementById("mesFiltro").value = fecha.slice(0, 7);
+          document.getElementById("motivoTardia").value = "";
+        }).catch(err => alert("Error al guardar en la nube: " + err.message));
+      }
+    }
+
+    function eliminarRegistro(idAEliminar) {
+      const reg = registros.find(r => r.id === idAEliminar);
+      if (!reg) return;
+
+      const partes = reg.fecha.split("-");
+      const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      const diaSemana = obtenerNombreDia(reg.fecha);
+
+      if (confirm(`¿Estás seguro de que deseas borrar el registro del ${diaSemana} ${fechaFormateada}?`)) {
+        if (esModoInvitado) {
+          registros = registros.filter(r => r.id !== idAEliminar);
+          guardarDatosLocales();
+          mostrarRegistros();
+          poblarSelectorAnio();
+        } else {
+          db.collection("usuarios").doc(usuarioActual.uid).collection("llegadas").doc(idAEliminar).delete()
+            .catch(err => alert("Error al eliminar de la nube: " + err.message));
+        }
+      }
+    }
+
+    function activarEdicion(id) {
+      editandoId = id;
+      mostrarRegistros();
+    }
+
+    function cancelarEdicion() {
+      editandoId = null;
+      mostrarRegistros();
+    }
+
+    function guardarEdicion(idOriginal) {
+      const nuevaFecha = document.getElementById(`editFecha_${idOriginal}`).value;
+      const nuevaHora = document.getElementById(`editHora_${idOriginal}`).value.trim();
+      const nuevoMotivo = document.getElementById(`editMotivo_${idOriginal}`).value.trim();
+
+      if (!nuevaFecha) return alert("Por favor selecciona una fecha válida.");
+
+      if (registros.some(r => r.fecha === nuevaFecha && r.id !== idOriginal)) {
+        return alert("Ya existe un registro guardado en la nueva fecha seleccionada.");
+      }
+
+      const horaDefinitiva = nuevaHora !== "" ? nuevaHora : "No especificada";
+
+      if (esModoInvitado) {
+        const index = registros.findIndex(r => r.id === idOriginal);
+        if (index !== -1) {
+          registros[index] = {
+            id: idOriginal,
+            fecha: nuevaFecha,
+            hora: horaDefinitiva,
+            motivo: nuevoMotivo
+          };
+          registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+          guardarDatosLocales();
+          editandoId = null;
+          poblarSelectorAnio();
+          mostrarRegistros();
+        }
+      } else {
+        db.collection("usuarios").doc(usuarioActual.uid).collection("llegadas").doc(idOriginal).update({
+          fecha: nuevaFecha,
+          hora: horaDefinitiva,
+          motivo: nuevoMotivo
+        }).then(() => {
+          editandoId = null;
+        }).catch(err => alert("Error al actualizar en la nube: " + err.message));
+      }
+    }
+
+    // Renderizar registros anidados: Año -> Mes (Con apertura automática del Mes Actual)
+    function mostrarRegistros() {
+      const div = document.getElementById("listaRegistros");
+      const totalGeneralDiv = document.getElementById("totalGeneral");
+      
+      totalGeneralDiv.innerHTML = `Total histórico: <strong>${registros.length}</strong> registros`;
+
+      if (registros.length === 0) {
+        div.innerHTML = "<p style='color: var(--text-muted); margin-top: 15px;'>No hay registros todavía.</p>";
+        return;
+      }
+
+      // Agrupar por Año -> Mes
+      let estructura = {};
+      registros.forEach(item => {
+        const anio = item.fecha.slice(0, 4);
+        const mes = item.fecha.slice(5, 7);
+        if (!estructura[anio]) estructura[anio] = {};
+        if (!estructura[anio][mes]) estructura[anio][mes] = [];
+        estructura[anio][mes].push(item);
+      });
+
+      const anioActualStr = new Date().getFullYear().toString();
+      const mesActualStr = String(new Date().getMonth() + 1).padStart(2, "0");
+
+      let html = "";
+      const aniosOrdenados = Object.keys(estructura).sort().reverse();
+
+      aniosOrdenados.forEach(anio => {
+        const isAnioOpen = anio === anioActualStr ? "open" : "";
+        let totalRegistrosAnio = 0;
+        Object.values(estructura[anio]).forEach(mList => totalRegistrosAnio += mList.length);
+
+        html += `
+          <details class="anio-grupo" ${isAnioOpen}>
+            <summary class="summary-anio">
+              <span>📁 Año ${anio}</span>
+              <span class="badge-count">${totalRegistrosAnio} ${totalRegistrosAnio === 1 ? 'registro' : 'registros'}</span>
+            </summary>
+            <div class="anio-contenido">`;
+
+        const mesesOrdenados = Object.keys(estructura[anio]).sort().reverse();
+
+        mesesOrdenados.forEach(mes => {
+          const isMesOpen = (anio === anioActualStr && mes === mesActualStr) ? "open" : "";
+          const diasDelMes = estructura[anio][mes].sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+          html += `
+            <details class="mes-grupo" ${isMesOpen}>
+              <summary class="summary-mes">
+                <span>📅 ${obtenerNombreMes(Number(mes))}</span>
+                <span class="badge-count-sub">${diasDelMes.length} ${diasDelMes.length === 1 ? 'registro' : 'registros'}</span>
+              </summary>
+              <div class="mes-contenido">
+                <table>`;
+
+          diasDelMes.forEach(item => {
+            if (item.id === editandoId) {
+              // Modo Edición In-situ
+              html += `
+                <tr style="background: var(--input-bg);">
+                  <td colspan="2" style="padding: 10px;">
+                    <div style="font-size: 12px; color: #ff9800; font-weight: bold; margin-bottom: 6px;">✏️ Editando registro</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <div style="display: flex; gap: 6px;">
+                        <input type="date" id="editFecha_${item.id}" value="${item.fecha}" style="height: 36px; padding: 0 6px; flex: 1.3;">
+                        <input type="text" id="editHora_${item.id}" value="${item.hora}" maxlength="5" placeholder="Hora" oninput="aplicarMascaraInput(this)" style="height: 36px; padding: 0 6px; flex: 1;">
+                      </div>
+                      <input type="text" id="editMotivo_${item.id}" value="${item.motivo || ''}" placeholder="Motivo" style="height: 36px; padding: 0 6px;">
+                      <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px;">
+                        <button style="width: auto; padding: 0 12px; height: 32px; background: #25d366;" onclick="guardarEdicion('${item.id}')">💾 Guardar</button>
+                        <button style="width: auto; padding: 0 12px; height: 32px; background: #757575;" onclick="cancelarEdicion()">❌ Cancelar</button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>`;
+            } else {
+              // Modo Lectura normal
+              const partes = item.fecha.split("-");
+              const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+              const diaSemana = obtenerNombreDia(item.fecha);
+              const lineaMotivo = item.motivo ? `<br><span style="color: var(--text-muted); font-size: 11px;">📝 ${item.motivo}</span>` : "";
+
+              html += `
+                <tr>
+                  <td>
+                    🔹 <strong>${diaSemana}</strong> ${fechaFormateada}<br>
+                    <span style="color: var(--text-muted); font-size: 11px;">🕒 ${item.hora}</span>${lineaMotivo}
+                  </td>
+                  <td>
+                    <button class="action-btn btn-edit" onclick="activarEdicion('${item.id}')" title="Editar">✏️</button>
+                    <button class="action-btn btn-delete" onclick="eliminarRegistro('${item.id}')" title="Borrar">🗑️</button>
+                  </td>
+                </tr>`;
+            }
+          });
+
+          html += `
+                </table>
+              </div>
+            </details>`;
+        });
+
+        html += `
+            </div>
+          </details>`;
+      });
+
+      div.innerHTML = html;
+    }
+
+    function generarTextoExcel(tipo) {
+      let listaAExportar = [];
+
+      if (tipo === "mes") {
+        const mesSeleccionado = document.getElementById("mesFiltro").value;
+        if (!mesSeleccionado) return "";
+        listaAExportar = registros.filter(r => r.fecha.startsWith(mesSeleccionado));
+      } else {
+        listaAExportar = [...registros].sort((a, b) => a.fecha.localeCompare(b.fecha));
+      }
+
+      if (listaAExportar.length === 0) return "No hay registros en este período.";
+
+      let texto = "Día\tFecha\tHora\tMotivo\n";
+      listaAExportar.forEach(item => {
+        const partes = item.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const diaSemana = obtenerNombreDia(item.fecha);
+        texto += `${diaSemana}\t${fechaFormateada}\t${item.hora}\t${item.motivo || ""}\n`;
+      });
+      return texto;
+    }
+
+    function exportar(tipo) {
+      const texto = generarTextoExcel(tipo);
+      if (!texto || texto.startsWith("No hay")) {
+        return alert("No hay registros para exportar en el período seleccionado.");
+      }
+
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("¡Copiado para Excel! Ya podés pegarlo (Ctrl + V) en tu planilla ✅");
+      }).catch(() => {
+        alert("Error al copiar automáticamente.");
+      });
+    }
+
+    // ============ CALENDARIO ANUAL EN EXCEL REAL (ExcelJS) ============
+    const DIAS_SEMANA_DOM = ["D", "L", "M", "X", "J", "V", "S"];
+
+    function numeroSemanaAnio(fecha, anio) {
+      const inicioAnio = new Date(anio, 0, 1);
+      const diaSemanaInicio = inicioAnio.getDay();
+      const primerDomingo = new Date(anio, 0, 1 - diaSemanaInicio);
+      const diffDias = Math.round((fecha - primerDomingo) / 86400000);
+      return Math.floor(diffDias / 7) + 1;
+    }
+
+    function generarSemanasMes(anio, mes) {
+      const primerDia = new Date(anio, mes - 1, 1);
+      const ultimoDia = new Date(anio, mes, 0);
+
+      let inicioSemana = new Date(primerDia);
+      inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay());
+
+      let semanas = [];
+      while (inicioSemana <= ultimoDia) {
+        const weekNum = numeroSemanaAnio(inicioSemana, anio);
+        let dias = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(inicioSemana);
+          d.setDate(d.getDate() + i);
+          dias.push(d.getMonth() === mes - 1 ? d.getDate() : null);
+        }
+        semanas.push({ weekNum, dias });
+        inicioSemana.setDate(inicioSemana.getDate() + 7);
+      }
+      return semanas;
+    }
+
+    const COL_INICIO_MES = [1, 10, 19];
+    const COLUMNAS_TOTALES = 26; 
+    const COL_TABLA_INICIO = COLUMNAS_TOTALES + 2; 
+
+    function agregarBloqueTresMesesExcel(ws, anio, mesInicio, filaInicio, bordeCompleto) {
+      const meses = [mesInicio, mesInicio + 1, mesInicio + 2];
+      const datosMeses = meses.map(mes => {
+        const mesKey = `${anio}-${String(mes).padStart(2, "0")}`;
+        return {
+          mes,
+          nombreMes: `${obtenerNombreMes(mes)} ${anio}`,
+          semanas: generarSemanasMes(anio, mes),
+          fechasRegistradas: new Set(
+            registros.filter(r => r.fecha.startsWith(mesKey)).map(r => r.fecha)
+          )
+        };
+      });
+
+      const maxSemanas = Math.max(...datosMeses.map(m => m.semanas.length));
+      let fila = filaInicio;
+
+      datosMeses.forEach((m, idx) => {
+        const colBase = COL_INICIO_MES[idx];
+        ws.mergeCells(fila, colBase + 1, fila, colBase + 7);
+        for (let c = colBase + 1; c <= colBase + 7; c++) {
+          const celda = ws.getCell(fila, c);
+          celda.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+          celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } };
+          celda.alignment = { horizontal: "center", vertical: "middle" };
+          celda.border = bordeCompleto;
+        }
+        ws.getCell(fila, colBase + 1).value = m.nombreMes;
+      });
+      fila++;
+
+      datosMeses.forEach((m, idx) => {
+        const colBase = COL_INICIO_MES[idx];
+        DIAS_SEMANA_DOM.forEach((d, i) => {
+          const celda = ws.getCell(fila, colBase + 1 + i);
+          celda.value = d;
+          celda.font = { bold: true };
+          celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDDDDDD" } };
+          celda.alignment = { horizontal: "center" };
+          celda.border = bordeCompleto;
+        });
+      });
+      fila++;
+
+      for (let i = 0; i < maxSemanas; i++) {
+        datosMeses.forEach((m, idx) => {
+          const colBase = COL_INICIO_MES[idx];
+          const semana = m.semanas[i];
+
+          const celdaSemana = ws.getCell(fila, colBase);
+          if (semana) {
+            celdaSemana.value = semana.weekNum;
+            celdaSemana.font = { size: 9, color: { argb: "FF888888" } };
+            celdaSemana.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0F0F0" } };
+            celdaSemana.alignment = { horizontal: "center" };
+          }
+
+          for (let d = 0; d < 7; d++) {
+            const celda = ws.getCell(fila, colBase + 1 + d);
+            celda.border = bordeCompleto;
+            celda.alignment = { horizontal: "center" };
+            if (semana && semana.dias[d] !== null) {
+              const dia = semana.dias[d];
+              celda.value = dia;
+              const fechaStr = `${anio}-${String(m.mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+              if (m.fechasRegistradas.has(fechaStr)) {
+                celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFF0000" } };
+                celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+              }
+            }
+          }
+        });
+        fila++;
+      }
+
+      return fila;
+    }
+
+    function agregarTablaRegistrosExcel(ws, anio, colInicio, bordeCompleto) {
+      const filaInicio = 2;
+      const registrosAnio = registros
+        .filter(r => r.fecha.startsWith(String(anio)))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+      const encabezados = ["Fecha", "Hora", "Motivo"];
+      encabezados.forEach((titulo, i) => {
+        const celda = ws.getCell(filaInicio, colInicio + i);
+        celda.value = titulo;
+        celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } };
+        celda.alignment = { horizontal: "center" };
+        celda.border = bordeCompleto;
+      });
+
+      if (registrosAnio.length === 0) {
+        const celda = ws.getCell(filaInicio + 1, colInicio);
+        ws.mergeCells(filaInicio + 1, colInicio, filaInicio + 1, colInicio + 2);
+        celda.value = "Sin registros en este año";
+        celda.font = { italic: true, color: { argb: "FF888888" } };
+        celda.alignment = { horizontal: "center" };
+        celda.border = bordeCompleto;
+        return filaInicio + 2;
+      }
+
+      registrosAnio.forEach((r, idx) => {
+        const fila = filaInicio + 1 + idx;
+        const partes = r.fecha.split("-");
+        const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const valores = [fechaFormateada, r.hora || "-", r.motivo || "-"];
+        const filaPar = idx % 2 === 1;
+
+        valores.forEach((valor, i) => {
+          const celda = ws.getCell(fila, colInicio + i);
+          celda.value = valor;
+          celda.alignment = { horizontal: i === 2 ? "left" : "center" };
+          celda.border = bordeCompleto;
+          if (filaPar) {
+            celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F5F5" } };
+          }
+        });
+      });
+
+      ws.getColumn(colInicio).width = 12;
+      ws.getColumn(colInicio + 1).width = 8;
+      ws.getColumn(colInicio + 2).width = 24;
+      ws.getColumn(colInicio - 1).width = 2;
+
+      return filaInicio + 1 + registrosAnio.length;
+    }
+
+    async function exportarCalendarioAnioExcel() {
+      const anio = Number(document.getElementById("anioExportar").value);
+      if (!anio) return alert("Selecciona un año.");
+
+      const btn = document.getElementById("btnExportarAnual");
+      const textoOriginal = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = "Generando...";
+
+      try {
+        const workbook = new ExcelJS.Workbook();
+        const ws = workbook.addWorksheet(`${anio}`);
+
+        const bordeFino = { style: "thin", color: { argb: "FF999999" } };
+        const bordeCompleto = { top: bordeFino, left: bordeFino, bottom: bordeFino, right: bordeFino };
+
+        ws.mergeCells(1, 1, 1, COLUMNAS_TOTALES);
+        const celdaAnio = ws.getCell(1, 1);
+        celdaAnio.value = anio;
+        celdaAnio.font = { bold: true, size: 16 };
+        celdaAnio.alignment = { horizontal: "center" };
+
+        let fila = 2;
+        [1, 4, 7, 10].forEach(mesInicio => {
+          fila = agregarBloqueTresMesesExcel(ws, anio, mesInicio, fila, bordeCompleto);
+          fila++;
+        });
+
+        agregarTablaRegistrosExcel(ws, anio, COL_TABLA_INICIO, bordeCompleto);
+
+        for (let c = 1; c <= COLUMNAS_TOTALES; c++) {
+          const esColumnaSemana = COL_INICIO_MES.includes(c);
+          const esEspaciador = c === 9 || c === 18;
+          ws.getColumn(c).width = esEspaciador ? 2 : (esColumnaSemana ? 4 : 5);
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `calendario_anual_llegadas_${anio}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert("Error al generar el Excel. Probá de nuevo.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+      }
+    }
+
+    function descargarBackup() {
+      if (registros.length === 0) return alert("No hay registros para respaldar.");
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `backup_llegadas_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function importarBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const datos = JSON.parse(e.target.result);
+          if (Array.isArray(datos)) {
+            if (confirm("¿Reemplazar datos actuales? (Aceptar = Reemplazar, Cancelar = Combinar con existentes)")) {
+              registros = datos;
+            } else {
+              datos.forEach(nuevo => {
+                if (!nuevo.id) nuevo.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+                if (!registros.some(r => r.fecha === nuevo.fecha)) {
+                  registros.push(nuevo);
+                }
+              });
+            }
+            registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
+            if (esModoInvitado) guardarDatosLocales();
+            mostrarRegistros();
+            poblarSelectorAnio();
+            alert("¡Copia de seguridad cargada con éxito! ✅");
+          } else {
+            alert("El archivo no tiene el formato correcto.");
+          }
+        } catch (err) {
+          alert("Error al leer el archivo JSON.");
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    }
+
+    function borrarTodo() {
+      if (confirm("¿Estás seguro de borrar TODOS los registros de llegadas?")) {
+        registros = [];
+        if (esModoInvitado) {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+        }
+        mostrarRegistros();
+        poblarSelectorAnio();
+      }
+    }
+  </script>
+</body>
+</html>

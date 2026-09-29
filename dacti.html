@@ -122,6 +122,8 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            width: 320px;
+            text-align: left;
         }
     </style>
 </head>
@@ -159,10 +161,18 @@
         </div>
     </div>
 
+    <!-- Modal con resumen de resultados integrado -->
     <div id="modal-record" class="modal oculto">
         <div class="modal-contenido">
-            <h2>¡Partida Terminada! 🎉</h2>
-            <p>Ingresa tu nombre para guardar tu puntaje:</p>
+            <h2 style="text-align: center; margin-top: 0;">¡Partida Terminada! 🎉</h2>
+            
+            <div id="resumen-final" style="background-color: var(--bg-color); padding: 12px; border-radius: 6px;">
+                <p style="margin: 5px 0;">PPM: <span id="modal-ppm" style="color: var(--primary); font-weight: bold;">0</span></p>
+                <p style="margin: 5px 0;">Precisión: <span id="modal-precision" style="color: var(--correct); font-weight: bold;">0</span>%</p>
+                <p style="margin: 5px 0;">Tiempo: <span id="modal-tiempo" style="color: var(--text-color); font-weight: bold;">0</span>s</p>
+            </div>
+
+            <p style="margin-bottom: 0;">Ingresa tu nombre para guardar tu puntaje:</p>
             <input type="text" id="input-nombre" placeholder="Tu nombre..." maxlength="15">
             <button id="btn-guardar-puntaje">Guardar en Firebase</button>
         </div>
@@ -172,7 +182,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Configuración de Firebase
         const firebaseConfig = {
           apiKey: "AIzaSyCxU5ijSn8AAgVh7HpYLqkc1n5A7ZFLFhM",
           authDomain: "darkpassenger-1316d.firebaseapp.com",
@@ -186,7 +195,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Variables de estado del juego
         let modoJuego = 'fijo';
         let textoObjetivo = "";
         let arraySpans = [];
@@ -200,35 +208,29 @@
         let teclasPulsadas = 0;
         let cronometroIniciado = false; 
 
-        // Elementos del DOM
         const textoDisplay = document.getElementById('texto-display');
         const btnIniciar = document.getElementById('btn-iniciar');
         const selectorModo = document.getElementById('selector-modo');
         const modalRecord = document.getElementById('modal-record');
         const btnGuardar = document.getElementById('btn-guardar-puntaje');
 
-        // --- LÓGICA PARA LEER EL ARCHIVO texto.json ---
+        // Función para obtener texto del archivo local 'texto.json'
         async function obtenerTexto() {
             try {
-                // Hacemos fetch a tu archivo texto.json con el parámetro de tiempo para evitar caché
                 const respuesta = await fetch('texto.json?t=' + new Date().getTime());
                 
                 if (!respuesta.ok) {
-                    throw new Error(`No se pudo cargar el archivo (Código: ${respuesta.status})`);
+                    throw new Error(`Error HTTP: ${respuesta.status}`);
                 }
 
                 const bancoDeTextos = await respuesta.json();
-                
-                // Seleccionamos la lista según el modo elegido ('fijo' o 'tiempo')
                 const listaTextos = bancoDeTextos[modoJuego];
-                
-                // Elegimos un texto al azar
                 const indiceAleatorio = Math.floor(Math.random() * listaTextos.length);
                 
                 return listaTextos[indiceAleatorio];
             } catch (error) {
                 console.error("Error al cargar los textos:", error);
-                return "Hubo un error al cargar el archivo texto.json. Revisa la consola.";
+                return "Error al cargar el archivo texto.json. Verifica que esté en la misma carpeta.";
             }
         }
 
@@ -288,6 +290,7 @@
             if(e.key === " ") e.preventDefault(); 
             if (e.key.length !== 1 && e.key !== 'Backspace') return;
 
+            // Inicia el cronómetro únicamente con la primera tecla válida
             if (!cronometroIniciado) {
                 cronometroIniciado = true;
                 iniciarTemporizador();
@@ -351,6 +354,17 @@
             juegoActivo = false;
             clearInterval(intervaloTimer);
             
+            // Capturamos las métricas finales
+            const ppmFinal = document.getElementById('ppm-display').innerText;
+            const precisionFinal = document.getElementById('precision-display').innerText;
+            const tiempoFinal = modoJuego === 'tiempo' ? '60' : document.getElementById('tiempo-display').innerText;
+            
+            // Inyectamos las métricas en el cuadro de resumen del Modal
+            document.getElementById('modal-ppm').innerText = ppmFinal;
+            document.getElementById('modal-precision').innerText = precisionFinal;
+            document.getElementById('modal-tiempo').innerText = tiempoFinal;
+            
+            // Mostramos el modal
             modalRecord.classList.remove('oculto');
             
             btnGuardar.onclick = async () => {
@@ -360,10 +374,7 @@
                 btnGuardar.innerText = "Guardando...";
                 btnGuardar.disabled = true;
                 
-                const ppmFinal = document.getElementById('ppm-display').innerText;
-                const precisionFinal = document.getElementById('precision-display').innerText;
-                
-                const puntaje = modoJuego === 'tiempo' ? Number(ppmFinal) : tiempoTranscurrido;
+                const puntaje = modoJuego === 'tiempo' ? Number(ppmFinal) : Number(tiempoFinal);
                 const coleccion = modoJuego === 'tiempo' ? 'top_modo_tiempo' : 'top_modo_texto_fijo';
                 
                 await addDoc(collection(db, coleccion), {
@@ -378,7 +389,7 @@
                 btnGuardar.disabled = false;
                 document.getElementById('input-nombre').value = "";
                 
-                // obtenerTop5(); <-- Comentado hasta que actives Firebase
+                // obtenerTop5(); <-- Descomentar cuando actives Firebase
             };
         }
 
@@ -409,7 +420,7 @@
             await cargarTabla('top_modo_texto_fijo', 'lista-top-fijo', 'asc');
         }
 
-        // obtenerTop5(); <-- Comentado para evitar el error de Firebase en tu entorno de pruebas
+        // obtenerTop5(); <-- Comentado para entorno de pruebas
     </script>
 </body>
 </html>

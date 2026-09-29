@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Dactilografía Multijugador</title>
+    
+    <style>
+        :root {
+            --bg-color: #1e1e2e;
+            --text-color: #cdd6f4;
+            --primary: #89b4fa;
+            --correct: #a6e3a1;
+            --incorrect: #f38ba8;
+            --surface: #313244;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .contenedor {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .controles, .estadisticas, .clasificacion {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        select, button, input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: var(--bg-color);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .area-juego {
+            background-color: var(--surface);
+            padding: 30px;
+            border-radius: 10px;
+            font-size: 24px;
+            line-height: 1.5;
+            text-align: left;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        span.letra {
+            color: #6c7086;
+        }
+        span.correcta {
+            color: var(--correct);
+        }
+        span.incorrecta {
+            color: var(--incorrect);
+            background-color: rgba(243, 139, 168, 0.2);
+            border-radius: 3px;
+        }
+        span.actual {
+            border-bottom: 2px solid var(--text-color);
+        }
+
+        .tabla-top {
+            background-color: var(--surface);
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            text-align: left;
+            min-width: 250px;
+        }
+
+        .tabla-top ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tabla-top li {
+            padding: 5px 0;
+            border-bottom: 1px solid #45475a;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.oculto {
+            display: none;
+        }
+
+        .modal-contenido {
+            background-color: var(--surface);
+            padding: 40px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>Juego de Dactilografía ⌨️</h1>
+        
+        <div class="controles">
+            <select id="selector-modo">
+                <option value="fijo">Modo: Texto Fijo (Menor tiempo gana)</option>
+                <option value="tiempo">Modo: Tiempo Límite (60s - Más PPM gana)</option>
+            </select>
+            <button id="btn-iniciar">Buscar texto</button>
+        </div>
+
+        <div class="estadisticas">
+            <div class="stat">Tiempo: <span id="tiempo-display">0</span>s</div>
+            <div class="stat">Precisión: <span id="precision-display">100</span>%</div>
+            <div class="stat">PPM: <span id="ppm-display">0</span></div>
+        </div>
+
+        <div class="area-juego" id="area-juego">
+            <p id="texto-display" style="color: #6c7086; font-size: 18px;">Presiona 'Buscar texto' para cargar un fragmento...</p>
+        </div>
+
+        <div class="clasificacion">
+            <div class="tabla-top">
+                <h3>Top 5 - Texto Fijo ⏱️</h3>
+                <ul id="lista-top-fijo">Cargando...</ul>
+            </div>
+            <div class="tabla-top">
+                <h3>Top 5 - Tiempo Límite 🚀</h3>
+                <ul id="lista-top-tiempo">Cargando...</ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-record" class="modal oculto">
+        <div class="modal-contenido">
+            <h2>¡Partida Terminada! 🎉</h2>
+            <p>Ingresa tu nombre para guardar tu puntaje:</p>
+            <input type="text" id="input-nombre" placeholder="Tu nombre..." maxlength="15">
+            <button id="btn-guardar-puntaje">Guardar en Firebase</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyCxU5ijSn8AAgVh7HpYLqkc1n5A7ZFLFhM",
+          authDomain: "darkpassenger-1316d.firebaseapp.com",
+          projectId: "darkpassenger-1316d",
+          storageBucket: "darkpassenger-1316d.firebasestorage.app",
+          messagingSenderId: "115304417945",
+          appId: "1:115304417945:web:4768035e680380cf9d8608",
+          measurementId: "G-VQN13DJF7B"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Variables de estado del juego
+        let modoJuego = 'fijo';
+        let textoObjetivo = "";
+        let arraySpans = [];
+        let indiceActual = 0;
+        let bloqueadoPorError = false;
+        let tiempoRestante = 60;
+        let tiempoTranscurrido = 0;
+        let intervaloTimer;
+        let juegoActivo = false;
+        let erroresCometidos = 0;
+        let teclasPulsadas = 0;
+        let cronometroIniciado = false; 
+
+        // Elementos del DOM
+        const textoDisplay = document.getElementById('texto-display');
+        const btnIniciar = document.getElementById('btn-iniciar');
+        const selectorModo = document.getElementById('selector-modo');
+        const modalRecord = document.getElementById('modal-record');
+        const btnGuardar = document.getElementById('btn-guardar-puntaje');
+
+        // --- LÓGICA PARA OBTENER TEXTO DESDE TU ARCHIVO JSON ---
+        async function obtenerTexto() {
+            try {
+                // Hacemos fetch a nuestro propio archivo alojado en GitHub/Cloudflare.
+                // El parámetro "?t=" evita que el navegador guarde en caché una versión vieja del archivo.
+                const respuesta = await fetch('textos.json?t=' + new Date().getTime());
+                const bancoDeTextos = await respuesta.json();
+                
+                // Seleccionamos la lista de textos según el modo
+                const listaTextos = bancoDeTextos[modoJuego];
+                
+                // Elegimos un texto al azar
+                const indiceAleatorio = Math.floor(Math.random() * listaTextos.length);
+                
+                return listaTextos[indiceAleatorio];
+            } catch (error) {
+                console.error("Error al cargar los textos:", error);
+                return "Hubo un error al cargar el archivo de textos. Por favor, revisa que textos.json exista en tu repositorio.";
+            }
+        }
+
+        btnIniciar.addEventListener('click', async () => {
+            btnIniciar.innerText = "Buscando texto...";
+            btnIniciar.disabled = true;
+            
+            modoJuego = selectorModo.value;
+            textoObjetivo = await obtenerTexto();
+            
+            indiceActual = 0;
+            erroresCometidos = 0;
+            teclasPulsadas = 0;
+            bloqueadoPorError = false;
+            tiempoTranscurrido = 0;
+            tiempoRestante = 60;
+            
+            juegoActivo = true;
+            cronometroIniciado = false; 
+            clearInterval(intervaloTimer);
+            
+            document.getElementById('tiempo-display').innerText = modoJuego === 'tiempo' ? '60' : '0';
+            document.getElementById('precision-display').innerText = '100';
+            document.getElementById('ppm-display').innerText = '0';
+            
+            textoDisplay.innerHTML = '';
+            arraySpans = textoObjetivo.split('').map(letra => {
+                const span = document.createElement('span');
+                span.innerText = letra;
+                span.classList.add('letra');
+                textoDisplay.appendChild(span);
+                return span;
+            });
+            arraySpans[0].classList.add('actual');
+
+            btnIniciar.innerText = "Buscar nuevo texto";
+            btnIniciar.disabled = false;
+        });
+
+        function iniciarTemporizador() {
+            intervaloTimer = setInterval(() => {
+                if (modoJuego === 'tiempo') {
+                    tiempoRestante--;
+                    document.getElementById('tiempo-display').innerText = tiempoRestante;
+                    if (tiempoRestante <= 0) finalizarJuego();
+                } else {
+                    tiempoTranscurrido++;
+                    document.getElementById('tiempo-display').innerText = tiempoTranscurrido;
+                }
+                actualizarEstadisticas();
+            }, 1000);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!juegoActivo) return; 
+            
+            if(e.key === " ") e.preventDefault(); 
+            if (e.key.length !== 1 && e.key !== 'Backspace') return;
+
+            // Iniciar cronómetro con la primera tecla válida
+            if (!cronometroIniciado) {
+                cronometroIniciado = true;
+                iniciarTemporizador();
+            }
+
+            teclasPulsadas++;
+            const letraEsperada = textoObjetivo[indiceActual];
+            const spanActual = arraySpans[indiceActual];
+
+            if (bloqueadoPorError) {
+                if (e.key === 'Backspace') {
+                    spanActual.classList.remove('incorrecta');
+                    bloqueadoPorError = false; 
+                }
+                return; 
+            }
+
+            if (e.key === 'Backspace') {
+                if (indiceActual > 0) {
+                    arraySpans[indiceActual].classList.remove('actual');
+                    indiceActual--;
+                    arraySpans[indiceActual].classList.remove('correcta');
+                    arraySpans[indiceActual].classList.add('actual');
+                }
+                return;
+            }
+
+            if (e.key === letraEsperada) {
+                spanActual.classList.remove('actual');
+                spanActual.classList.add('correcta');
+                indiceActual++;
+                
+                if (indiceActual === textoObjetivo.length) {
+                    finalizarJuego();
+                    return;
+                }
+                arraySpans[indiceActual].classList.add('actual');
+            } else {
+                erroresCometidos++;
+                spanActual.classList.add('incorrecta');
+                bloqueadoPorError = true;
+            }
+            
+            actualizarEstadisticas();
+        });
+
+        function actualizarEstadisticas() {
+            let ppm = 0;
+            const tiempoUsado = modoJuego === 'tiempo' ? (60 - tiempoRestante) : tiempoTranscurrido;
+            const precision = teclasPulsadas === 0 ? 100 : Math.round(((teclasPulsadas - erroresCometidos) / teclasPulsadas) * 100);
+            
+            if (tiempoUsado > 0) {
+                ppm = Math.round((indiceActual / 5) / (tiempoUsado / 60));
+            }
+            
+            document.getElementById('precision-display').innerText = precision;
+            document.getElementById('ppm-display').innerText = ppm;
+        }
+
+        async function finalizarJuego() {
+            juegoActivo = false;
+            clearInterval(intervaloTimer);
+            
+            modalRecord.classList.remove('oculto');
+            
+            btnGuardar.onclick = async () => {
+                const nombre = document.getElementById('input-nombre').value;
+                if(nombre.trim() === "") return;
+                
+                btnGuardar.innerText = "Guardando...";
+                btnGuardar.disabled = true;
+                
+                const ppmFinal = document.getElementById('ppm-display').innerText;
+                const precisionFinal = document.getElementById('precision-display').innerText;
+                
+                const puntaje = modoJuego === 'tiempo' ? Number(ppmFinal) : tiempoTranscurrido;
+                const coleccion = modoJuego === 'tiempo' ? 'top_modo_tiempo' : 'top_modo_texto_fijo';
+                
+                await addDoc(collection(db, coleccion), {
+                    nombre: nombre,
+                    puntaje: puntaje, 
+                    precision: Number(precisionFinal),
+                    fecha: new Date()
+                });
+                
+                modalRecord.classList.add('oculto');
+                btnGuardar.innerText = "Guardar en Firebase";
+                btnGuardar.disabled = false;
+                document.getElementById('input-nombre').value = "";
+                
+                obtenerTop5();
+            };
+        }
+
+        async function obtenerTop5() {
+            async function cargarTabla(coleccion, idLista, orden) {
+                const lista = document.getElementById(idLista);
+                lista.innerHTML = 'Cargando...';
+                
+                const q = query(collection(db, coleccion), orderBy("puntaje", orden), limit(5));
+                const querySnapshot = await getDocs(q);
+                
+                lista.innerHTML = '';
+                if(querySnapshot.empty) {
+                    lista.innerHTML = '<li style="color: #6c7086;">Sin registros aún</li>';
+                    return;
+                }
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement('li');
+                    const metrica = coleccion === 'top_modo_tiempo' ? `${data.puntaje} PPM` : `${data.puntaje} Segs`;
+                    li.innerText = `🏆 ${data.nombre} - ${metrica} (${data.precision}%)`;
+                    lista.appendChild(li);
+                });
+            }
+
+            await cargarTabla('top_modo_tiempo', 'lista-top-tiempo', 'desc');
+            await cargarTabla('top_modo_texto_fijo', 'lista-top-fijo', 'asc');
+        }
+
+        obtenerTop5();
+    </script>
+</body>
+</html>

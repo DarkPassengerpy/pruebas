@@ -207,26 +207,34 @@
         const modalRecord = document.getElementById('modal-record');
         const btnGuardar = document.getElementById('btn-guardar-puntaje');
 
-        // --- LÓGICA PARA OBTENER TEXTO DESDE TU ARCHIVO JSON ---
-        async function obtenerTexto() {
-            try {
-                // Hacemos fetch a nuestro propio archivo alojado en GitHub/Cloudflare.
-                // El parámetro "?t=" evita que el navegador guarde en caché una versión vieja del archivo.
-                const respuesta = await fetch('textos.json?t=' + new Date().getTime());
-                const bancoDeTextos = await respuesta.json();
-                
-                // Seleccionamos la lista de textos según el modo
-                const listaTextos = bancoDeTextos[modoJuego];
-                
-                // Elegimos un texto al azar
-                const indiceAleatorio = Math.floor(Math.random() * listaTextos.length);
-                
-                return listaTextos[indiceAleatorio];
-            } catch (error) {
-                console.error("Error al cargar los textos:", error);
-                return "Hubo un error al cargar el archivo de textos. Por favor, revisa que textos.json exista en tu repositorio.";
-            }
+        // --- LÓGICA CORREGIDA PARA OBTENER TEXTO ---
+async function obtenerTexto() {
+    try {
+        // Usamos la URL ABSOLUTA exacta donde comprobaste que está tu archivo
+        const urlAbsoluta = 'https://darkpassengerpy.github.io/pruebas/textos.json';
+        
+        // Hacemos el fetch agregando el parámetro de tiempo para evitar el caché
+        const respuesta = await fetch(urlAbsoluta + '?t=' + new Date().getTime());
+        
+        // Si la respuesta de la red no es OK, forzamos el error
+        if (!respuesta.ok) {
+            throw new Error(`Error HTTP: ${respuesta.status}`);
         }
+
+        const bancoDeTextos = await respuesta.json();
+        
+        // Seleccionamos la lista de textos según el modo de juego
+        const listaTextos = bancoDeTextos[modoJuego];
+        
+        // Elegimos un texto al azar
+        const indiceAleatorio = Math.floor(Math.random() * listaTextos.length);
+        
+        return listaTextos[indiceAleatorio];
+    } catch (error) {
+        console.error("Error al cargar los textos:", error);
+        return "Hubo un error al cargar el archivo de textos. Por favor, revisa la consola.";
+    }
+}
 
         btnIniciar.addEventListener('click', async () => {
             btnIniciar.innerText = "Buscando texto...";
@@ -375,7 +383,7 @@
                 btnGuardar.disabled = false;
                 document.getElementById('input-nombre').value = "";
                 
-             //   obtenerTop5();
+                obtenerTop5();
             };
         }
 

@@ -212,7 +212,7 @@
             try {
                 // Hacemos fetch a nuestro propio archivo alojado en GitHub/Cloudflare.
                 // El parámetro "?t=" evita que el navegador guarde en caché una versión vieja del archivo.
-                const respuesta = await fetch('textos.json?t=' + new Date().getTime());
+                const respuesta = await fetch('dacti.json?t=' + new Date().getTime());
                 const bancoDeTextos = await respuesta.json();
                 
                 // Seleccionamos la lista de textos según el modo
@@ -224,7 +224,7 @@
                 return listaTextos[indiceAleatorio];
             } catch (error) {
                 console.error("Error al cargar los textos:", error);
-                return "Hubo un error al cargar el archivo de textos. Por favor, revisa que textos.json exista en tu repositorio.";
+                return "Hubo un error al cargar el archivo de textos. Por favor, revisa que dacti.json exista en tu repositorio.";
             }
         }
 

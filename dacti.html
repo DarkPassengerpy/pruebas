@@ -172,6 +172,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // ¡NUEVO! Importamos los textos directamente desde tu archivo JavaScript local
+        import { bancoDeTextos } from './textos.js';
+
         // Configuración de Firebase
         const firebaseConfig = {
           apiKey: "AIzaSyCxU5ijSn8AAgVh7HpYLqkc1n5A7ZFLFhM",
@@ -207,34 +210,16 @@
         const modalRecord = document.getElementById('modal-record');
         const btnGuardar = document.getElementById('btn-guardar-puntaje');
 
-        // --- LÓGICA CORREGIDA PARA OBTENER TEXTO ---
-async function obtenerTexto() {
-    try {
-        // Usamos la URL ABSOLUTA exacta donde comprobaste que está tu archivo
-        const urlAbsoluta = 'https://darkpassengerpy.github.io/pruebas/textos.json';
-        
-        // Hacemos el fetch agregando el parámetro de tiempo para evitar el caché
-        const respuesta = await fetch(urlAbsoluta + '?t=' + new Date().getTime());
-        
-        // Si la respuesta de la red no es OK, forzamos el error
-        if (!respuesta.ok) {
-            throw new Error(`Error HTTP: ${respuesta.status}`);
+        // --- NUEVA LÓGICA ULTRA RÁPIDA (Sin fetch) ---
+        async function obtenerTexto() {
+            // Seleccionamos la lista de textos según el modo
+            const listaTextos = bancoDeTextos[modoJuego];
+            
+            // Elegimos un texto al azar
+            const indiceAleatorio = Math.floor(Math.random() * listaTextos.length);
+            
+            return listaTextos[indiceAleatorio];
         }
-
-        const bancoDeTextos = await respuesta.json();
-        
-        // Seleccionamos la lista de textos según el modo de juego
-        const listaTextos = bancoDeTextos[modoJuego];
-        
-        // Elegimos un texto al azar
-        const indiceAleatorio = Math.floor(Math.random() * listaTextos.length);
-        
-        return listaTextos[indiceAleatorio];
-    } catch (error) {
-        console.error("Error al cargar los textos:", error);
-        return "Hubo un error al cargar el archivo de textos. Por favor, revisa la consola.";
-    }
-}
 
         btnIniciar.addEventListener('click', async () => {
             btnIniciar.innerText = "Buscando texto...";
@@ -383,7 +368,7 @@ async function obtenerTexto() {
                 btnGuardar.disabled = false;
                 document.getElementById('input-nombre').value = "";
                 
-                obtenerTop5();
+                // obtenerTop5(); <-- Comentado hasta que actives Firebase
             };
         }
 
@@ -414,7 +399,7 @@ async function obtenerTexto() {
             await cargarTabla('top_modo_texto_fijo', 'lista-top-fijo', 'asc');
         }
 
-        obtenerTop5();
+        // obtenerTop5(); <-- Comentado para evitar el error de Firebase en tu entorno de pruebas
     </script>
 </body>
 </html>
